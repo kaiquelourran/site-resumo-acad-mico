@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SUBTOPICO</title>
+    <style>
+        
+        @charset "UTF-8";
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background-image: linear-gradient(to top, #4A90E2, #50E3C2);
+      min-height: 100vh;
+    }
+
+    header {
+      min-height: 150px;
+      background-image: linear-gradient(to top, #00C6FF, #0072FF);
+      text-align: center;
+      font-size: 1.2em;
+      padding-top: 13px;
+      color: white;
+      justify-content: center;
+      text-shadow: 5px 1px 3px rgba(0, 0, 0, 0.4);
+      position: fixed;
+      width: 100%;
+      top: 0;
+      left: 0;
+      z-index: 1000;
+    }
+
+    header p {
+      padding: 1.2em;
+      font-size: 1.1em;
+      font-family: Arial, Helvetica, sans-serif;
+      font-weight: 100;
+    }
+
+    nav {
+      display: flex;
+      justify-content: left;
+      gap: 35px;
+      background-color: #0096c1;
+      padding: 1px;
+      width: 100%;
+      font-size: 0.8em;
+      color: white;
+      border-radius: 10px;
+    }
+
+    nav a {
+      text-decoration: none;
+      color: white;
+      font-weight: bold;
+      padding: 2px;
+      transition: background-color 0.3s;
+    }
+
+    nav a:hover {
+      background-color: #3478F6;
+    }
+
+    .menu ul {
+      list-style: none;
+      display: flex;
+      background-color: #0096c1;
+      padding: 10px;
+      gap: 35px;
+      font-size: 0.8em;
+      position: relative;
+    }
+
+    .menu ul li {
+      position: relative;
+    }
+
+    .menu ul li a {
+      text-decoration: none;
+      color: white;
+      font-weight: bold;
+      padding: 2px;
+      display: block;
+      transition: background-color 0.3s;
+    }
+
+    .menu ul li a:hover {
+      background-color: #3478F6;
+      border-radius: 4px;
+    }
+
+    .menu ul li ul.submenu {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      background-color: #50E3C2;
+      padding: 0;
+      min-width: 160px;
+      z-index: 1000;
+      flex-direction: column;
+      border-radius: 10%;
+    }
+
+    .menu ul li:hover > ul.submenu {
+      display: block;
+    }
+
+    main {
+      background-color: #FFFFFF;
+      max-width: 900px;
+      padding: 10px;
+      margin: 180px auto 20px auto;
+      box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.432);
+      border-radius: 10px;
+      font-size: 1.2em;
+      color: #333;
+      font-family: Arial, Helvetica, sans-serif;
+      padding-bottom: 90px;
+    }
+
+    main h2 {
+      margin-top: 20px;
+      margin-bottom: 10px;
+      padding-left: 10px;
+      background-image: linear-gradient(to right, #0073ff94, #00c8ff93, transparent 60%);
+      color: #090639f0;
+      text-shadow: 2px 3px 4px rgba(0, 0, 0, 0.4);
+    }
+
+    main h3 {
+      margin-top: 20px;
+      color: #004488;
+      background-image: linear-gradient(to right, #0073ff94, #00c8ff93, transparent 60%);
+      text-shadow: 2px 3px 4px rgba(0, 0, 0, 0.4);
+      margin-bottom: 10px;
+      padding-left: 10px;
+    }
+
+    main p {
+      margin-top: 1em;
+      text-indent: 2em;
+      text-align: justify;
+      line-height: 1.8em;
+    }
+
+    footer {
+      background-color: #0096c1;
+      text-align: center;
+      padding: 0.5em;
+      color: white;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 0.9em;
+      bottom: 0;
+      width: 100%;
+    }
+
+    @media(max-width: 768px) {
+      header {
+        font-size: 1em;
+        padding: 10px;
+      }
+
+      header p {
+        padding: 0.5em;
+        font-size: 0.9em;
+      }
+
+      main {
+        margin: 203px 10px 20px 10px;
+        font-size: 1em;
+      }
+
+      .menu ul {
+        flex-direction: column;
+        gap: 0.2em;
+        width: 100%;
+      }
+
+      .menu ul li a {
+        display: block;
+        width: 100%;
+        padding: 10px;
+        background-color: #0072FF;
+        border-radius: 20px;
+      }
+
+      .menu ul li a:hover {
+        background-color: #005ed9;
+      }
+
+      .menu ul li ul.submenu {
+        position: static;
+        background-color: #0096c1;
+      }
+
+      .menu ul li:hover > ul.submenu {
+        display: block;
+      }
+    }
+
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Resumo Acadêmico</h1>
+        <p>Facilitamos sua jornada acadêmica com resumos claros e organizados em um só lugar.</p>
+
+        <nav class="menu">
+            <ul>
+                <li><a href="#">HOME</a>
+                    <ul class="submenu">
+                        <li><a href="#">Início Rápido</a></li>
+                        <li><a href="#">Apresentação</a></li>
+                    </ul>
+                </li>
+                <li><a href="#">SOBRE</a>
+                    <ul class="submenu">
+                        <li><a href="index.html#resumo">Resumo Acadêmico</a></li>
+                        <li><a href="index.html#cleice">Cleice Santana</a></li>
+                        <li><a href="index.html#funcionamento">Funcionamento</a></li>
+                    </ul>
+                </li>
+                <li><a href="#">CONTEÚDO</a>
+                    <ul class="submenu">
+                        <li><a href="index.html#lista">LISTA DE CONTEUDO</a></li>
+                        <li><a href="#">Relatos</a></li>
+                        <li><a href="#">Conselhos</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <article>
+            <h2>TOPICO A</h2>
+            <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Doloribus neque sapiente ut explicabo eum impedit dolor voluptatibus et sed recusandae. Aliquam tenetur totam odio tempore ratione nesciunt animi optio impedit?</p>
+            <h3> SUBTOPICO A</h3>
+            <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Atque deleniti ullam doloremque ab odit voluptas sint culpa, nostrum, debitis neque delectus, odio ipsum tempora. Recusandae nesciunt tenetur quaerat ullam necessitatibus. Lorem, ipsum dolor sit amet consectetur adipisicing elit. Minus libero itaque corporis reiciendis mollitia vitae nam sapiente odit quia esse neque officiis ullam suscipit laboriosam numquam, tempore dignissimos. Quas, recusandae. Lorem ipsum dolor sit amet consectetur adipisicing elit. Officia dicta libero deleniti delectus laborum, aliquam reprehenderit. Placeat modi ab mollitia architecto, qui deleniti cum at provident animi non incidunt accusantium.</p>
+        </article>
+    </main>
+    <footer>
+        <p>SITE CRIADOR POR KAIQUE LOURRAN E CLEICE SANTANA</p>
+    </footer>
+</body>
+</html>
