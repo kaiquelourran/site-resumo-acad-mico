@@ -170,6 +170,22 @@
   
 }
 
+    /*         download de apostila        */
+    .download {
+    display: inline-block;
+    padding: 12px 20px;
+    background: linear-gradient(to right, #0072FF, #00C6FF);
+    color: #fff;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: bold;
+    
+}
+
+.download:hover {
+    background: linear-gradient(to right, #0056cc, #0099cc);
+}
+
 
     @media(max-width: 768px) {
       header {
@@ -258,37 +274,13 @@
     <main>
         <article>
 
-          <h2>O que são os marcos do desenvolvimento?</h2>
+          <h2>Transtorno do Déficit de Atenção e
+            Hiperatividade (TDAH)</h2>
 
-          <p>Eles são indicadores-chave do progresso de uma criança em diferentes domínios:</p>
+          <iframe src="apostilas/Transtorno_d_ Déficit_de_Atenção_e_Hiperatividade_TDAH.pdf" width="100%" height="600px" style="border: none;"></iframe>
 
-          <ul>	Motor:</ul> 
-          <p>Relacionado aos movimentos, como sentar, engatinhar, andar (motor grosso) e segurar objetos, desenhar (motor fino).</p>
-
-          <ul>	Linguagem e Comunicação:</ul>
-          
-
-          <ul>	Cognitivo:</ul> 
-          <p>Ligado ao raciocínio, memória, resolução de problemas, atenção e compreensão do mundo.</p>
-
-          <ul>	Socioemocional: </ul>
-          <p>Diz respeito às interações com outras pessoas, expressão de sentimentos, brincadeiras e a formação de vínculos.</p>
-
-          <p>É importante ressaltar que os marcos do desenvolvimento não são regras rígidas e cada criança tem seu próprio ritmo. No entanto, eles servem como um guia para pais, cuidadores e profissionais da saúde monitorarem o progresso e identificarem possíveis atrasos.</p>
-
-          <h3>Por que os marcos do desenvolvimento são importantes?</h3>
-
-          <ul>1.Monitoramento do progresso:</ul>
-          <p> Permitem acompanhar de perto o crescimento da criança e celebrar cada nova conquista.</p>
-
-          <ul>2.Identificação precoce de atrasos:</ul> 
-          <p>Ao conhecer os marcos, é possível perceber se a criança está apresentando dificuldades ou atrasos em alguma área do desenvolvimento.</p>
-
-          <ul>3.Intervenção precoce:</ul> 
-          <p>A detecção precoce de atrasos permite que intervenções (como terapias de fala, fisioterapia ou acompanhamento psicológico) sejam iniciadas o quanto antes, o que pode fazer uma diferença significativa no desenvolvimento da criança e prevenir dificuldades futuras.</p>
-
-          <ul>4.Estímulo adequado:</ul> 
-          <p>Compreender em que fase a criança se encontra ajuda os pais a fornecerem os estímulos apropriados para um desenvolvimento saudável.</p>
+        <a href="apostilas/Transtorno_d_ Déficit_de_Atenção_e_Hiperatividade_TDAH.pdf" 
+        class="download" download>📘 Baixar Apostila com o conteúdo completo.</a>
           
         </article>
         
@@ -297,5 +289,16 @@
         <p>SITE CRIADOR POR KAIQUE LOURRAN E CLEICE SANTANA</p>
       </footer>
       
+      <script>
+        document.querySelector('.download').addEventListener('click', function(e) {
+            e.preventDefault(); // impede abrir no navegador
+            const link = document.createElement('a');
+            link.href = this.href;
+            link.download = this.href.split('/').pop(); // mantém o nome do arquivo
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+        </script>
 </body>
 </html>
