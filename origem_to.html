@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SUBTOPICO</title>
+    <link rel="icon" href="fotos/Logotipo_resumo_academico.png" type="image/png">
+    <link rel="apple-touch-icon" href="fotos/minha-logo-apple.png">
+    <style>
+        
+       
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background-image: linear-gradient(to top, #4A90E2, #50E3C2);
+      min-height: 100vh;
+    }
+
+    header {
+      min-height: 150px;
+      background-image: linear-gradient(to top, #00C6FF, #0072FF);
+      text-align: center;
+      font-size: 1.2em;
+      padding-top: 13px;
+      color: white;
+      justify-content: center;
+      text-shadow: 5px 1px 3px rgba(0, 0, 0, 0.4);
+      position: fixed;
+      width: 100%;
+      top: 0;
+      left: 0;
+      z-index: 1000;
+    }
+
+    header p {
+      padding: 1.2em;
+      font-size: 1.1em;
+      font-family: Arial, Helvetica, sans-serif;
+      font-weight: 100;
+    }
+
+    nav {
+      display: flex;
+      justify-content: left;
+      gap: 35px;
+      background-color: #0096c1;
+      padding: 1px;
+      width: 100%;
+      font-size: 0.8em;
+      color: white;
+      border-radius: 10px;
+    }
+
+    nav a {
+      text-decoration: none;
+      color: white;
+      font-weight: bold;
+      padding: 2px;
+      transition: background-color 0.3s;
+    }
+
+    nav a:hover {
+      background-color: #3478F6;
+    }
+
+    .menu ul {
+      list-style: none;
+      display: flex;
+      background-color: #0096c1;
+      padding: 10px;
+      gap: 35px;
+      font-size: 0.8em;
+      position: relative;
+    }
+
+    .menu ul li {
+      position: relative;
+    }
+
+    .menu ul li a {
+      text-decoration: none;
+      color: white;
+      font-weight: bold;
+      padding: 2px;
+      display: block;
+      transition: background-color 0.3s;
+    }
+
+    .menu ul li a:hover {
+      background-color: #3478F6;
+      border-radius: 4px;
+    }
+
+    .menu ul li ul.submenu {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      background-color: #50E3C2;
+      padding: 0;
+      min-width: 160px;
+      z-index: 1000;
+      flex-direction: column;
+      border-radius: 10%;
+    }
+
+    .menu ul li:hover > ul.submenu {
+      display: block;
+    }
+    main {
+      background-color: #FFFFFF;
+      max-width: 900px;
+      padding: 10px;
+      margin: 180px auto 20px auto;
+      box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.432);
+      border-radius: 10px;
+      font-size: 1.2em;
+      color: #333;
+      font-family: Arial, Helvetica, sans-serif;
+      padding-bottom: 90px;
+
+    }
+    main ul {
+      color: #090639f0;
+      background-image: linear-gradient(to right, #0073ff94, #00c8ff93, transparent 60%);
+      text-shadow: 2px 3px 4px rgba(0, 0, 0, 0.4);
+      padding-left: 9px;
+    }
+
+    main h2 {
+      margin-top: 20px;
+      margin-bottom: 10px;
+      padding-left: 10px;
+      background-image: linear-gradient(to right, #0073ff94, #00c8ff93, transparent 60%);
+      color: #090639f0;
+      text-shadow: 2px 3px 4px rgba(0, 0, 0, 0.4);
+    }
+    main h3 {
+      margin-top: 20px;
+      color: #090639f0;
+      background-image: linear-gradient(to right, #0073ff94, #00c8ff93, transparent 60%);
+      text-shadow: 2px 3px 4px rgba(0, 0, 0, 0.4);
+      margin-bottom: 1em;
+      padding-left: 10px;
+    }
+    main p {
+      margin-top: 1em;
+      margin-bottom: 0.3em;
+      text-indent: 2em;
+      text-align: justify;
+      line-height: 1.8em;
+      padding-left: 20px;
+    } 
+    .citação{
+      color: #0096c1;
+      text-decoration: none;
+      font-weight: bold;
+      border-bottom: 2px solid #0072FF;
+    }
+    
+    abbr{
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+    }
+    
+
+    footer {
+  background-color: #0096c1;
+  text-align: center;
+  padding: 0.5em;
+  color: white;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 0.9em;
+  bottom: 0;
+  width: 100%;
+  
+}
+
+
+    @media(max-width: 768px) {
+      header {
+        font-size: 1em;
+        padding: 10px;
+      }
+
+      header p {
+        padding: 0.5em;
+        font-size: 0.9em;
+      }
+      
+      nav{
+        background-color: transparent;
+    }
+
+      main {
+        margin: 203px 10px 20px 10px;
+        font-size: 1em;
+      }
+
+      .menu ul {
+        flex-direction: column;
+        gap: 0.2em;
+        width: 100%;
+        background-color: transparent;
+      }
+
+      .menu ul li a {
+        display: block;
+        width: 100%;
+        padding: 10px;
+        background-color: #0072FF;
+        border-radius: 20px;
+      }
+
+      .menu ul li a:hover {
+        background-color: #005ed9;
+      }
+
+      .menu ul li ul.submenu {
+        position: static;
+        background-color: #0096c1;
+      }
+
+      .menu ul li:hover > ul.submenu {
+        display: block;
+      }
+    }
+
+
+
+
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Resumo Acadêmico</h1>
+        <p>Facilitamos sua jornada acadêmica com resumos claros e organizados em um só lugar.</p>
+    
+        <nav class="menu">
+            <ul>
+                <li><a href="#">HOME</a>
+                    <ul class="submenu">
+                        <li><a href="#">Início Rápido</a></li>
+                        <li><a href="#">Apresentação</a></li>
+                    </ul>
+                </li>
+                <li><a href="#">SOBRE</a>
+                    <ul class="submenu">
+                        <li><a href="index.html#resumo">Resumo Acadêmico</a></li>
+                        <li><a href="index.html#cleice">Cleice Santana</a></li>
+                        <li><a href="index.html#funcionamento">Funcionamento</a></li>
+                    </ul>
+                </li>
+                <li><a href="#">CONTEÚDO</a>
+                    <ul class="submenu">
+                        <li><a href="index.html#lista">LISTA DE CONTEUDO</a></li>
+                        <li><a href="index.html#origem">ORIGEM E HISTÓRIA</a></li>
+                        <li><a href="#">Conselhos</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <article>
+
+          <p>O Tratamento Moral representou uma revolução na abordagem da saúde mental. Em uma época em que os hospitais psiquiátricos eram, em sua maioria, locais de confinamento e punição, médicos como o <a href="https://pt.wikipedia.org/wiki/Philippe_Pinel" target="_blank" class="citação"><abbr title="Philippe Pinel foi um médico e zoologista que se destacou no campo da psiquiatria. Depois de receber um diploma da Faculdade de Medicina de Toulouse que complementou com estudos na Faculdade de Medicina de Montpellier.">francês Philippe Pinel</abbr></a> e o <a href="https://pt.wikipedia.org/wiki/Benjamin_Rush" target="_blank" class="citação"><abbr title="Benjamin Rush foi um líder político, reformador social, humanitário, educador médico, escritor e educador norte-americano. Foi um dos signatários da Declaração da Independência dos Estados Unidos.">americano Benjamin Rush</abbr></a> defenderam que a saúde mental poderia ser restaurada através do respeito à dignidade humana, do trabalho manual e de uma rotina estruturada. Eles argumentavam que a participação em atividades significativas, como agricultura, costura ou artesanato, era fundamental para a restauração da sanidade e do propósito de vida. A ideia central era que a "ocupação" (no sentido de estar ativamente engajado) era, por si só, terapêutica.</p>
+
+<h3>2. O Movimento de Artes e Ofícios e a Consolidação da Profissão</h3>
+
+<p>Paralelamente ao Tratamento Moral, o Movimento de Artes e Ofícios (Arts and Crafts Movement) floresceu na Inglaterra no final do século XIX, liderado por figuras como <a href="https://pt.wikipedia.org/wiki/John_Ruskin" target="_blank" class="citação"><abbr title="John Ruskin foi um importante crítico de arte, desenhista e aquarelista britânico. Os ensaios de Ruskin sobre arte e arquitetura foram extremamente influentes na era Vitoriana, repercutindo até hoje.">John Ruskin</abbr></a> e <a href="https://pt.wikipedia.org/wiki/William_Morris" target="_blank" class="citação"><abbr title="William Morris foi um designer têxtil, poeta, romancista, tradutor e ativista socialista inglês. Associado com o movimento artístico britânico Arts & crafts, foi um dos principais contribuidores para o revivalismo das artes têxteis e métodos tradicionais de produção.">William Morris</abbr></a>. Este movimento foi uma resposta direta à desumanização e à produção em massa da Revolução Industrial. Seus idealizadores acreditavam que o trabalho manual e a criação de objetos belos e úteis eram essenciais para a saúde do corpo e da mente. A filosofia do movimento se baseava na ideia de que a realização pessoal e a dignidade humana estavam intrinsecamente ligadas ao ato de criar com as próprias mãos, resgatando um senso de propósito e valor.</p>
+<p>
+  Foi a interseção dessas duas correntes – o humanismo do Tratamento Moral e a valorização do trabalho manual do Movimento de Artes e Ofícios – que pavimentou o caminho para a fundação formal da Terapia Ocupacional. A profissão nasceu do reconhecimento de que as atividades humanas, quando intencionalmente escolhidas e adaptadas, podem ser a ferramenta primária para promover a saúde e a reabilitação.
+</p>
+
+<h3>3. A Formalização e os Fundadores da Terapia Ocupacional</h3>
+
+<p>A profissionalização da Terapia Ocupacional ocorreu em 15 de março de 1917, quando um grupo de visionários fundou a Sociedade Nacional para a Promoção da Terapia Ocupacional (National Society for the Promotion of Occupational Therapy - NSPOT), em Nova York. Os membros fundadores são considerados os pilares da profissão:</p>
+
+<p>George Edward Barton: Arquiteto que se recuperou de uma tuberculose e uma paralisia e utilizou o trabalho manual em sua própria reabilitação, ele abriu a Consolation House em Clifton Springs, Nova York, para tratar pessoas com deficiências.</p>
+
+<p><a href="https://en.wikipedia.org/wiki/William_Rush_Dunton" target="_blank" class="citação"><abbr title="foi um dos fundadores e primeiros presidentes da American Occupational Therapy Association. Ele também é reconhecido por sua coleção e bolsa de estudos sobre colchas americanas.">William Rush Dunton Jr</abbr></a>.: Psiquiatra, ele cunhou o termo "terapia ocupacional" e escreveu um dos primeiros livros sobre o assunto, defendendo o uso de ocupações como tratamento para doenças mentais.</p>
+
+<p><a href="https://en.wikipedia.org/wiki/Eleanor_Clarke_Slagle" target="_blank" class="citação"><abbr title="Eleanor Clarke Slagle foi uma assistente social americana e pioneira da terapia ocupacional.">Eleanor Clarke Slagle</abbr></a>: Assistente social que foi a figura mais influente na organização da profissão. Ela desenvolveu o método de "Habit Training", um programa de reeducação de hábitos diários e rotinas para pacientes com doenças mentais, que se tornou um marco na prática da Terapia Ocupacional.</p>
+
+<p>A Primeira Guerra Mundial teve um impacto significativo, pois a necessidade de reabilitar os soldados feridos forçou a profissionalização e a padronização dos métodos da terapia ocupacional, que se mostrou uma ferramenta eficaz na recuperação física e psicológica.</p>
+
+<h3>4. Definição e Filosofia da Terapia Ocupacional</h3>
+<p>A definição da Terapia Ocupacional evoluiu, mas sempre manteve a ocupação como seu conceito central. A Associação Americana de Terapia Ocupacional (AOTA), uma das mais influentes do mundo, define a Terapia Ocupacional como "o uso terapêutico das atividades diárias (ocupações) com indivíduos ou grupos, a fim de participar nas funções e nos papéis da vida em uma variedade de ambientes, como casa, escola, local de trabalho e comunidade."</p>
+
+<p>O terapeuta ocupacional entende que a ocupação é tudo aquilo que as pessoas fazem para se engajar na vida. Isso inclui:</p>
+
+<p>Atividades da Vida Diária (AVD): como se vestir, comer e higiene pessoal.</p>
+
+Atividades Instrumentais da Vida Diária (AIVD): como cozinhar, cuidar da casa, gerenciar finanças e usar transportes.
+
+<p>Descanso e Sono: essenciais para a saúde e o bem-estar.</p>
+
+<p>Educação e Trabalho: atividades que dão propósito e contribuem para a sociedade.</p>
+
+<p>Lazer, Brincar e Participação Social: fundamentais para o equilíbrio emocional e social.</p>
+
+<p>A filosofia da profissão é holística, considerando a pessoa em sua totalidade (física, mental, social e espiritual), e a prática é centrada no cliente, respeitando suas necessidades, valores e objetivos. O terapeuta ocupacional não apenas "trata a doença", mas busca restaurar o significado, a dignidade e a autonomia através da participação em ocupações.</p>
+
+<h3>Referências</h3>
+
+<p>AOTA (American Occupational Therapy Association). (2020). Occupational Therapy Practice Framework: Domain and Process (4th ed.). American Journal of Occupational Therapy, 74(S2), 7412410010p1–7412410010p87.</p>
+
+<p>Hopkins, H. L., & Smith, H. D. (1993). Willard and Spackman's Occupational Therapy. Lippincott Williams & Wilkins. (Um dos livros-texto mais antigos e respeitados na área).</p>
+
+<p>Kielhofner, G. (2009). Conceptual Foundations of Occupational Therapy Practice. F.A. Davis Company. (Explora a teoria e os modelos de prática).</p>
+
+<p>Mosey, A. C. (1986). The early years of occupational therapy: A historical perspective. American Journal of Occupational Therapy, 40(1), 1-10.</p>
+          
+        </article>
+        
+    </main>
+    <footer>
+        <p>SITE CRIADOR POR KAIQUE LOURRAN E CLEICE SANTANA</p>
+      </footer>
+      
+</body>
+</html>

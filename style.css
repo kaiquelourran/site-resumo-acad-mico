@@ -156,6 +156,7 @@ main p {
 }
 
 main article h2 {
+    margin-top:0.3em;
     margin-bottom: 0.1em;
     padding-left: 10px;
     background-image: linear-gradient(to right, #0073ff94, #00c8ff93, transparent 60%);
