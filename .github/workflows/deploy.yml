@@ -1,0 +1,22 @@
+name: 🚀 Deploy Automático para Hostinger
+
+on:
+  push:
+    branches:
+      - main   # troque para "master" se sua branch principal for essa
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Baixar código do repositório
+        uses: actions/checkout@v3
+
+      - name: 📤 Enviar arquivos para Hostinger via FTP
+        uses: SamKirkland/FTP-Deploy-Action@4.3.4
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          server-dir: ${{ secrets.FTP_PATH }}
+          # Por padrão esta action envia só os arquivos alterados (mais rápido)
