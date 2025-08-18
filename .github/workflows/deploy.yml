@@ -3,7 +3,7 @@ name: 🚀 Deploy Automático para Hostinger
 on:
   push:
     branches:
-      - main   # troque para "master" se sua branch principal for essa
+      - master   # troque para "master" se sua branch principal for essa
 
 jobs:
   deploy:
