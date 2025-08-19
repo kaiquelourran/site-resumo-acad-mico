@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transtorno de Déficit de Atenção e Hiperatividade (TDAH) - Resumo Acadêmico</title>
+    <meta name="description" content="Acesse um resumo completo sobre o Transtorno de Déficit de Atenção e Hiperatividade (TDAH), um material essencial para estudantes e profissionais da saúde e educação.">
+    
+    <link rel="icon" href="fotos/Logotipo_resumo_academico.png" type="image/png">
+    <link rel="apple-touch-icon" href="fotos/minha-logo-apple.png">
+    
+    <style>
+        /* (Seu CSS está aqui, ele está bem estruturado, então não precisa de alterações) */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-image: linear-gradient(to top, #4A90E2, #50E3C2);
+            min-height: 100vh;
+        }
+
+        header {
+            min-height: 150px;
+            background-image: linear-gradient(to top, #00C6FF, #0072FF);
+            text-align: center;
+            font-size: 1.2em;
+            padding-top: 13px;
+            color: white;
+            justify-content: center;
+            text-shadow: 5px 1px 3px rgba(0, 0, 0, 0.4);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+        }
+
+        header p {
+            padding: 1.2em;
+            font-size: 1.1em;
+            font-family: Arial, Helvetica, sans-serif;
+            font-weight: 100;
+        }
+
+        nav {
+            display: flex;
+            justify-content: left;
+            gap: 35px;
+            background-color: #0096c1;
+            padding: 1px;
+            width: 100%;
+            font-size: 0.8em;
+            color: white;
+            border-radius: 10px;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: white;
+            font-weight: bold;
+            padding: 2px;
+            transition: background-color 0.3s;
+        }
+
+        nav a:hover {
+            background-color: #3478F6;
+        }
+
+        .menu ul {
+            list-style: none;
+            display: flex;
+            background-color: #0096c1;
+            padding: 10px;
+            gap: 35px;
+            font-size: 0.8em;
+            position: relative;
+        }
+
+        .menu ul li {
+            position: relative;
+        }
+
+        .menu ul li a {
+            text-decoration: none;
+            color: white;
+            font-weight: bold;
+            padding: 2px;
+            display: block;
+            transition: background-color 0.3s;
+        }
+
+        .menu ul li a:hover {
+            background-color: #3478F6;
+            border-radius: 4px;
+        }
+
+        .menu ul li ul.submenu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background-color: #50E3C2;
+            padding: 0;
+            min-width: 160px;
+            z-index: 1000;
+            flex-direction: column;
+            border-radius: 10%;
+        }
+
+        .menu ul li:hover > ul.submenu {
+            display: block;
+        }
+
+        main {
+            background-color: #FFFFFF;
+            max-width: 900px;
+            padding: 10px;
+            margin: 180px auto 20px auto;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.432);
+            border-radius: 10px;
+            font-size: 1.2em;
+            color: #333;
+            font-family: Arial, Helvetica, sans-serif;
+            padding-bottom: 90px;
+        }
+
+        main ul {
+            color: #090639f0;
+            background-image: linear-gradient(to right, #0073ff94, #00c8ff93, transparent 60%);
+            text-shadow: 2px 3px 4px rgba(0, 0, 0, 0.4);
+            padding-left: 9px;
+        }
+
+        main h1 {
+            margin-top: 20px;
+            margin-bottom: 10px;
+            padding-left: 10px;
+            background-image: linear-gradient(to right, #0073ff94, #00c8ff93, transparent 60%);
+            color: #090639f0;
+            text-shadow: 2px 3px 4px rgba(0, 0, 0, 0.4);
+        }
+
+        main h2 {
+            margin-top: 20px;
+            margin-bottom: 10px;
+            padding-left: 10px;
+            background-image: linear-gradient(to right, #0073ff94, #00c8ff93, transparent 60%);
+            color: #090639f0;
+            text-shadow: 2px 3px 4px rgba(0, 0, 0, 0.4);
+        }
+
+        main h3 {
+            margin-top: 20px;
+            color: #090639f0;
+            background-image: linear-gradient(to right, #0073ff94, #00c8ff93, transparent 60%);
+            text-shadow: 2px 3px 4px rgba(0, 0, 0, 0.4);
+            margin-bottom: 1em;
+            padding-left: 10px;
+        }
+
+        main p {
+            margin-top: 1em;
+            margin-bottom: 0.3em;
+            text-indent: 2em;
+            text-align: justify;
+            line-height: 1.8em;
+            padding-left: 20px;
+        }
+
+        .download {
+            display: inline-block;
+            padding: 12px 20px;
+            background: linear-gradient(to right, #0072FF, #00C6FF);
+            color: #fff;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        .download:hover {
+            background: linear-gradient(to right, #0056cc, #0099cc);
+        }
+        
+        footer {
+            background-color: #0096c1;
+            text-align: center;
+            padding: 0.5em;
+            color: white;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 0.9em;
+            bottom: 0;
+            width: 100%;
+        }
+
+        @media(max-width: 768px) {
+            header {
+                font-size: 1em;
+                padding: 10px;
+            }
+            header p {
+                padding: 0.5em;
+                font-size: 0.9em;
+            }
+            nav{
+                background-color: transparent;
+            }
+            main {
+                margin: 203px 10px 20px 10px;
+                font-size: 1em;
+            }
+            .menu ul {
+                flex-direction: column;
+                gap: 0.2em;
+                width: 100%;
+                background-color: transparent;
+            }
+            .menu ul li a {
+                display: block;
+                width: 100%;
+                padding: 10px;
+                background-color: #0072FF;
+                border-radius: 20px;
+            }
+            .menu ul li a:hover {
+                background-color: #005ed9;
+            }
+            .menu ul li ul.submenu {
+                position: static;
+                background-color: #0096c1;
+            }
+            .menu ul li:hover > ul.submenu {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Resumo Acadêmico</h1>
+        <p>Facilitamos sua jornada acadêmica com resumos claros e organizados em um só lugar.</p>
+        <nav class="menu">
+            <ul>
+                <li><a href="index.html">HOME</a>
+                    <ul class="submenu">
+                        <li><a href="index.html#inicio">Início Rápido</a></li>
+                        <li><a href="index.html#apresentacao">Apresentação</a></li>
+                    </ul>
+                </li>
+                <li><a href="sobre.html">SOBRE</a>
+                    <ul class="submenu">
+                        <li><a href="index.html#resumo">Resumo Acadêmico</a></li>
+                        <li><a href="index.html#cleice">Cleice Santana</a></li>
+                        <li><a href="index.html#funcionamento">Funcionamento</a></li>
+                    </ul>
+                </li>
+                <li><a href="conteudo.html">CONTEÚDO</a>
+                    <ul class="submenu">
+                        <li><a href="index.html#lista">LISTA DE CONTEUDO</a></li>
+                        <li><a href="index.html#origem">ORIGEM E HISTÓRIA</a></li>
+                        <li><a href="index.html#conselhos">Conselhos</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <article>
+            <h1>Transtorno do Déficit de Atenção e Hiperatividade (TDAH)</h1>
+            
+            <p>Nesta página, você encontra um resumo completo e detalhado sobre o **Transtorno do Déficit de Atenção e Hiperatividade (TDAH)**, um material de apoio essencial para estudantes e profissionais da área da saúde e educação.</p>
+            <p>Para sua conveniência, a apostila está disponível para visualização abaixo e pode ser baixada no botão.</p>
+
+        </article>
+        
+        <iframe src="apostilas/Transtorno_d_ Déficit_de_Atenção_e_Hiperatividade_TDAH.pdf" width="100%" height="600px" style="border: none;" title="Apostila sobre Transtorno do Déficit de Atenção e Hiperatividade (TDAH)"></iframe>
+
+        <a href="apostilas/Transtorno_d_ Déficit_de_Atenção_e_Hiperatividade_TDAH.pdf" 
+        class="download" download>📘 Baixar Apostila completa sobre TDAH.</a>
+        
+    </main>
+    <footer>
+        <p>SITE CRIADOR POR KAIQUE LOURRAN E CLEICE SANTANA</p>
+    </footer>
+    
+    <script>
+        document.querySelector('.download').addEventListener('click', function(e) {
+            e.preventDefault(); // impede abrir no navegador
+            const link = document.createElement('a');
+            link.href = this.href;
+            link.download = this.href.split('/').pop(); // mantém o nome do arquivo
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+    </script>
+</body>
+</html>
