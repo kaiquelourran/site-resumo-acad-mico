@@ -248,7 +248,7 @@ div.video {
     position: relative;
     
 }
-
+ 
 div.video > video {
     position: absolute;
     top: 5%;
