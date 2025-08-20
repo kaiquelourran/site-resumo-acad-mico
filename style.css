@@ -246,6 +246,7 @@ div.video {
     border-radius: 10px;
     margin: 30px 0;
     position: relative;
+    height: 0;
 }
 
 div.video > video {
@@ -253,7 +254,7 @@ div.video > video {
     top: 0%;
     left: 0%;
     width: 100%;
-    height:auto
+    height:100%
 }
 
 .CRIANÇA::after{
