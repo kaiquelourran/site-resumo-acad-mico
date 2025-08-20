@@ -4,13 +4,13 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-     
+      
 }
 
 body {
     background-image: linear-gradient(to top, #4A90E2, #50E3C2);
     min-height: 100vh;
-   
+    
 
 }
 
@@ -239,7 +239,6 @@ a.saber:hover {
     content: "+";
 }
 
-/* Depois */
 div.video {
     background-color: #4A90E2;
     padding: 10px;
@@ -250,12 +249,12 @@ div.video {
 div.video > video {
     width: 100%;
     height: auto;
-    display: block; /* Para que o vídeo não tenha espaço extra embaixo */
+    display: block;
 }
 
 .CRIANÇA::after{
-   content: "👶"; 
-   padding-left: 5px;    
+    content: "👶"; 
+    padding-left: 5px;      
 }
 .adolescente::after {
     content: "🧒 ";
@@ -273,7 +272,7 @@ div.video > video {
     content:"🏥";
     padding-left: 5px;
   }
-     
+      
 .ldc{
     margin-top: 30px;
     padding: 20px;
