@@ -241,10 +241,10 @@ a.saber:hover {
 
 div.video {
     background-color: #4A90E2;
-    padding: 10px;
-    padding-bottom: 5%;
-    border-radius: 10px;
-    margin: 20px 0;
+    padding:10px;
+    padding-bottom:50%;
+    border-radius:10px;
+    margin: 30px 0;
     position: relative;
     
 }
