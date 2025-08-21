@@ -313,6 +313,10 @@ div.video > video {
  flex-direction: column;
  
 }
+.ldc ul li.verde a:hover {
+    background-color: rgba(0, 128, 0, 0.945); /* Fundo verde ao passar o mouse */
+    color: white; /* Cor do texto ao passar o mouse para melhor contraste */
+}
 .ldc h2 {
  margin-bottom: 20px;
  font-size: 1.4em;
