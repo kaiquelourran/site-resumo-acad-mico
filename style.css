@@ -431,9 +431,23 @@ div.video > video {
 }
 
 /* RODAPÉ */
+/* RODAPÉ PROFISSIONAL (ADAPTADO AO SEU ESTILO) */
 footer {
-    background-color: #0096c1;
+    background-image: linear-gradient(to top, #0072FF, #00C6FF);
     text-align: center;
-    padding: 0.5em;
+    padding: 0.1em 0;
     color: white;
+    font-family: Arial, sans-serif;
+    
+}
+
+.footer-creditos {
+    line-height: 1.4;
+    text-shadow: 2px 2px 3px rgba(0, 0, 0, 0.3);
+}
+
+.footer-creditos p {
+    margin: 3px 0;
+    font-size: 0.7em;
+    font-weight: bold;
 }

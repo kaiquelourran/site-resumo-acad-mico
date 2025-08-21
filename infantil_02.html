@@ -174,16 +174,25 @@
 }
   
 
-    footer {
-  background-color: #0096c1;
-  text-align: center;
-  padding: 0.5em;
-  color: white;
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: 0.9em;
-  bottom: 0;
-  width: 100%;
-  
+  /* RODAPÉ PROFISSIONAL (ADAPTADO AO SEU ESTILO) */
+footer {
+    background-image: linear-gradient(to top, #0072FF, #00C6FF);
+    text-align: center;
+    padding: 0.1em 0;
+    color: white;
+    font-family: Arial, sans-serif;
+    
+}
+
+.footer-creditos {
+    line-height: 1.4;
+    text-shadow: 2px 2px 3px rgba(0, 0, 0, 0.3);
+}
+
+.footer-creditos p {
+    margin: 3px 0;
+    font-size: 0.7em;
+    font-weight: bold;
 }
 
 
@@ -288,8 +297,11 @@
 
     </main>
     <footer>
-        <p>SITE CRIADOR POR KAIQUE LOURRAN E CLEICE SANTANA</p>
-      </footer>
+      <div class="footer-creditos">
+          <p>SITE CRIADO POR KAIQUE LOURRAN E CLEICE SANTANA</p>
+          <p>&copy; 2025 Todos os direitos reservados.</p>
+      </div>
+  </footer>
 
       <script>
         document.querySelector('.download').addEventListener('click', function(e) {
