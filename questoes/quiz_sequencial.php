@@ -3,12 +3,12 @@ session_start();
 require_once 'conexao.php';
 
 // Verifica se o usuário está logado
-if (!isset($_SESSION['usuario_id'])) {
+if (!isset($_SESSION['id_usuario'])) {
     header('Location: login.php');
     exit;
 }
 
-$id_usuario = $_SESSION['usuario_id'];
+$id_usuario = $_SESSION['id_usuario'];
 $id_assunto = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 $filtro = isset($_GET['filtro']) ? $_GET['filtro'] : 'nao-respondidas';
 
