@@ -1,6 +1,13 @@
 document.addEventListener('DOMContentLoaded', () => {
     // Referências aos elementos da página
     const quizForm = document.querySelector('.alternativas-list');
+    
+    // Verifica se os elementos existem antes de continuar
+    if (!quizForm) {
+        console.log('Elementos do quiz não encontrados na página. Script não será executado.');
+        return;
+    }
+    
     const proximaQuestaoBtn = document.getElementById('botao-proxima');
     const placarPontosSpan = document.getElementById('placar-pontos');
     const feedbackMensagemDiv = document.getElementById('feedback-mensagem');
