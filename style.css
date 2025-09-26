@@ -33,7 +33,7 @@ header {
 
 header p {
     padding: 1.2em;
-    font-size: 1em;
+    font-size: 1.1em;
     font-family: Arial, Helvetica, sans-serif;
     font-weight: 100;
 }
@@ -82,7 +82,7 @@ nav a:hover {
     font-weight: bold;
     padding: 2px;
     display: block;
-    transition: background-color 0.3s;
+
 }
 
 .menu ul li a:hover {
@@ -108,7 +108,7 @@ nav a:hover {
 }
 
 main h2[id] {
-    scroll-margin-top: 170px;
+    scroll-margin-top: 180px;
 }
 
 /* CORPO */
@@ -123,15 +123,15 @@ main {
     border-bottom-left-radius: 10px;
     border-bottom-right-radius: 10px;
     text-align: justify;
-    margin-top: 5em;
-    font-size: 1.3em;
+    margin-top: 0.1em;
+    font-size: 1.4em;
     color: #333333;
 }
 
 /* Margens aplicadas por tela */
 @media(min-width: 769px) {
     main {
-        margin: 173px auto 10px auto;
+        margin: 183px auto 10px auto;
     }
 }
 
@@ -149,20 +149,17 @@ main img {
 }
 
 main p {
-    margin-top: 0.6em;
+    margin-top: 0.8em;
     padding-left: 20px;
     line-height: 2em;
     text-indent: 2em;
 }
 
 main article h2 {
-    margin-top:0.3em;
     margin-bottom: 0.1em;
     padding-left: 10px;
     background-image: linear-gradient(to right, #0073ff94, #00c8ff93, transparent 60%);
-    color: #090639f0;
     text-shadow: 2px 3px 4px rgba(0, 0, 0, 0.4);
-    font-size: 1.3em;
 }
 
 .lateral {
@@ -193,17 +190,17 @@ main article h2 {
     display: flex;
     flex-direction: column;
     gap: 5px;
-    max-width: 300px;
+    max-width: 350px;
     width: 100%;
     padding: 30px;
-    margin-bottom: 0.2em;
+    margin-bottom: 0.5em;
 }
 
 .lateral1 .imagens img {
     width: 100%;
     border-radius: 8px;
     display: block;
-    margin-bottom: 1.3em;
+    margin-bottom: 4.3em;
 }
 
 .lateral1 p {
@@ -241,149 +238,118 @@ a.saber:hover {
 
 div.video {
     background-color: #4A90E2;
-    padding:10px;
-    padding-bottom:50%;
-    border-radius:10px;
+    padding-bottom: 50%;
+    border-radius: 10px;
     margin: 30px 0;
     position: relative;
-    
 }
- 
+
 div.video > video {
     position: absolute;
     top: 5%;
     left: 5%;
     width: 90%;
-    height:90%
+    height: 90%;
+    border-radius: 8px;
 }
 
-/* CONTEÚDO EM BREVE */
-/* Adicionando os emojis */
-.CRIANÇA::after {
-    content: " 👶  ✏️ conteúdo em desenvolvimento✏️ ";
-    padding-left: 5px;
-    font-size: 0.9em;
-    font-weight: normal;
-    color: #FFC107;
-    vertical-align: middle;
+.CRIANÇA::after{
+   content: "👶"; 
+   padding-left: 5px;    
 }
 .adolescente::after {
-    content: " 🧒 🚧 Conteúdo em Breve 🚧";
+    content: "🧒 ";
     padding-left: 5px;
-    font-size: 0.9em;
-    font-weight: normal;
-    color: #FFC107;
-    vertical-align: middle;
-}
+  }
 .adulto::after {
-    content: " 🧑  🚧 Conteúdo em Breve 🚧 ";
+    content: "🧑 ";
     padding-left: 5px;
-    font-size: 0.9em;
-    font-weight: normal;
-    color: #FFC107;
-    vertical-align: middle;
-}
+  }
 .idoso::after {
-    content: " 👴  🚧 Conteúdo em Breve 🚧";
+    content: "👴 ";
     padding-left: 5px;
-    font-size: 0.9em;
-    font-weight: normal;
-    color: #FFC107;
-    vertical-align: middle;
-}
-.contextos::after {
-    content: " 🏥 🚧 Conteúdo em Breve 🚧";
+  }
+.contextos::after{
+    content:"🏥";
     padding-left: 5px;
-    font-size: 0.9em;
-    font-weight: normal;
-    color: #FFC107;
-    vertical-align: middle;
-}
-
-
-   
-
+  }
+     
 .ldc{
- margin-top: 30px;
- padding: 20px;
- background-image:linear-gradient(to bottom,#19b0df,#356C7C,transparent);
- border-radius: 10px;
- box-shadow: 0 0 10px rgba(0,0,0,0.1);
- font-family: Arial, Helvetica, sans-serif;
- flex-direction: column;
- 
-}
-.ldc ul li.verde a:hover {
-    background-color: rgba(0, 128, 0, 0.945); /* Fundo verde ao passar o mouse */
-    color: white; /* Cor do texto ao passar o mouse para melhor contraste */
+    margin-top: 30px;
+    padding: 20px;
+    background-image:linear-gradient(to bottom,#19b0df,#356C7C,transparent);
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    font-family: Arial, Helvetica, sans-serif;
+    flex-direction: column;
+    
 }
 .ldc h2 {
- margin-bottom: 20px;
- font-size: 1.4em;
- color: #ffffff;
- text-align: center;
- text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+    margin-bottom: 20px;
+    font-size: 1.4em;
+    color: #ffffff;
+    text-align: center;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
 }
 
 
 .ldc ul{
- display: flex;
- flex-wrap: wrap;
- gap: 30px;
- list-style: none;
- padding-left:0;
- 
+    display: flex;
+    flex-wrap: wrap;
+    gap: 30px;
+    list-style: none;
+    padding-left:0;
+    
 }
 
 
 .ldc > ul > li {
- width: 100%;
- margin-bottom: 15px;
+    width: 100%;
+    margin-bottom: 15px;
 }
 
 
 
 .ldc a {
- text-decoration: none;
- font-weight: bold;
- color: #0072FF;
- background-color: #d0edff ;
- padding: 10px 15px;
- display: inline-block;
- border-radius:8px;
- transition:background-color 0.3s;
+    text-decoration: none;
+    font-weight: bold;
+    color: #0072FF;
+    background-color: #d0edff ;
+    padding: 10px 15px;
+    display: inline-block;
+    border-radius:8px;
+    transition:background-color 0.3s;
 }
 .ldc a:hover{
- background-color:#0096c1;
- color:white;
+    color:white;
 }
 .ldc ul ul {
- margin-top: 10px;
- padding-left: 0;
- display: flex;
- flex-wrap: wrap;
- gap: 10px;
- justify-content: flex-start;
- list-style: none;
+    margin-top: 10px;
+    padding-left: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: flex-start;
+    list-style: none;
 }
 .ldc ul ul li {
- margin: 0;
- padding: 0;
+    margin: 0;
+    padding: 0;
 }
 
 
 .ldc ul ul li a{
- background-color: #ffffff;
- color: #333;
- font-weight: normal;
- font-size: 0.95em;
- padding: 8px 12px;
- margin: 4px 0;
- display: inline-block;
+    background-color: #ffffff;
+    color: #333;
+    font-weight: normal;
+    font-size: 0.95em;
+    padding: 8px 12px;
+    margin: 4px 0;
+    display: inline-block;
 } 
 .ldc ul ul li a:hover {
- background-color:#0096c1;
- color:white;
+    background-color:#0096c1;
+    color:white;
 }
 
 
@@ -396,11 +362,8 @@ div.video > video {
         min-height: auto;
         padding: 15px 5px;
         font-size: 0.9em;
-        border-radius: 0px 0px 10px 10px;
+        border-radius: 9px;
         margin-bottom: 2px;
-    }
-    nav{
-        background-color: transparent;
     }
 
     header p {
@@ -434,7 +397,6 @@ div.video > video {
         flex-direction: column;
         gap: 0.2em;
         width: 100%;
-        background-color: transparent;
     }
 
     .menu ul li a {
@@ -459,24 +421,510 @@ div.video > video {
     }
 }
 
-/* RODAPÉ */
-/* RODAPÉ PROFISSIONAL (ADAPTADO AO SEU ESTILO) */
-footer {
-    background-image: linear-gradient(to top, #0072FF, #00C6FF);
-    text-align: center;
-    padding: 0.1em 0;
+/* ========================================
+   SISTEMA DE BOTÕES PADRONIZADOS
+======================================== */
+
+/* Botão Primário */
+.btn, .btn-primary {
+    display: inline-block;
+    background: linear-gradient(135deg, #0072FF, #00C6FF);
     color: white;
-    font-family: Arial, sans-serif;
-    
+    text-decoration: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 1em;
+    font-weight: 600;
+    text-align: center;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 114, 255, 0.3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.btn:hover, .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 114, 255, 0.4);
+    background: linear-gradient(135deg, #005ed9, #0096c1);
+}
+
+/* Botão Secundário */
+.btn-secondary {
+    background: linear-gradient(135deg, #6c757d, #495057);
+    color: white;
+    display: inline-block;
+    text-decoration: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 1em;
+    font-weight: 600;
+    text-align: center;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.btn-secondary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(108, 117, 125, 0.4);
+    background: linear-gradient(135deg, #495057, #343a40);
+}
+
+/* Botão Sucesso */
+.btn-success {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+    display: inline-block;
+    text-decoration: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 1em;
+    font-weight: 600;
+    text-align: center;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.btn-success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4);
+    background: linear-gradient(135deg, #218838, #1e7e34);
+}
+
+/* Botão Perigo */
+.btn-danger {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    color: white;
+    display: inline-block;
+    text-decoration: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 1em;
+    font-weight: 600;
+    text-align: center;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.btn-danger:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(220, 53, 69, 0.4);
+    background: linear-gradient(135deg, #c82333, #bd2130);
+}
+
+/* Botão Outline */
+.btn-outline {
+    background: transparent;
+    color: #0072FF;
+    border: 2px solid #0072FF;
+    display: inline-block;
+    text-decoration: none;
+    padding: 10px 22px;
+    border-radius: 8px;
+    font-size: 1em;
+    font-weight: 600;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.btn-outline:hover {
+    background: #0072FF;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 114, 255, 0.3);
+}
+
+/* Botão Grande */
+.btn-large {
+    padding: 18px 36px;
+    font-size: 1.2em;
+    border-radius: 12px;
+}
+
+/* Botão Pequeno */
+.btn-small, .btn-sm {
+    padding: 8px 16px;
+    font-size: 0.9em;
+    border-radius: 6px;
+}
+
+/* ========================================
+   SISTEMA DE NAVEGAÇÃO PADRONIZADO
+======================================== */
+
+/* Header Padrão */
+.header-padrao {
+    min-height: 150px;
+    background: linear-gradient(135deg, #00C6FF, #0072FF);
+    text-align: center;
+    font-size: 1.2em;
+    padding-top: 13px;
+    color: white;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    position: fixed;
+    width: 100%;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.header-padrao h1 {
+    margin: 0;
+    font-size: 2em;
+    font-weight: bold;
+}
+
+.header-padrao p {
+    padding: 1.2em;
+    font-size: 1.1em;
+    font-weight: 300;
+    margin: 0;
+}
+
+/* Menu de Navegação Padrão */
+.menu-padrao {
+    background-color: rgba(0, 150, 193, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 10px;
+    margin: 10px 20px 0 20px;
+}
+
+.menu-padrao ul {
+    list-style: none;
+    display: flex;
+    justify-content: center;
+    gap: 35px;
+    padding: 15px;
+    margin: 0;
+    font-size: 0.9em;
+    position: relative;
+}
+
+.menu-padrao ul li {
+    position: relative;
+}
+
+.menu-padrao ul li a {
+    text-decoration: none;
+    color: white;
+    font-weight: bold;
+    padding: 10px 15px;
+    display: block;
+    transition: all 0.3s ease;
+    border-radius: 6px;
+}
+
+.menu-padrao ul li a:hover {
+    background-color: #3478F6;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(52, 120, 246, 0.4);
+}
+
+/* Submenu Padrão */
+.menu-padrao ul li ul.submenu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: linear-gradient(135deg, #50E3C2, #4ecdc4);
+    padding: 10px 0;
+    min-width: 200px;
+    z-index: 1000;
+    border-radius: 10px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    margin-top: 5px;
+}
+
+.menu-padrao ul li ul.submenu li a {
+    padding: 12px 20px;
+    color: white;
+    font-weight: 500;
+    border-radius: 0;
+}
+
+.menu-padrao ul li ul.submenu li a:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    transform: translateX(5px);
+}
+
+.menu-padrao ul li:hover > ul.submenu {
+    display: block;
+    animation: fadeInDown 0.3s ease;
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Main Content Padrão */
+.main-padrao {
+    background-color: #FFFFFF;
+    max-width: 900px;
+    padding: 30px;
+    margin: 180px auto 40px auto;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    border-radius: 15px;
+    min-height: calc(100vh - 300px);
+}
+
+/* Footer Padrão */
+.footer-padrao {
+    background: linear-gradient(135deg, #0096c1, #0072FF);
+    text-align: center;
+    padding: 30px 20px;
+    color: white;
+    margin-top: 40px;
 }
 
 .footer-creditos {
-    line-height: 1.4;
-    text-shadow: 2px 2px 3px rgba(0, 0, 0, 0.3);
+    max-width: 900px;
+    margin: 0 auto;
 }
 
 .footer-creditos p {
-    margin: 3px 0;
-    font-size: 0.7em;
+    margin: 5px 0;
+    font-size: 0.9em;
+}
+
+/* ========================================
+   RESPONSIVIDADE PARA NAVEGAÇÃO
+======================================== */
+
+@media (max-width: 768px) {
+    .header-padrao {
+        font-size: 1em;
+        padding: 10px;
+        min-height: 120px;
+    }
+
+    .header-padrao h1 {
+        font-size: 1.5em;
+    }
+
+    .header-padrao p {
+        padding: 0.5em;
+        font-size: 0.9em;
+    }
+
+    .menu-padrao {
+        margin: 10px;
+        background-color: transparent;
+    }
+
+    .menu-padrao ul {
+        flex-direction: column;
+        gap: 10px;
+        padding: 10px;
+    }
+
+    .menu-padrao ul li a {
+        display: block;
+        width: 100%;
+        padding: 15px;
+        background: linear-gradient(135deg, #0072FF, #00C6FF);
+        border-radius: 10px;
+        text-align: center;
+    }
+
+    .menu-padrao ul li a:hover {
+        background: linear-gradient(135deg, #005ed9, #0096c1);
+        transform: translateY(-1px);
+    }
+
+    .menu-padrao ul li ul.submenu {
+        position: static;
+        background: linear-gradient(135deg, #0096c1, #50E3C2);
+        margin-top: 10px;
+        border-radius: 8px;
+    }
+
+    .menu-padrao ul li:hover > ul.submenu {
+        display: block;
+    }
+
+    .main-padrao {
+        margin: 200px 10px 20px 10px;
+        padding: 20px;
+        font-size: 1em;
+    }
+
+    /* Botões responsivos */
+    .btn, .btn-primary, .btn-secondary, .btn-success, .btn-danger, .btn-outline {
+        width: 100%;
+        margin: 5px 0;
+        padding: 15px 20px;
+    }
+}
+
+/* ===== SEÇÃO DE QUIZ ===== */
+.secao-quiz {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 3rem 2rem;
+    margin: 3rem 0;
+    border-radius: 20px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+.secao-quiz::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    animation: rotate 20s linear infinite;
+    pointer-events: none;
+}
+
+@keyframes rotate {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.secao-quiz h2 {
+    color: white;
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    position: relative;
+    z-index: 2;
+}
+
+.secao-quiz p {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 1.6;
+    position: relative;
+    z-index: 2;
+}
+
+.botao-quiz {
+    display: inline-block;
+    background: linear-gradient(45deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3);
+    background-size: 300% 300%;
+    color: white;
+    text-decoration: none;
+    padding: 1.2rem 3rem;
+    border-radius: 50px;
+    font-size: 1.3rem;
     font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    transition: all 0.4s ease;
+    position: relative;
+    z-index: 2;
+    animation: gradientShift 3s ease infinite;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+}
+
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+.botao-quiz:hover {
+    transform: translateY(-5px) scale(1.05);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+    animation-duration: 1s;
+}
+
+.botao-quiz:active {
+    transform: translateY(-2px) scale(1.02);
+}
+
+/* Efeito de partículas decorativas */
+.secao-quiz::after {
+    content: '🧠 📚 ✨ 🎯 💡 🏆';
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-size: 1.5rem;
+    opacity: 0.3;
+    animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-20px); }
+}
+
+/* Responsividade para a seção de quiz */
+@media (max-width: 768px) {
+    .secao-quiz {
+        padding: 2rem 1rem;
+        margin: 2rem 0;
+    }
+    
+    .secao-quiz h2 {
+        font-size: 2rem;
+    }
+    
+    .secao-quiz p {
+        font-size: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .botao-quiz {
+        padding: 1rem 2rem;
+        font-size: 1.1rem;
+    }
+    
+    .secao-quiz::after {
+        font-size: 1.2rem;
+        top: 10px;
+        right: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .secao-quiz h2 {
+        font-size: 1.8rem;
+    }
+    
+    .botao-quiz {
+        padding: 0.8rem 1.5rem;
+        font-size: 1rem;
+    }
+}
+
+/* RODAPÉ */
+footer {
+    background-color: #0096c1;
+    text-align: center;
+    padding: 0.5em;
+    color: white;
 }
