@@ -467,24 +467,8 @@ try {
             });
         });
         
-        // Verificar se há um filtro na URL ou no localStorage
-        document.addEventListener('DOMContentLoaded', function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const filtroUrl = urlParams.get('filtro');
-            const filtroSalvo = localStorage.getItem('filtro_ativo');
-            const filtroParaAplicar = filtroUrl || filtroSalvo || 'todas';
-            
-            // Aplicar o filtro
-            const btnFiltro = document.querySelector(`[data-filtro="${filtroParaAplicar}"]`);
-            if (btnFiltro) {
-                document.querySelectorAll('.btn-filtro').forEach(b => b.classList.remove('active'));
-                btnFiltro.classList.add('active');
-                filtrarQuestoes(filtroParaAplicar);
-                localStorage.setItem('filtro_ativo', filtroParaAplicar);
-            }
-            
-            // Função simplificada para abrir questão
-            function abrirQuestao(idQuestao) {
+        // Função simplificada para abrir questão (GLOBAL)
+        function abrirQuestao(idQuestao) {
                 try {
                     console.log('=== INICIANDO ABERTURA DE QUESTÃO ===');
                     console.log('ID da questão recebido:', idQuestao);
@@ -527,16 +511,32 @@ try {
                     console.error('Stack trace:', error.stack);
                     alert('Erro ao abrir questão: ' + error.message);
                 }
-            }
+        }
+        
+        // Verificar se há um filtro na URL ou no localStorage
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const filtroUrl = urlParams.get('filtro');
+            const filtroSalvo = localStorage.getItem('filtro_ativo');
+            const filtroParaAplicar = filtroUrl || filtroSalvo || 'todas';
             
-            // Função para redirecionar questão baseada no filtro ativo (mantida para compatibilidade)
-            function redirecionarQuestao(idQuestao, statusQuestao) {
-                abrirQuestao(idQuestao);
+            // Aplicar o filtro
+            const btnFiltro = document.querySelector(`[data-filtro="${filtroParaAplicar}"]`);
+            if (btnFiltro) {
+                document.querySelectorAll('.btn-filtro').forEach(b => b.classList.remove('active'));
+                btnFiltro.classList.add('active');
+                filtrarQuestoes(filtroParaAplicar);
+                localStorage.setItem('filtro_ativo', filtroParaAplicar);
             }
             
             // Calcular estatísticas
             calcularEstatisticas();
         });
+        
+        // Função para redirecionar questão baseada no filtro ativo (mantida para compatibilidade)
+        function redirecionarQuestao(idQuestao, statusQuestao) {
+            abrirQuestao(idQuestao);
+        }
     </script>
 </body>
 </html>
