@@ -490,11 +490,11 @@ try {
                     
                     // Se há filtro ativo e não é "todas", vai para quiz sequencial
                     if (filtroAtivo && filtroAtivo !== 'todas') {
-                        url = `/questoes/quiz_sequencial.php?id=${idAssunto}&filtro=${filtroAtivo}&questao=${idQuestao}`;
+                        url = `http://localhost:8000/questoes/quiz_sequencial.php?id=${idAssunto}&filtro=${filtroAtivo}&questao=${idQuestao}`;
                         console.log('REDIRECIONANDO PARA QUIZ SEQUENCIAL:', url);
                     } else {
                         // Comportamento normal - vai para quiz individual
-                        url = `/questoes/quiz.php?id=${idQuestao}`;
+                        url = `http://localhost:8000/questoes/quiz.php?id=${idQuestao}`;
                         console.log('REDIRECIONANDO PARA QUIZ INDIVIDUAL:', url);
                     }
                     
