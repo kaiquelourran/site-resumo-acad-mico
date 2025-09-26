@@ -486,32 +486,45 @@ try {
             // Função simplificada para abrir questão
             function abrirQuestao(idQuestao) {
                 try {
-                    console.log('Abrindo questão:', idQuestao);
+                    console.log('=== INICIANDO ABERTURA DE QUESTÃO ===');
+                    console.log('ID da questão recebido:', idQuestao);
+                    console.log('Tipo do ID:', typeof idQuestao);
+                    
+                    if (!idQuestao) {
+                        throw new Error('ID da questão não fornecido');
+                    }
                     
                     const filtroAtivo = localStorage.getItem('filtro_ativo') || 'todas';
                     const urlParams = new URLSearchParams(window.location.search);
                     const idAssunto = urlParams.get('id');
                     
                     console.log('Filtro ativo:', filtroAtivo);
-                    console.log('ID Assunto:', idAssunto);
+                    console.log('ID Assunto da URL:', idAssunto);
+                    console.log('URL atual:', window.location.href);
                     
                     let url;
                     
                     // Se há filtro ativo e não é "todas", vai para quiz sequencial
                     if (filtroAtivo && filtroAtivo !== 'todas') {
                         url = `quiz_sequencial.php?id=${idAssunto}&filtro=${filtroAtivo}&questao=${idQuestao}`;
-                        console.log('Redirecionando para quiz sequencial:', url);
+                        console.log('REDIRECIONANDO PARA QUIZ SEQUENCIAL:', url);
                     } else {
                         // Comportamento normal - vai para quiz individual
                         url = `quiz.php?id=${idQuestao}`;
-                        console.log('Redirecionando para quiz individual:', url);
+                        console.log('REDIRECIONANDO PARA QUIZ INDIVIDUAL:', url);
                     }
+                    
+                    console.log('URL final construída:', url);
+                    console.log('Executando redirecionamento...');
                     
                     // Redirecionar
                     window.location.href = url;
                     
+                    console.log('Redirecionamento executado');
+                    
                 } catch (error) {
-                    console.error('Erro ao abrir questão:', error);
+                    console.error('ERRO AO ABRIR QUESTÃO:', error);
+                    console.error('Stack trace:', error.stack);
                     alert('Erro ao abrir questão: ' + error.message);
                 }
             }
