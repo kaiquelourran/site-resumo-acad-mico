@@ -445,7 +445,7 @@ foreach ($questoes_filtradas as $questao) {
 
         <?php foreach ($questoes_com_alternativas as $index => $item): ?>
             <div class="questao-container" data-questao-id="<?= $item['questao']['id_questao'] ?>">
-                <div class="questao-numero"><?= $index + 1 ?></div>
+                <div class="questao-numero">Questão <?= $item['questao']['id_questao'] ?></div>
                 <div class="questao-enunciado"><?= htmlspecialchars($item['questao']['enunciado']) ?></div>
                 
                 <div class="alternativas">

@@ -386,7 +386,7 @@ try {
                 ?>
                 
                 <div class="questao-card <?= $status ?>" data-status="<?= $status ?>">
-                    <div class="questao-numero">Questão <?= $index + 1 ?></div>
+                    <div class="questao-numero">Questão <?= $questao['id_questao'] ?></div>
                     <div class="questao-texto"><?= htmlspecialchars($questao['enunciado']) ?></div>
                     <div class="questao-status">
                         <span class="status-badge <?= $status_classe ?>"><?= $status_texto ?></span>
