@@ -52,7 +52,7 @@ switch ($filtro) {
         $sql = "SELECT q.id_questao, q.enunciado 
                 FROM questoes q 
                 INNER JOIN respostas_usuarios r ON q.id_questao = r.id_questao AND r.id_usuario = ?
-                WHERE q.id_assunto = ? AND r.correta = 1
+                WHERE q.id_assunto = ? AND r.acertou = 1
                 ORDER BY q.id_questao";
         break;
         
@@ -60,7 +60,7 @@ switch ($filtro) {
         $sql = "SELECT q.id_questao, q.enunciado 
                 FROM questoes q 
                 INNER JOIN respostas_usuarios r ON q.id_questao = r.id_questao AND r.id_usuario = ?
-                WHERE q.id_assunto = ? AND r.correta = 0
+                WHERE q.id_assunto = ? AND r.acertou = 0
                 ORDER BY q.id_questao";
         break;
         
