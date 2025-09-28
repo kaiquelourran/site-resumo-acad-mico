@@ -35,8 +35,13 @@ $sql_create_table = "CREATE TABLE IF NOT EXISTS respostas_usuario (
 $pdo->query($sql_create_table);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $id_questao = isset($_POST['id_questao']) ? (int)$_POST['id_questao'] : 0;
-    $id_alternativa_selecionada = isset($_POST['id_alternativa']) ? (int)$_POST['id_alternativa'] : 0;
+    // 1. LER O CORPO BRUTO DA REQUISIÇÃO (JSON)
+    $json_data = file_get_contents('php://input');
+    $data = json_decode($json_data, true);
+
+    // 2. EXTRAIR OS DADOS DO JSON LIDO
+    $id_questao = isset($data['id_questao']) ? (int)$data['id_questao'] : 0;
+    $id_alternativa_selecionada = isset($data['id_alternativa']) ? (int)$data['id_alternativa'] : 0;
 
     // Debug: log dos dados recebidos
     error_log("DEBUG processar_resposta: id_questao=$id_questao, id_alternativa=$id_alternativa_selecionada");

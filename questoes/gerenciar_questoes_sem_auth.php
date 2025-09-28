@@ -62,7 +62,6 @@ try {
         </div>
         
         <div class="user-info">
-            <a href="inserir_questoes_manual.php" class="user-link">➕ Adicionar Questões</a>
             <a href="quiz_sem_login.php" class="user-link">🎮 Testar Questões</a>
             <a href="index.php" class="user-link">🏠 Menu Principal</a>
         </div>
@@ -77,7 +76,6 @@ try {
                 <div class="card-description">
                     <p>Possíveis soluções:</p>
                     <div style="margin: 20px 0;">
-                        <a href="inserir_questoes_manual.php" class="btn" style="margin: 10px;">➕ Inserir Questões</a>
                         <a href="quiz_sem_login.php" class="btn btn-secondary" style="margin: 10px;">🎮 Testar Questões</a>
                     </div>
                 </div>
@@ -139,7 +137,6 @@ try {
         <?php endif; ?>
         
         <div style="text-align: center; margin: 40px 0;">
-            <a href="inserir_questoes_manual.php" class="btn" style="margin: 10px;">➕ Adicionar Questões</a>
             <a href="quiz_sem_login.php" class="btn" style="margin: 10px;">🎮 Testar Questões</a>
             <a href="index.php" class="btn btn-secondary" style="margin: 10px;">🏠 Menu Principal</a>
         </div>

@@ -92,5 +92,4 @@ try {
 ?>
 
 <br><br>
-<a href="gerenciar_questoes_sem_auth.php">📋 Gerenciar Questões</a> | 
-<a href="inserir_questoes_manual.php">➕ Inserir Questões</a>
+<a href="gerenciar_questoes_sem_auth.php">📋 Gerenciar Questões</a>

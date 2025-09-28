@@ -1,368 +1,574 @@
 <?php
-session_start();
-require_once 'conexao.php';
+require_once __DIR__ . '/conexao.php';
 
-// Verificar se foi passado o ID do assunto
-if (!isset($_GET['id']) || empty($_GET['id'])) {
-    header('Location: escolher_assunto.php');
-    exit;
+// Captura parâmetros
+$id_assunto = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+$filtro_ativo = isset($_GET['filtro']) ? $_GET['filtro'] : 'todas';
+
+// Busca informações do assunto
+$assunto_nome = 'Todas as Questões';
+if ($id_assunto > 0) {
+    $stmt_assunto = $pdo->prepare("SELECT nome FROM assuntos WHERE id_assunto = ?");
+    $stmt_assunto->execute([$id_assunto]);
+    $assunto_nome = $stmt_assunto->fetchColumn() ?: 'Assunto não encontrado';
 }
 
-$id_assunto = (int)$_GET['id'];
-$filtro = isset($_GET['filtro']) ? $_GET['filtro'] : 'todas';
+// Query base com LEFT JOIN para respostas
+$sql = "SELECT q.*, a.nome as assunto_nome, 
+               CASE 
+                   WHEN r.id_questao IS NOT NULL AND r.acertou = 1 THEN 'acertada'
+                   WHEN r.id_questao IS NOT NULL AND r.acertou = 0 THEN 'errada'
+                   WHEN r.id_questao IS NOT NULL THEN 'respondida'
+                   ELSE 'nao-respondida'
+               END as status_resposta
+        FROM questoes q 
+        LEFT JOIN assuntos a ON q.id_assunto = a.id_assunto
+        LEFT JOIN respostas_usuario r ON q.id_questao = r.id_questao
+        WHERE 1=1";
+$params = [];
 
-// Buscar informações do assunto
-$sql_assunto = "SELECT nome FROM assuntos WHERE id_assunto = ?";
-$stmt_assunto = $pdo->prepare($sql_assunto);
-$stmt_assunto->execute([$id_assunto]);
-$result_assunto = $stmt_assunto->fetch();
-
-if (!$result_assunto) {
-    header('Location: escolher_assunto.php');
-    exit;
+if ($id_assunto > 0) {
+    $sql .= " AND q.id_assunto = ?";
+    $params[] = $id_assunto;
 }
 
-$assunto = $result_assunto;
-
-// Criar tabela de respostas se não existir
-$sql_create_table = "CREATE TABLE IF NOT EXISTS respostas_usuario (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    id_questao INT NOT NULL,
-    id_alternativa INT NOT NULL,
-    acertou TINYINT(1) NOT NULL DEFAULT 0,
-    data_resposta TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (id_questao) REFERENCES questoes(id_questao),
-    FOREIGN KEY (id_alternativa) REFERENCES alternativas(id_alternativa),
-    UNIQUE KEY unique_questao (id_questao)
-)";
-$pdo->query($sql_create_table);
-
-// Construir query baseada no filtro
-$sql_base = "SELECT q.id_questao, q.enunciado, 
-             CASE WHEN r.id_questao IS NOT NULL THEN 1 ELSE 0 END as respondida,
-             CASE WHEN r.acertou = 1 THEN 1 ELSE 0 END as acertou
-             FROM questoes q 
-             LEFT JOIN respostas_usuario r ON q.id_questao = r.id_questao
-             WHERE q.id_assunto = ?";
-
-switch($filtro) {
+// Aplicar filtro específico
+switch($filtro_ativo) {
     case 'respondidas':
-        $sql_questoes = $sql_base . " AND r.id_questao IS NOT NULL";
+        $sql .= " AND r.id_questao IS NOT NULL";
         break;
     case 'nao-respondidas':
-        $sql_questoes = $sql_base . " AND r.id_questao IS NULL";
+        $sql .= " AND r.id_questao IS NULL";
         break;
     case 'acertadas':
-        $sql_questoes = $sql_base . " AND r.acertou = 1";
+        $sql .= " AND r.acertou = 1";
         break;
     case 'erradas':
-        $sql_questoes = $sql_base . " AND r.id_questao IS NOT NULL AND r.acertou = 0";
+        $sql .= " AND r.id_questao IS NOT NULL AND r.acertou = 0";
         break;
-    default:
-        $sql_questoes = $sql_base;
+    // 'todas' não precisa de filtro adicional
 }
 
-$sql_questoes .= " ORDER BY q.id_questao";
+$sql .= " ORDER BY q.id_questao";
 
-$stmt_questoes = $pdo->prepare($sql_questoes);
-$stmt_questoes->execute([$id_assunto]);
-$result_questoes = $stmt_questoes->fetchAll();
+$stmt = $pdo->prepare($sql);
+$stmt->execute($params);
+$questoes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Contar questões por categoria
-$sql_counts = "SELECT 
-               COUNT(*) as total,
-               SUM(CASE WHEN r.id_questao IS NOT NULL THEN 1 ELSE 0 END) as respondidas,
-               SUM(CASE WHEN r.id_questao IS NULL THEN 1 ELSE 0 END) as nao_respondidas,
-               SUM(CASE WHEN r.acertou = 1 THEN 1 ELSE 0 END) as acertadas,
-               SUM(CASE WHEN r.id_questao IS NOT NULL AND r.acertou = 0 THEN 1 ELSE 0 END) as erradas
-               FROM questoes q 
-               LEFT JOIN respostas_usuario r ON q.id_questao = r.id_questao
-               WHERE q.id_assunto = ?";
+// Contar questões por status usando queries separadas para precisão
+$contadores = [
+    'todas' => 0,
+    'respondidas' => 0,
+    'nao-respondidas' => 0,
+    'acertadas' => 0,
+    'erradas' => 0
+];
 
-$stmt_counts = $pdo->prepare($sql_counts);
-$stmt_counts->execute([$id_assunto]);
-$counts = $stmt_counts->fetch();
+// Contar todas as questões do assunto
+$sql_count_all = "SELECT COUNT(*) FROM questoes WHERE id_assunto = ?";
+$stmt_count_all = $pdo->prepare($sql_count_all);
+$stmt_count_all->execute([$id_assunto]);
+$contadores['todas'] = $stmt_count_all->fetchColumn();
+
+// Contar questões respondidas
+$sql_count_respondidas = "SELECT COUNT(DISTINCT q.id_questao) FROM questoes q 
+                          INNER JOIN respostas_usuario r ON q.id_questao = r.id_questao 
+                          WHERE q.id_assunto = ?";
+$stmt_count_respondidas = $pdo->prepare($sql_count_respondidas);
+$stmt_count_respondidas->execute([$id_assunto]);
+$contadores['respondidas'] = $stmt_count_respondidas->fetchColumn();
+
+// Contar questões não respondidas
+$contadores['nao-respondidas'] = $contadores['todas'] - $contadores['respondidas'];
+
+// Contar questões acertadas
+$sql_count_acertadas = "SELECT COUNT(DISTINCT q.id_questao) FROM questoes q 
+                        INNER JOIN respostas_usuario r ON q.id_questao = r.id_questao 
+                        WHERE q.id_assunto = ? AND r.acertou = 1";
+$stmt_count_acertadas = $pdo->prepare($sql_count_acertadas);
+$stmt_count_acertadas->execute([$id_assunto]);
+$contadores['acertadas'] = $stmt_count_acertadas->fetchColumn();
+
+// Contar questões erradas
+$sql_count_erradas = "SELECT COUNT(DISTINCT q.id_questao) FROM questoes q 
+                      INNER JOIN respostas_usuario r ON q.id_questao = r.id_questao 
+                      WHERE q.id_assunto = ? AND r.acertou = 0";
+$stmt_count_erradas = $pdo->prepare($sql_count_erradas);
+$stmt_count_erradas->execute([$id_assunto]);
+$contadores['erradas'] = $stmt_count_erradas->fetchColumn();
 ?>
 
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Questões - <?php echo htmlspecialchars($assunto['nome']); ?></title>
-    <link rel="stylesheet" href="modern-style.css">
+    <title>Lista de Questões - <?php echo htmlspecialchars($assunto_nome); ?></title>
+    <link rel="stylesheet" href="../style.css">
     <style>
-        .questoes-container {
-            max-width: 1000px;
+        /* Estilos específicos para a página de questões baseados no index.html */
+        .main-container {
+            max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
         }
-        
-        .filtros-container {
-            background: white;
-            border-radius: 16px;
-            padding: 25px;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+
+        .content-wrapper {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
         }
-        
-        .filtros-grid {
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 30px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .page-title {
+            font-size: 2.5em;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .page-subtitle {
+            color: #666;
+            font-size: 1.2em;
+            font-weight: 300;
+        }
+
+        .filters-section {
+            margin-bottom: 40px;
+        }
+
+        .filters-title {
+            font-size: 1.5em;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .filters-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 15px;
-            margin-top: 20px;
+            margin-bottom: 30px;
         }
-        
-        .filtro-btn {
-            padding: 15px 20px;
-            border: 2px solid #e0e0e0;
-            border-radius: 12px;
-            background: white;
-            color: #333;
-            text-decoration: none;
-            text-align: center;
-            transition: all 0.3s ease;
-            font-weight: 500;
-        }
-        
-        .filtro-btn:hover {
-            border-color: #667eea;
-            background: #f8f9ff;
-            color: #333;
-            text-decoration: none;
-        }
-        
-        .filtro-btn.ativo {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-color: #667eea;
-            color: white;
-        }
-        
-        .filtro-count {
-            display: block;
-            font-size: 1.5em;
-            font-weight: 600;
-            margin-bottom: 5px;
-        }
-        
-        .filtro-label {
-            font-size: 0.9em;
-            opacity: 0.8;
-        }
-        
-        .questao-item {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
-            cursor: pointer;
-            border-left: 4px solid #e0e0e0;
-        }
-        
-        .questao-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-        }
-        
-        .questao-item.respondida {
-            border-left-color: #28a745;
-        }
-        
-        .questao-item.acertada {
-            border-left-color: #28a745;
-            background: #f8fff9;
-        }
-        
-        .questao-item.errada {
-            border-left-color: #dc3545;
-            background: #fff8f8;
-        }
-        
-        .questao-texto {
-            font-size: 1.1em;
-            color: #333;
-            margin-bottom: 10px;
-            line-height: 1.5;
-        }
-        
-        .questao-status {
+
+        .filter-btn {
             display: flex;
             align-items: center;
-            gap: 10px;
-            font-size: 0.9em;
+            justify-content: space-between;
+            padding: 15px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 15px;
+            background: white;
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
         }
-        
-        .status-badge {
+
+        .filter-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            border-color: #667eea;
+        }
+
+        .filter-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .filter-label {
+            font-size: 1em;
+            font-weight: 600;
+        }
+
+        .filter-count {
+            background: rgba(255, 255, 255, 0.2);
+            color: inherit;
             padding: 4px 12px;
             border-radius: 20px;
-            font-size: 0.8em;
-            font-weight: 500;
+            font-size: 0.9em;
+            font-weight: 600;
         }
-        
+
+        .filter-btn.active .filter-count {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .questions-section {
+            margin-bottom: 40px;
+        }
+
+        .questions-grid {
+            display: grid;
+            gap: 20px;
+        }
+
+        .question-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            border: 2px solid #f0f0f0;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .question-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            border-color: #667eea;
+        }
+
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .question-number {
+            font-weight: 600;
+            color: #667eea;
+            font-size: 1.1em;
+        }
+
+        .question-status {
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
         .status-nao-respondida {
             background: #f8f9fa;
             color: #6c757d;
+            border: 1px solid #dee2e6;
         }
-        
+
         .status-acertada {
             background: #d4edda;
             color: #155724;
+            border: 1px solid #c3e6cb;
         }
-        
+
         .status-errada {
             background: #f8d7da;
             color: #721c24;
+            border: 1px solid #f5c6cb;
         }
-        
-        .voltar-btn {
-            background: #6c757d;
-            color: white;
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
+
+        .question-text {
+            color: #333;
+            line-height: 1.6;
+            font-size: 1.05em;
+            margin-bottom: 20px;
+        }
+
+        .question-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .btn-action {
+            padding: 10px 20px;
+            border-radius: 25px;
             text-decoration: none;
-            display: inline-block;
-            margin-bottom: 30px;
-            transition: background 0.3s ease;
+            font-weight: 600;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
-        
-        .voltar-btn:hover {
-            background: #5a6268;
-            color: white;
-            text-decoration: none;
-        }
-        
-        .page-header {
-            text-align: center;
-            margin-bottom: 30px;
-            padding: 30px 20px;
+
+        .btn-primary {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            border-radius: 16px;
+            border: none;
         }
-        
-        .page-header h1 {
-            margin: 0;
-            font-size: 2em;
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-secondary:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .navigation-section {
+            text-align: center;
+            padding: 30px;
+            background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
+            border-radius: 20px;
+            border: 2px solid #f0f0f0;
+        }
+
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            padding: 15px 30px;
+            border-radius: 25px;
+            text-decoration: none;
             font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            border: 2px solid;
         }
-        
-        .page-header p {
-            margin: 10px 0 0 0;
-            opacity: 0.9;
+
+        .nav-btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: transparent;
         }
-        
+
+        .nav-btn-outline {
+            background: white;
+            color: #667eea;
+            border-color: #667eea;
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
         .empty-state {
             text-align: center;
             padding: 60px 20px;
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-        }
-        
-        .empty-state h3 {
             color: #666;
-            margin-bottom: 15px;
         }
-        
-        .empty-state p {
-            color: #999;
-            margin-bottom: 25px;
+
+        .empty-state-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+
+        .empty-state-title {
+            font-size: 1.5em;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .empty-state-text {
+            font-size: 1.1em;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 768px) {
+            .content-wrapper {
+                padding: 20px;
+            }
+            
+            .page-title {
+                font-size: 2em;
+            }
+            
+            .filters-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .nav-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .nav-btn {
+                width: 100%;
+                max-width: 300px;
+                justify-content: center;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="questoes-container">
-            <a href="escolher_assunto.php" class="voltar-btn">← Voltar aos Assuntos</a>
-            
+    <div class="main-container">
+        <div class="content-wrapper">
+            <!-- Header -->
             <div class="page-header">
-                <h1>📚 <?php echo htmlspecialchars($assunto['nome']); ?></h1>
-                <p>Selecione uma questão para responder</p>
+                <h1 class="page-title">📚 Lista de Questões</h1>
+                <p class="page-subtitle"><?php echo htmlspecialchars($assunto_nome); ?></p>
             </div>
-            
-            <div class="filtros-container">
-                <h3 style="margin: 0 0 15px 0; color: #333;">Filtrar Questões</h3>
-                
-                <div class="filtros-grid">
+
+            <!-- Filtros -->
+            <div class="filters-section">
+                <h2 class="filters-title">🔍 Filtrar Questões</h2>
+                <div class="filters-grid">
                     <a href="?id=<?php echo $id_assunto; ?>&filtro=todas" 
-                       class="filtro-btn <?php echo $filtro == 'todas' ? 'ativo' : ''; ?>">
-                        <span class="filtro-count"><?php echo $counts['total']; ?></span>
-                        <span class="filtro-label">Todas</span>
+                       class="filter-btn <?php echo $filtro_ativo === 'todas' ? 'active' : ''; ?>">
+                        <span class="filter-label">📋 Todas</span>
+                        <span class="filter-count"><?php echo $contadores['todas']; ?></span>
                     </a>
                     
                     <a href="?id=<?php echo $id_assunto; ?>&filtro=nao-respondidas" 
-                       class="filtro-btn <?php echo $filtro == 'nao-respondidas' ? 'ativo' : ''; ?>">
-                        <span class="filtro-count"><?php echo $counts['nao_respondidas']; ?></span>
-                        <span class="filtro-label">Não Respondidas</span>
+                       class="filter-btn <?php echo $filtro_ativo === 'nao-respondidas' ? 'active' : ''; ?>">
+                        <span class="filter-label">❓ Não Respondidas</span>
+                        <span class="filter-count"><?php echo $contadores['nao-respondidas']; ?></span>
                     </a>
                     
                     <a href="?id=<?php echo $id_assunto; ?>&filtro=respondidas" 
-                       class="filtro-btn <?php echo $filtro == 'respondidas' ? 'ativo' : ''; ?>">
-                        <span class="filtro-count"><?php echo $counts['respondidas']; ?></span>
-                        <span class="filtro-label">Respondidas</span>
+                       class="filter-btn <?php echo $filtro_ativo === 'respondidas' ? 'active' : ''; ?>">
+                        <span class="filter-label">✅ Respondidas</span>
+                        <span class="filter-count"><?php echo $contadores['respondidas']; ?></span>
                     </a>
                     
                     <a href="?id=<?php echo $id_assunto; ?>&filtro=acertadas" 
-                       class="filtro-btn <?php echo $filtro == 'acertadas' ? 'ativo' : ''; ?>">
-                        <span class="filtro-count"><?php echo $counts['acertadas']; ?></span>
-                        <span class="filtro-label">Acertadas</span>
+                       class="filter-btn <?php echo $filtro_ativo === 'acertadas' ? 'active' : ''; ?>">
+                        <span class="filter-label">🎯 Acertadas</span>
+                        <span class="filter-count"><?php echo $contadores['acertadas']; ?></span>
                     </a>
                     
                     <a href="?id=<?php echo $id_assunto; ?>&filtro=erradas" 
-                       class="filtro-btn <?php echo $filtro == 'erradas' ? 'ativo' : ''; ?>">
-                        <span class="filtro-count"><?php echo $counts['erradas']; ?></span>
-                        <span class="filtro-label">Erradas</span>
+                       class="filter-btn <?php echo $filtro_ativo === 'erradas' ? 'active' : ''; ?>">
+                        <span class="filter-label">❌ Erradas</span>
+                        <span class="filter-count"><?php echo $contadores['erradas']; ?></span>
                     </a>
                 </div>
             </div>
-            
-            <?php if ($result_questoes && count($result_questoes) > 0): ?>
-                <?php foreach($result_questoes as $questao): ?>
-                    <?php
-                    $classe_status = '';
-                    $badge_status = '';
-                    
-                    if ($questao['respondida']) {
-                        if ($questao['acertou']) {
-                            $classe_status = 'acertada';
-                            $badge_status = '<span class="status-badge status-acertada">✓ Acertada</span>';
-                        } else {
-                            $classe_status = 'errada';
-                            $badge_status = '<span class="status-badge status-errada">✗ Errada</span>';
-                        }
-                    } else {
-                        $classe_status = '';
-                        $badge_status = '<span class="status-badge status-nao-respondida">Não respondida</span>';
-                    }
-                    ?>
-                    
-                    <div class="questao-item <?php echo $classe_status; ?>" 
-                         onclick="window.location.href='quiz_sem_login.php?questao=<?php echo $questao['id_questao']; ?>&id=<?php echo $id_assunto; ?>&filtro=<?php echo $filtro; ?>'">
-                        <div class="questao-texto">
-                            <?php echo htmlspecialchars($questao['enunciado']); ?>
-                        </div>
-                        <div class="questao-status">
-                            <?php echo $badge_status; ?>
-                        </div>
+
+            <!-- Lista de Questões -->
+            <div class="questions-section">
+                <?php if (empty($questoes)): ?>
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📭</div>
+                        <h3 class="empty-state-title">Nenhuma questão encontrada</h3>
+                        <p class="empty-state-text">
+                            Não há questões disponíveis para o filtro selecionado.<br>
+                            Tente selecionar um filtro diferente ou escolha outro assunto.
+                        </p>
                     </div>
-                <?php endforeach; ?>
-            <?php else: ?>
-                <div class="empty-state">
-                    <h3>Nenhuma questão encontrada</h3>
-                    <p>Não há questões que correspondam ao filtro selecionado.</p>
-                    <a href="?id=<?php echo $id_assunto; ?>&filtro=todas" class="btn">Ver Todas as Questões</a>
+                <?php else: ?>
+                    <div class="questions-grid">
+                        <?php foreach ($questoes as $questao): ?>
+                            <div class="question-card">
+                                <div class="question-header">
+                                    <div class="question-number">
+                                        🎯 Questão #<?php echo $questao['id_questao']; ?>
+                                    </div>
+                                    <div class="question-status status-<?php echo $questao['status_resposta']; ?>">
+                                        <?php
+                                        switch($questao['status_resposta']) {
+                                            case 'nao-respondida':
+                                                echo '❓ Não Respondida';
+                                                break;
+                                            case 'acertada':
+                                                echo '✅ Acertada';
+                                                break;
+                                            case 'errada':
+                                                echo '❌ Errada';
+                                                break;
+                                            default:
+                                                echo '✅ Respondida';
+                                        }
+                                        ?>
+                                    </div>
+                                </div>
+                                
+                                <div class="question-text">
+                                    <?php echo htmlspecialchars($questao['enunciado']); ?>
+                                </div>
+                                
+                                <div class="question-actions">
+                                    <?php if ($filtro_ativo === 'nao-respondidas'): ?>
+                                        <a href="quiz_vertical.php?id=<?php echo $id_assunto; ?>&filtro=<?php echo $filtro_ativo; ?>" 
+                                           class="btn-action btn-primary">
+                                            📝 Responder Todas
+                                        </a>
+                                    <?php else: ?>
+                                        <a href="quiz_sem_login.php?id=<?php echo $id_assunto; ?>&questao=<?php echo $questao['id_questao']; ?>&filtro=<?php echo $filtro_ativo; ?>" 
+                                           class="btn-action btn-primary">
+                                            🎯 Responder
+                                        </a>
+                                    <?php endif; ?>
+                                    <a href="ver_questao.php?id=<?php echo $questao['id_questao']; ?>&volta=listar&assunto=<?php echo $id_assunto; ?>&filtro=<?php echo $filtro_ativo; ?>" 
+                                       class="btn-action btn-secondary">
+                                        👁️ Visualizar
+                                    </a>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
+
+            <!-- Navegação -->
+            <div class="navigation-section">
+                <div class="nav-buttons">
+                    <?php if ($filtro_ativo === 'nao-respondidas' && !empty($questoes)): ?>
+                        <a href="quiz_vertical.php?id=<?php echo $id_assunto; ?>&filtro=<?php echo $filtro_ativo; ?>" 
+                           class="nav-btn nav-btn-primary">
+                            📝 Quiz Vertical - Todas as Não Respondidas
+                        </a>
+                    <?php endif; ?>
+                    <a href="quiz_sem_login.php?id=<?php echo $id_assunto; ?>&filtro=<?php echo $filtro_ativo; ?>" 
+                       class="nav-btn nav-btn-primary">
+                        🎯 Iniciar Quiz
+                    </a>
+                    <a href="index.php" class="nav-btn nav-btn-outline">
+                        🏠 Voltar ao Início
+                    </a>
+                    <a href="escolher_assunto.php" class="nav-btn nav-btn-outline">
+                        📚 Escolher Assunto
+                    </a>
                 </div>
-            <?php endif; ?>
+            </div>
         </div>
     </div>
-    
+
     <script>
-        // Salvar filtro ativo no localStorage para manter após responder questão
-        const filtroAtivo = '<?php echo $filtro; ?>';
+        // Salvar filtro ativo no localStorage
+        const filtroAtivo = '<?php echo $filtro_ativo; ?>';
         localStorage.setItem('filtro_ativo', filtroAtivo);
+        
+        // Animações suaves
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.question-card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    card.style.transition = 'all 0.5s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        });
     </script>
 </body>
 </html>

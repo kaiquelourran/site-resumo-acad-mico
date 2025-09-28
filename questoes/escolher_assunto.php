@@ -133,8 +133,6 @@ $result = $pdo->query($sql)->fetchAll();
                     <div class="assunto-titulo">Nenhum assunto encontrado</div>
                     <div class="assunto-info">
                         Não há assuntos com questões cadastradas no sistema.
-                        <br><br>
-                        <a href="inserir_questoes_manual.php" class="btn">Cadastrar Questões</a>
                     </div>
                 </div>
             <?php endif; ?>

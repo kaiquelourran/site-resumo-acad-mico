@@ -20,9 +20,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 fetch('http://localhost:8001/processar_resposta.php', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Content-Type': 'application/json',
                     },
-                    body: new URLSearchParams({
+                    body: JSON.stringify({
                         id_questao: idQuestao,
                         id_alternativa: respostaId,
                         resposta: respostaId,

@@ -88,13 +88,7 @@ if (!isset($_SESSION['csrf_token'])) {
                 <a href="gerenciar_questoes_sem_auth.php" class="btn">Gerenciar</a>
             </div>
 
-            <!-- Card Inserir - Apenas para Admins -->
-            <div class="card fade-in">
-                <span class="card-icon">➕</span>
-                <h3 class="card-title">Inserir Questões</h3>
-                <p class="card-description">Adicione novas questões manualmente ao sistema com facilidade.</p>
-                <a href="inserir_questoes_manual.php" class="btn">Inserir</a>
-            </div>
+
             <?php endif; ?>
         </div>
 

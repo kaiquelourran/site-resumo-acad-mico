@@ -74,7 +74,6 @@ try {
         'conexao.php' => 'Conexão com banco',
         'gerenciar_questoes_sem_auth.php' => 'Gerenciador de questões',
         'quiz_sem_login.php' => 'Questões principal',
-        'inserir_questoes_manual.php' => 'Inserção manual',
         'processar_resposta.php' => 'Processamento de respostas',
         'resultado.php' => 'Exibição de resultados',
         'style.css' => 'Estilos CSS',
@@ -184,7 +183,6 @@ try {
     echo "<div style='display: flex; gap: 15px; margin: 20px 0; flex-wrap: wrap;'>";
     echo "<a href='gerenciar_questoes_sem_auth.php' target='_blank' style='background: #28a745; color: white; padding: 15px 20px; text-decoration: none; border-radius: 8px; font-weight: bold;'>📋 Gerenciador</a>";
     echo "<a href='quiz_sem_login.php' target='_blank' style='background: #007bff; color: white; padding: 15px 20px; text-decoration: none; border-radius: 8px; font-weight: bold;'>🎮 Questões</a>";
-    echo "<a href='inserir_questoes_manual.php' target='_blank' style='background: #17a2b8; color: white; padding: 15px 20px; text-decoration: none; border-radius: 8px; font-weight: bold;'>➕ Inserir</a>";
     echo "<a href='admin/dashboard.php' target='_blank' style='background: #6c757d; color: white; padding: 15px 20px; text-decoration: none; border-radius: 8px; font-weight: bold;'>👨‍💼 Admin</a>";
     echo "</div>";
     
