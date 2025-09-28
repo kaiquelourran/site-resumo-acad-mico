@@ -1,0 +1,318 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Questões - MARCOS DO DESENVOLVIMENTO INFANTIL</title>
+    <link rel="stylesheet" href="modern-style.css">
+    <style>
+        .questoes-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .filtros-container {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .filtros-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .filtro-btn {
+            padding: 15px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            background: white;
+            color: #333;
+            text-decoration: none;
+            text-align: center;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        
+        .filtro-btn:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+            color: #333;
+            text-decoration: none;
+        }
+        
+        .filtro-btn.ativo {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #667eea;
+            color: white;
+        }
+        
+        .filtro-count {
+            display: block;
+            font-size: 1.5em;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .filtro-label {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+        
+        .questao-item {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border-left: 4px solid #e0e0e0;
+        }
+        
+        .questao-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+        
+        .questao-item.respondida {
+            border-left-color: #28a745;
+        }
+        
+        .questao-item.acertada {
+            border-left-color: #28a745;
+            background: #f8fff9;
+        }
+        
+        .questao-item.errada {
+            border-left-color: #dc3545;
+            background: #fff8f8;
+        }
+        
+        .questao-texto {
+            font-size: 1.1em;
+            color: #333;
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+        
+        .questao-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9em;
+        }
+        
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 500;
+        }
+        
+        .status-nao-respondida {
+            background: #f8f9fa;
+            color: #6c757d;
+        }
+        
+        .status-acertada {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-errada {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .voltar-btn {
+            background: #6c757d;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            text-decoration: none;
+            display: inline-block;
+            margin-bottom: 30px;
+            transition: background 0.3s ease;
+        }
+        
+        .voltar-btn:hover {
+            background: #5a6268;
+            color: white;
+            text-decoration: none;
+        }
+        
+        .page-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 30px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 16px;
+        }
+        
+        .page-header h1 {
+            margin: 0;
+            font-size: 2em;
+            font-weight: 600;
+        }
+        
+        .page-header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .empty-state h3 {
+            color: #666;
+            margin-bottom: 15px;
+        }
+        
+        .empty-state p {
+            color: #999;
+            margin-bottom: 25px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="questoes-container">
+            <a href="escolher_assunto.php" class="voltar-btn">← Voltar aos Assuntos</a>
+            
+            <div class="page-header">
+                <h1>📚 MARCOS DO DESENVOLVIMENTO INFANTIL</h1>
+                <p>Selecione uma questão para responder</p>
+            </div>
+            
+            <div class="filtros-container">
+                <h3 style="margin: 0 0 15px 0; color: #333;">Filtrar Questões</h3>
+                
+                <div class="filtros-grid">
+                    <a href="?id=8&filtro=todas" 
+                       class="filtro-btn ">
+                        <span class="filtro-count">10</span>
+                        <span class="filtro-label">Todas</span>
+                    </a>
+                    
+                    <a href="?id=8&filtro=nao-respondidas" 
+                       class="filtro-btn ativo">
+                        <span class="filtro-count">9</span>
+                        <span class="filtro-label">Não Respondidas</span>
+                    </a>
+                    
+                    <a href="?id=8&filtro=respondidas" 
+                       class="filtro-btn ">
+                        <span class="filtro-count">1</span>
+                        <span class="filtro-label">Respondidas</span>
+                    </a>
+                    
+                    <a href="?id=8&filtro=acertadas" 
+                       class="filtro-btn ">
+                        <span class="filtro-count">0</span>
+                        <span class="filtro-label">Acertadas</span>
+                    </a>
+                    
+                    <a href="?id=8&filtro=erradas" 
+                       class="filtro-btn ">
+                        <span class="filtro-count">1</span>
+                        <span class="filtro-label">Erradas</span>
+                    </a>
+                </div>
+            </div>
+            
+                                                                    
+                    <div class="questao-item " 
+                         onclick="window.location.href='quiz_sem_login.php?questao=77&id=8&filtro=nao-respondidas'">
+                        <div class="questao-texto">
+                            &lt;strong&gt;(Fonte: adaptada de prova de concurso para prefeitura)&lt;/strong&gt;&lt;br&gt;&lt;br&gt;Com que idade é esperado que uma criança demonstre a capacidade de caminhar de forma autônoma, sem necessidade de apoio?                        </div>
+                        <div class="questao-status">
+                            <span class="status-badge status-nao-respondida">Não respondida</span>                        </div>
+                    </div>
+                                                        
+                    <div class="questao-item " 
+                         onclick="window.location.href='quiz_sem_login.php?questao=78&id=8&filtro=nao-respondidas'">
+                        <div class="questao-texto">
+                            &lt;strong&gt;(Fonte: adaptada de prova de residência multiprofissional)&lt;/strong&gt;&lt;br&gt;&lt;br&gt;Em relação aos marcos da linguagem, qual das seguintes habilidades é a última a se desenvolver em uma sequência típica?                        </div>
+                        <div class="questao-status">
+                            <span class="status-badge status-nao-respondida">Não respondida</span>                        </div>
+                    </div>
+                                                        
+                    <div class="questao-item " 
+                         onclick="window.location.href='quiz_sem_login.php?questao=79&id=8&filtro=nao-respondidas'">
+                        <div class="questao-texto">
+                            &lt;strong&gt;(Fonte: adaptada de prova de concurso público)&lt;/strong&gt;&lt;br&gt;&lt;br&gt;Aos 2 anos de idade, uma criança típica deve ser capaz de:                        </div>
+                        <div class="questao-status">
+                            <span class="status-badge status-nao-respondida">Não respondida</span>                        </div>
+                    </div>
+                                                        
+                    <div class="questao-item " 
+                         onclick="window.location.href='quiz_sem_login.php?questao=80&id=8&filtro=nao-respondidas'">
+                        <div class="questao-texto">
+                            &lt;strong&gt;(Fonte: adaptada de prova de residência em pediatria)&lt;/strong&gt;&lt;br&gt;&lt;br&gt;O desenvolvimento da preensão em pinça (polegar e indicador) ocorre tipicamente em que idade?                        </div>
+                        <div class="questao-status">
+                            <span class="status-badge status-nao-respondida">Não respondida</span>                        </div>
+                    </div>
+                                                        
+                    <div class="questao-item " 
+                         onclick="window.location.href='quiz_sem_login.php?questao=81&id=8&filtro=nao-respondidas'">
+                        <div class="questao-texto">
+                            &lt;strong&gt;(Fonte: adaptada de prova de concurso de fisioterapia)&lt;/strong&gt;&lt;br&gt;&lt;br&gt;Em relação ao controle de esfíncteres, qual é a idade típica para o controle diurno da urina?                        </div>
+                        <div class="questao-status">
+                            <span class="status-badge status-nao-respondida">Não respondida</span>                        </div>
+                    </div>
+                                                        
+                    <div class="questao-item " 
+                         onclick="window.location.href='quiz_sem_login.php?questao=82&id=8&filtro=nao-respondidas'">
+                        <div class="questao-texto">
+                            &lt;strong&gt;(Fonte: adaptada de prova de residência multiprofissional)&lt;/strong&gt;&lt;br&gt;&lt;br&gt;Qual marco do desenvolvimento social é esperado aos 12 meses?                        </div>
+                        <div class="questao-status">
+                            <span class="status-badge status-nao-respondida">Não respondida</span>                        </div>
+                    </div>
+                                                        
+                    <div class="questao-item " 
+                         onclick="window.location.href='quiz_sem_login.php?questao=83&id=8&filtro=nao-respondidas'">
+                        <div class="questao-texto">
+                            &lt;strong&gt;(Fonte: adaptada de prova de concurso de psicologia)&lt;/strong&gt;&lt;br&gt;&lt;br&gt;O desenvolvimento da permanência do objeto, segundo Piaget, ocorre tipicamente em que período?                        </div>
+                        <div class="questao-status">
+                            <span class="status-badge status-nao-respondida">Não respondida</span>                        </div>
+                    </div>
+                                                        
+                    <div class="questao-item " 
+                         onclick="window.location.href='quiz_sem_login.php?questao=84&id=8&filtro=nao-respondidas'">
+                        <div class="questao-texto">
+                            &lt;strong&gt;(Fonte: adaptada de prova de residência em neurologia)&lt;/strong&gt;&lt;br&gt;&lt;br&gt;Em relação aos reflexos primitivos, o reflexo de Moro desaparece tipicamente em que idade?                        </div>
+                        <div class="questao-status">
+                            <span class="status-badge status-nao-respondida">Não respondida</span>                        </div>
+                    </div>
+                                                        
+                    <div class="questao-item " 
+                         onclick="window.location.href='quiz_sem_login.php?questao=85&id=8&filtro=nao-respondidas'">
+                        <div class="questao-texto">
+                            &lt;strong&gt;(Fonte: adaptada de prova de concurso de T.O.)&lt;/strong&gt;&lt;br&gt;&lt;br&gt;Em relação aos marcos da alimentação, com que idade é esperado que uma criança consiga beber de um copo aberto, com derramamento mínimo?                        </div>
+                        <div class="questao-status">
+                            <span class="status-badge status-nao-respondida">Não respondida</span>                        </div>
+                    </div>
+                                    </div>
+    </div>
+    
+    <script>
+        // Salvar filtro ativo no localStorage para manter após responder questão
+        const filtroAtivo = 'nao-respondidas';
+        localStorage.setItem('filtro_ativo', filtroAtivo);
+    </script>
+</body>
+</html>

@@ -32,8 +32,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $pdo->prepare("DELETE FROM assuntos WHERE id_assunto = ?");
             $stmt->execute([$id_assunto]);
 
-            // Redireciona para a página principal após a exclusão bem-sucedida
-            header("Location: ../index.php");
+            // Redireciona para a página de gerenciar assuntos após a exclusão bem-sucedida
+            header("Location: gerenciar_assuntos.php?sucesso=excluido");
             exit();
         } catch (PDOException $e) {
             // Em caso de erro no banco de dados, exibe uma mensagem

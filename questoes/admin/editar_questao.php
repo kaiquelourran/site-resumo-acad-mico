@@ -1,42 +1,43 @@
 <?php
 session_start();
-
-// Verifica se o usuário é um administrador logado usando as variáveis corretas.
-if (!isset($_SESSION['id_usuario']) || $_SESSION['tipo_usuario'] !== 'admin') {
-    header('Location: login.php');
-    exit;
-}
-
 require_once __DIR__ . '/../conexao.php';
+
+// Gerar token CSRF se não existir
+if (!isset($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
 
 $mensagem_status = '';
 $questao = null;
 $alternativas = [];
 $assuntos = [];
 
-if (isset($_GET['id'])) {
-    $id_questao = (int)$_GET['id'];
+// Buscar todos os assuntos para o select
+try {
+    $stmt_assuntos = $pdo->query("SELECT id_assunto, nome FROM assuntos ORDER BY nome");
+    $assuntos = $stmt_assuntos->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    $mensagem_status = '<p style="color:red;">Erro ao buscar assuntos: ' . $e->getMessage() . '</p>';
+}
 
-    // Busca a questão e suas alternativas
+// Verificar se foi passado um ID de questão
+if (isset($_GET['id']) && !empty($_GET['id'])) {
+    $id_questao = (int)$_GET['id'];
+    
     try {
+        // Buscar dados da questão
         $stmt_questao = $pdo->prepare("SELECT * FROM questoes WHERE id_questao = ?");
         $stmt_questao->execute([$id_questao]);
         $questao = $stmt_questao->fetch(PDO::FETCH_ASSOC);
-
-        if (!$questao) {
-            $mensagem_status = '<p style="color: red;">Questão não encontrada.</p>';
-        } else {
-            $stmt_alternativas = $pdo->prepare("SELECT * FROM alternativas WHERE id_questao = ? ORDER BY id_alternativa");
+        
+        if ($questao) {
+            // Buscar alternativas da questão
+            $stmt_alternativas = $pdo->prepare("SELECT * FROM alternativas WHERE id_questao = ? ORDER BY letra");
             $stmt_alternativas->execute([$id_questao]);
             $alternativas = $stmt_alternativas->fetchAll(PDO::FETCH_ASSOC);
         }
-
-        // Busca todos os assuntos para o dropdown
-        $stmt_assuntos = $pdo->query("SELECT id_assunto, nome FROM assuntos ORDER BY nome");
-        $assuntos = $stmt_assuntos->fetchAll(PDO::FETCH_ASSOC);
-
     } catch (PDOException $e) {
-        $mensagem_status = '<p style="color: red;">Erro ao carregar os dados da questão: ' . $e->getMessage() . '</p>';
+        $mensagem_status = '<p style="color:red;">Erro ao buscar questão: ' . $e->getMessage() . '</p>';
     }
 }
 
@@ -70,7 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['id_questao'])) {
             $pdo->commit();
             $mensagem_status = '<p style="color:green;">Questão atualizada com sucesso!</p>';
             // Recarrega os dados da questão atualizada
-            header('Location: editar_questao.php?id=' . $id_questao);
+            header('Location: ../gerenciar_questoes_sem_auth.php?status=updated');
             exit;
         } catch (Exception $e) {
             $pdo->rollBack();
@@ -85,78 +86,236 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['id_questao'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Editar Questão</title>
-    <link rel="stylesheet" href="../../style.css">
+    <title>Editar Questão - Resumo Acadêmico</title>
+    <link rel="stylesheet" href="../modern-style.css">
     <style>
-        .conteudo-principal { max-width: 900px; margin: 173px auto 10px auto; background-color: #FFFFFF; padding: 20px; box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.432); border-radius: 10px; }
-        form { text-align: left; }
-        label, input, textarea, select { display: block; width: 100%; margin-bottom: 10px; }
-        textarea { height: 100px; }
-        .alternativa-row { display: flex; gap: 10px; align-items: center; padding: 8px 10px; border: 1px solid #e3e8ef; border-radius: 8px; }
-        .alternativa-row input[type="text"] { flex: 1; }
-        .alternativa-row .alt-letra { width: 28px; text-align: center; font-weight: 700; color: #0072FF; }
-        .alternativa-row input[type="radio"] { width: 20px; height: 20px; accent-color: #0072FF; cursor: pointer; }
-        .alternativas-header { display:flex; align-items:center; gap:10px; margin: 8px 0; font-weight: 700; color: #333; }
-        .alternativa-row.correta { border-color: #4CAF50; background-color: #f1fbf2; }
-        .actions-right { display:flex; justify-content:flex-end; gap:10px; margin-top:20px; }
+        .form-container {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 1.1em;
+        }
+        
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .form-group textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+        
+        .alternativas-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+        
+        .alternativas-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            font-weight: 600;
+            color: #333;
+            font-size: 1.1em;
+        }
+        
+        .alternativa-row {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 10px;
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            background: white;
+            transition: all 0.3s ease;
+        }
+        
+        .alternativa-row:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.1);
+        }
+        
+        .alternativa-row.correta {
+            border-color: #28a745;
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+        }
+        
+        .alt-letra {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 50%;
+            font-weight: 700;
+            font-size: 1.1em;
+        }
+        
+        .alternativa-row.correta .alt-letra {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+        
+        .alternativa-row input[type="text"] {
+            flex: 1;
+            border: none;
+            background: transparent;
+            font-size: 1em;
+            padding: 8px 12px;
+        }
+        
+        .alternativa-row input[type="text"]:focus {
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 6px;
+        }
+        
+        .alternativa-row input[type="radio"] {
+            width: 24px;
+            height: 24px;
+            accent-color: #667eea;
+            cursor: pointer;
+            transform: scale(1.2);
+        }
+        
+        .actions-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #f0f0f0;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .status-message {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        
+        .status-message.success {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status-message.error {
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
     </style>
-    </head>
+</head>
 <body>
-    <header>
-        <h1>Editar Questão</h1>
-        <p>Atualize os dados da questão selecionada.</p>
-    </header>
-
-    <main class="conteudo-principal">
-        <?php if (!empty($mensagem_status)): ?>
-            <?= $mensagem_status ?>
-        <?php endif; ?>
-
-        <?php if (!$questao): ?>
-            <p>Selecione uma questão válida a partir de <a href="gerenciar_questoes.php">Gerenciar Questões</a>.</p>
-        <?php else: ?>
-            <form action="editar_questao.php" method="post">
-                <?= csrf_field() ?>
-                <input type="hidden" name="id_questao" value="<?= htmlspecialchars($questao['id_questao']) ?>">
-
-                <label for="id_assunto">Assunto:</label>
-                <select id="id_assunto" name="id_assunto" required>
-                    <?php foreach ($assuntos as $assunto): ?>
-                        <option value="<?= htmlspecialchars($assunto['id_assunto']) ?>" <?= ($assunto['id_assunto'] == $questao['id_assunto']) ? 'selected' : '' ?>>
-                            <?= htmlspecialchars($assunto['nome']) ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-
-                <label for="enunciado">Enunciado da Questão:</label>
-                <textarea id="enunciado" name="enunciado" required><?= htmlspecialchars($questao['enunciado']) ?></textarea>
-
-                <label>Alternativas (marque a correta):</label>
-                <div class="alternativas-header">
-                    <span class="alt-letra">#</span>
-                    <span>Texto da alternativa</span>
-                </div>
-                <?php $letras = ['A','B','C','D','E','F']; foreach ($alternativas as $i => $alt): ?>
-                    <div class="alternativa-row <?= $alt['correta'] ? 'correta' : '' ?>">
-                        <span class="alt-letra"><?= $letras[$i] ?? ($i+1) ?></span>
-                        <input type="text" name="alternativas[<?= htmlspecialchars($alt['id_alternativa']) ?>]" value="<?= htmlspecialchars($alt['texto']) ?>" required>
-                        <input type="radio" name="correta" value="<?= htmlspecialchars($alt['id_alternativa']) ?>" <?= ($alt['correta'] ? 'checked' : '') ?> title="Marcar <?= $letras[$i] ?? ($i+1) ?> como correta">
-                    </div>
-                <?php endforeach; ?>
-
-                <div class="actions-right">
-                    <a href="gerenciar_questoes.php" class="btn btn-outline">Voltar</a>
-                    <button type="submit" class="btn btn-primary">Salvar Alterações</button>
-                </div>
-            </form>
-        <?php endif; ?>
-    </main>
-
-    <footer>
-        <div class="footer-creditos">
-            <p>Desenvolvido por Resumo Acadêmico &copy; 2025</p>
+    <div class="main-container">
+        <div class="header">
+            <div class="logo">📚</div>
+            <h1 class="title">Editar Questão</h1>
+            <p class="subtitle">Atualize os dados da questão selecionada</p>
         </div>
-    </footer>
+
+        <div class="form-container">
+            <?php if (!empty($mensagem_status)): ?>
+                <div class="status-message <?= strpos($mensagem_status, 'sucesso') !== false ? 'success' : 'error' ?>">
+                    <?= strip_tags($mensagem_status) ?>
+                </div>
+            <?php endif; ?>
+
+            <?php if (!$questao): ?>
+                <div class="status-message error">
+                    <p>Selecione uma questão válida a partir de <a href="../gerenciar_questoes_sem_auth.php" class="btn btn-primary">Gerenciar Questões</a>.</p>
+                </div>
+            <?php else: ?>
+                <form action="editar_questao.php" method="post">
+                    <?= csrf_field() ?>
+                    <input type="hidden" name="id_questao" value="<?= htmlspecialchars($questao['id_questao']) ?>">
+
+                    <div class="form-group">
+                        <label for="id_assunto">📋 Assunto:</label>
+                        <select id="id_assunto" name="id_assunto" required>
+                            <?php foreach ($assuntos as $assunto): ?>
+                                <option value="<?= htmlspecialchars($assunto['id_assunto']) ?>" <?= ($assunto['id_assunto'] == $questao['id_assunto']) ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($assunto['nome']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="enunciado">❓ Enunciado da Questão:</label>
+                        <textarea id="enunciado" name="enunciado" required placeholder="Digite o enunciado da questão..."><?= htmlspecialchars($questao['enunciado']) ?></textarea>
+                    </div>
+
+                    <div class="alternativas-section">
+                        <div class="alternativas-header">
+                            <span>✅ Alternativas</span>
+                            <small style="color: #666;">(marque a alternativa correta)</small>
+                        </div>
+                        
+                        <?php $letras = ['A','B','C','D','E','F']; foreach ($alternativas as $i => $alt): ?>
+                            <div class="alternativa-row <?= $alt['correta'] ? 'correta' : '' ?>">
+                                <div class="alt-letra"><?= $letras[$i] ?? ($i+1) ?></div>
+                                <input type="text" name="alternativas[<?= htmlspecialchars($alt['id_alternativa']) ?>]" value="<?= htmlspecialchars($alt['texto']) ?>" required placeholder="Digite a alternativa <?= $letras[$i] ?? ($i+1) ?>...">
+                                <input type="radio" name="correta" value="<?= htmlspecialchars($alt['id_alternativa']) ?>" <?= ($alt['correta'] ? 'checked' : '') ?> title="Marcar <?= $letras[$i] ?? ($i+1) ?> como correta">
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+
+                    <div class="actions-container">
+                        <div class="btn-group">
+                            <a href="../gerenciar_questoes_sem_auth.php" class="btn btn-outline">
+                                ← Voltar para Gerenciar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                💾 Salvar Alterações
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            <?php endif; ?>
+        </div>
+    </div>
 </body>
 </html>
 

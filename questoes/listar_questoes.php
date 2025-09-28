@@ -2,56 +2,86 @@
 session_start();
 require_once 'conexao.php';
 
-// Verificar se o usuário está logado
-if (!isset($_SESSION['id_usuario'])) {
-    header('Location: login.php');
-    exit();
-}
-
 // Verificar se foi passado o ID do assunto
 if (!isset($_GET['id']) || empty($_GET['id'])) {
-    header('Location: index.php');
-    exit();
+    header('Location: escolher_assunto.php');
+    exit;
 }
 
 $id_assunto = (int)$_GET['id'];
-$usuario_id = $_SESSION['id_usuario'];
+$filtro = isset($_GET['filtro']) ? $_GET['filtro'] : 'todas';
 
-try {
-    // Buscar informações do assunto
-    $stmt = $pdo->prepare("SELECT nome FROM assuntos WHERE id_assunto = ?");
-    $stmt->execute([$id_assunto]);
-    $assunto = $stmt->fetch(PDO::FETCH_ASSOC);
-    
-    if (!$assunto) {
-        header('Location: index.php');
-        exit();
-    }
-    
-    // Buscar todas as questões do assunto
-    $stmt = $pdo->prepare("SELECT id_questao, enunciado FROM questoes WHERE id_assunto = ? ORDER BY id_questao");
-    $stmt->execute([$id_assunto]);
-    $questoes = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
-    // Buscar respostas do usuário para essas questões
-    $stmt = $pdo->prepare("
-        SELECT q.id_questao, r.acertou as correta 
-        FROM questoes q 
-        LEFT JOIN respostas_usuarios r ON q.id_questao = r.id_questao AND r.id_usuario = ?
-        WHERE q.id_assunto = ?
-    ");
-    $stmt->execute([$usuario_id, $id_assunto]);
-    $respostas_usuario = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
-    // Organizar respostas por ID da questão
-    $status_questoes = [];
-    foreach ($respostas_usuario as $resposta) {
-        $status_questoes[$resposta['id_questao']] = $resposta['correta'];
-    }
-    
-} catch (PDOException $e) {
-    die("Erro na conexão: " . $e->getMessage());
+// Buscar informações do assunto
+$sql_assunto = "SELECT nome FROM assuntos WHERE id_assunto = ?";
+$stmt_assunto = $pdo->prepare($sql_assunto);
+$stmt_assunto->execute([$id_assunto]);
+$result_assunto = $stmt_assunto->fetch();
+
+if (!$result_assunto) {
+    header('Location: escolher_assunto.php');
+    exit;
 }
+
+$assunto = $result_assunto;
+
+// Criar tabela de respostas se não existir
+$sql_create_table = "CREATE TABLE IF NOT EXISTS respostas_usuario (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_questao INT NOT NULL,
+    id_alternativa INT NOT NULL,
+    acertou TINYINT(1) NOT NULL DEFAULT 0,
+    data_resposta TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_questao) REFERENCES questoes(id_questao),
+    FOREIGN KEY (id_alternativa) REFERENCES alternativas(id_alternativa),
+    UNIQUE KEY unique_questao (id_questao)
+)";
+$pdo->query($sql_create_table);
+
+// Construir query baseada no filtro
+$sql_base = "SELECT q.id_questao, q.enunciado, 
+             CASE WHEN r.id_questao IS NOT NULL THEN 1 ELSE 0 END as respondida,
+             CASE WHEN r.acertou = 1 THEN 1 ELSE 0 END as acertou
+             FROM questoes q 
+             LEFT JOIN respostas_usuario r ON q.id_questao = r.id_questao
+             WHERE q.id_assunto = ?";
+
+switch($filtro) {
+    case 'respondidas':
+        $sql_questoes = $sql_base . " AND r.id_questao IS NOT NULL";
+        break;
+    case 'nao-respondidas':
+        $sql_questoes = $sql_base . " AND r.id_questao IS NULL";
+        break;
+    case 'acertadas':
+        $sql_questoes = $sql_base . " AND r.acertou = 1";
+        break;
+    case 'erradas':
+        $sql_questoes = $sql_base . " AND r.id_questao IS NOT NULL AND r.acertou = 0";
+        break;
+    default:
+        $sql_questoes = $sql_base;
+}
+
+$sql_questoes .= " ORDER BY q.id_questao";
+
+$stmt_questoes = $pdo->prepare($sql_questoes);
+$stmt_questoes->execute([$id_assunto]);
+$result_questoes = $stmt_questoes->fetchAll();
+
+// Contar questões por categoria
+$sql_counts = "SELECT 
+               COUNT(*) as total,
+               SUM(CASE WHEN r.id_questao IS NOT NULL THEN 1 ELSE 0 END) as respondidas,
+               SUM(CASE WHEN r.id_questao IS NULL THEN 1 ELSE 0 END) as nao_respondidas,
+               SUM(CASE WHEN r.acertou = 1 THEN 1 ELSE 0 END) as acertadas,
+               SUM(CASE WHEN r.id_questao IS NOT NULL AND r.acertou = 0 THEN 1 ELSE 0 END) as erradas
+               FROM questoes q 
+               LEFT JOIN respostas_usuario r ON q.id_questao = r.id_questao
+               WHERE q.id_assunto = ?";
+
+$stmt_counts = $pdo->prepare($sql_counts);
+$stmt_counts->execute([$id_assunto]);
+$counts = $stmt_counts->fetch();
 ?>
 
 <!DOCTYPE html>
@@ -59,484 +89,280 @@ try {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Questões - <?= htmlspecialchars($assunto['nome']) ?></title>
+    <title>Questões - <?php echo htmlspecialchars($assunto['nome']); ?></title>
+    <link rel="stylesheet" href="modern-style.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
+        .questoes-container {
+            max-width: 1000px;
+            margin: 0 auto;
             padding: 20px;
         }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background-color: #fff;
-            padding: 30px;
-            box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.3);
-            border-radius: 15px;
-            animation: fadeIn 0.5s ease-in-out;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .header {
-            text-align: center;
+        
+        .filtros-container {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
             margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #e9ecef;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
         }
-
-        .header h1 {
-            color: #0056b3;
-            font-size: 2.2em;
-            font-weight: 700;
-            margin-bottom: 10px;
+        
+        .filtros-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
         }
-
-        .header p {
-            color: #6c757d;
+        
+        .filtro-btn {
+            padding: 15px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            background: white;
+            color: #333;
+            text-decoration: none;
+            text-align: center;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        
+        .filtro-btn:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+            color: #333;
+            text-decoration: none;
+        }
+        
+        .filtro-btn.ativo {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #667eea;
+            color: white;
+        }
+        
+        .filtro-count {
+            display: block;
+            font-size: 1.5em;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .filtro-label {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+        
+        .questao-item {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border-left: 4px solid #e0e0e0;
+        }
+        
+        .questao-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+        
+        .questao-item.respondida {
+            border-left-color: #28a745;
+        }
+        
+        .questao-item.acertada {
+            border-left-color: #28a745;
+            background: #f8fff9;
+        }
+        
+        .questao-item.errada {
+            border-left-color: #dc3545;
+            background: #fff8f8;
+        }
+        
+        .questao-texto {
             font-size: 1.1em;
+            color: #333;
+            margin-bottom: 10px;
+            line-height: 1.5;
         }
-
-        .btn-voltar {
-            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+        
+        .questao-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9em;
+        }
+        
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 500;
+        }
+        
+        .status-nao-respondida {
+            background: #f8f9fa;
+            color: #6c757d;
+        }
+        
+        .status-acertada {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-errada {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .voltar-btn {
+            background: #6c757d;
             color: white;
             padding: 12px 24px;
+            border: none;
             border-radius: 8px;
             text-decoration: none;
             display: inline-block;
-            margin-bottom: 20px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            border: none;
-            cursor: pointer;
-        }
-
-        .btn-voltar:hover {
-            background: linear-gradient(135deg, #495057 0%, #343a40 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
-        }
-
-        .filtros {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
             margin-bottom: 30px;
-            flex-wrap: wrap;
+            transition: background 0.3s ease;
         }
-
-        .filtros button {
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            border: 2px solid #dee2e6;
-            color: #495057;
-            padding: 10px 20px;
-            border-radius: 25px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-
-        .filtros button:hover,
-        .filtros button.active {
-            background: linear-gradient(135deg, #0056b3 0%, #003d82 100%);
+        
+        .voltar-btn:hover {
+            background: #5a6268;
             color: white;
-            border-color: #0056b3;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 86, 179, 0.3);
+            text-decoration: none;
         }
-
-        .estatisticas {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .estatistica {
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            padding: 20px;
-            border-radius: 12px;
+        
+        .page-header {
             text-align: center;
-            border: 1px solid #dee2e6;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
+            margin-bottom: 30px;
+            padding: 30px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 16px;
         }
-
-        .estatistica:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-        }
-
-        .estatistica h3 {
-            color: #0056b3;
-            font-size: 1.8em;
-            margin-bottom: 5px;
-        }
-
-        .estatistica p {
-            color: #6c757d;
+        
+        .page-header h1 {
+            margin: 0;
+            font-size: 2em;
             font-weight: 600;
         }
-
-        .questoes-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 20px;
+        
+        .page-header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
         }
-
-        .questao-card {
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            border: 2px solid #dee2e6;
-            border-radius: 12px;
-            padding: 20px;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
         }
-
-        .questao-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-        }
-
-        .questao-card.respondida {
-            border-color: #17a2b8;
-            background: linear-gradient(135deg, #e8f4f8 0%, #d1ecf1 100%);
-        }
-
-        .questao-card.correta {
-            border-color: #28a745;
-            background: linear-gradient(135deg, #e8f5e8 0%, #d4edda 100%);
-        }
-
-        .questao-card.incorreta {
-            border-color: #dc3545;
-            background: linear-gradient(135deg, #f8e8e8 0%, #f5c6cb 100%);
-        }
-
-        .questao-numero {
-            font-size: 1.1em;
-            font-weight: 700;
-            color: #0056b3;
-            margin-bottom: 10px;
-        }
-
-        .questao-texto {
-            color: #495057;
+        
+        .empty-state h3 {
+            color: #666;
             margin-bottom: 15px;
-            line-height: 1.5;
-            font-size: 1em;
         }
-
-        .questao-status {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .status-badge {
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.85em;
-            font-weight: 600;
-        }
-
-        .status-badge.nao-respondida {
-            background-color: #6c757d;
-            color: white;
-        }
-
-        .status-badge.respondida {
-            background-color: #17a2b8;
-            color: white;
-        }
-
-        .status-badge.correta {
-            background-color: #28a745;
-            color: white;
-        }
-
-        .status-badge.incorreta {
-            background-color: #dc3545;
-            color: white;
-        }
-
-        .btn-responder {
-            background: linear-gradient(135deg, #0056b3 0%, #003d82 100%);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 6px;
-            text-decoration: none;
-            font-size: 0.9em;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            border: none;
-            cursor: pointer;
-        }
-
-        .btn-responder:hover {
-            background: linear-gradient(135deg, #003d82 0%, #002752 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 86, 179, 0.3);
-            color: white;
-            text-decoration: none;
-        }
-
-        /* Responsividade */
-        @media (max-width: 768px) {
-            .container {
-                padding: 20px;
-                margin: 10px;
-            }
-            
-            .questoes-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .estatisticas {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            
-            .filtros {
-                justify-content: center;
-            }
-            
-            .filtros button {
-                padding: 8px 16px;
-                font-size: 0.9em;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .header h1 {
-                font-size: 1.8em;
-            }
-            
-            .estatisticas {
-                grid-template-columns: 1fr;
-            }
+        
+        .empty-state p {
+            color: #999;
+            margin-bottom: 25px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <a href="index.php" class="btn-voltar">← Voltar aos Assuntos</a>
-        
-        <div class="header">
-            <h1><?= htmlspecialchars($assunto['nome']) ?></h1>
-            <p>Todas as questões disponíveis</p>
-        </div>
-
-        <div class="filtros">
-            <button class="btn-filtro active" data-filtro="todas">Todas</button>
-            <button class="btn-filtro" data-filtro="respondidas">Respondidas</button>
-            <button class="btn-filtro" data-filtro="nao-respondidas">Não Respondidas</button>
-            <button class="btn-filtro" data-filtro="corretas">Acertos</button>
-            <button class="btn-filtro" data-filtro="incorretas">Erros</button>
-        </div>
-        
-        <div class="estatisticas">
-            <div class="estatistica">
-                <h3 id="total-questoes"><?= count($questoes) ?></h3>
-                <p>Total</p>
+        <div class="questoes-container">
+            <a href="escolher_assunto.php" class="voltar-btn">← Voltar aos Assuntos</a>
+            
+            <div class="page-header">
+                <h1>📚 <?php echo htmlspecialchars($assunto['nome']); ?></h1>
+                <p>Selecione uma questão para responder</p>
             </div>
-            <div class="estatistica">
-                <h3 id="questoes-respondidas">0</h3>
-                <p>Respondidas</p>
-            </div>
-            <div class="estatistica">
-                <h3 id="questoes-corretas">0</h3>
-                <p>Acertos</p>
-            </div>
-            <div class="estatistica">
-                <h3 id="questoes-incorretas">0</h3>
-                <p>Erros</p>
-            </div>
-        </div>
-
-        <div class="questoes-grid">
-            <?php foreach ($questoes as $index => $questao): ?>
-                <?php 
-                $status = 'nao-respondida';
-                $status_texto = 'Não Respondida';
-                $status_classe = 'nao-respondida';
+            
+            <div class="filtros-container">
+                <h3 style="margin: 0 0 15px 0; color: #333;">Filtrar Questões</h3>
                 
-                if (isset($status_questoes[$questao['id_questao']])) {
-                    if ($status_questoes[$questao['id_questao']] == 1) {
-                        $status = 'correta';
-                        $status_texto = 'Correta';
-                        $status_classe = 'correta';
-                    } else {
-                        $status = 'incorreta';
-                        $status_texto = 'Incorreta';
-                        $status_classe = 'incorreta';
-                    }
-                }
-                ?>
-                
-                <div class="questao-card <?= $status ?>" data-status="<?= $status ?>">
-                    <div class="questao-numero">Questão <?= $questao['id_questao'] ?></div>
-                    <div class="questao-texto"><?= htmlspecialchars($questao['enunciado']) ?></div>
-                    <div class="questao-status">
-                        <span class="status-badge <?= $status_classe ?>"><?= $status_texto ?></span>
-                        <button type="button" class="btn-responder" onclick="abrirQuestao(<?= $questao['id_questao'] ?>)">
-                            <?= $status == 'nao-respondida' ? 'Responder' : 'Ver Questão' ?>
-                        </button>
-                    </div>
+                <div class="filtros-grid">
+                    <a href="?id=<?php echo $id_assunto; ?>&filtro=todas" 
+                       class="filtro-btn <?php echo $filtro == 'todas' ? 'ativo' : ''; ?>">
+                        <span class="filtro-count"><?php echo $counts['total']; ?></span>
+                        <span class="filtro-label">Todas</span>
+                    </a>
+                    
+                    <a href="?id=<?php echo $id_assunto; ?>&filtro=nao-respondidas" 
+                       class="filtro-btn <?php echo $filtro == 'nao-respondidas' ? 'ativo' : ''; ?>">
+                        <span class="filtro-count"><?php echo $counts['nao_respondidas']; ?></span>
+                        <span class="filtro-label">Não Respondidas</span>
+                    </a>
+                    
+                    <a href="?id=<?php echo $id_assunto; ?>&filtro=respondidas" 
+                       class="filtro-btn <?php echo $filtro == 'respondidas' ? 'ativo' : ''; ?>">
+                        <span class="filtro-count"><?php echo $counts['respondidas']; ?></span>
+                        <span class="filtro-label">Respondidas</span>
+                    </a>
+                    
+                    <a href="?id=<?php echo $id_assunto; ?>&filtro=acertadas" 
+                       class="filtro-btn <?php echo $filtro == 'acertadas' ? 'ativo' : ''; ?>">
+                        <span class="filtro-count"><?php echo $counts['acertadas']; ?></span>
+                        <span class="filtro-label">Acertadas</span>
+                    </a>
+                    
+                    <a href="?id=<?php echo $id_assunto; ?>&filtro=erradas" 
+                       class="filtro-btn <?php echo $filtro == 'erradas' ? 'ativo' : ''; ?>">
+                        <span class="filtro-count"><?php echo $counts['erradas']; ?></span>
+                        <span class="filtro-label">Erradas</span>
+                    </a>
                 </div>
-            <?php endforeach; ?>
+            </div>
+            
+            <?php if ($result_questoes && count($result_questoes) > 0): ?>
+                <?php foreach($result_questoes as $questao): ?>
+                    <?php
+                    $classe_status = '';
+                    $badge_status = '';
+                    
+                    if ($questao['respondida']) {
+                        if ($questao['acertou']) {
+                            $classe_status = 'acertada';
+                            $badge_status = '<span class="status-badge status-acertada">✓ Acertada</span>';
+                        } else {
+                            $classe_status = 'errada';
+                            $badge_status = '<span class="status-badge status-errada">✗ Errada</span>';
+                        }
+                    } else {
+                        $classe_status = '';
+                        $badge_status = '<span class="status-badge status-nao-respondida">Não respondida</span>';
+                    }
+                    ?>
+                    
+                    <div class="questao-item <?php echo $classe_status; ?>" 
+                         onclick="window.location.href='quiz_sem_login.php?questao=<?php echo $questao['id_questao']; ?>&id=<?php echo $id_assunto; ?>&filtro=<?php echo $filtro; ?>'">
+                        <div class="questao-texto">
+                            <?php echo htmlspecialchars($questao['enunciado']); ?>
+                        </div>
+                        <div class="questao-status">
+                            <?php echo $badge_status; ?>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <div class="empty-state">
+                    <h3>Nenhuma questão encontrada</h3>
+                    <p>Não há questões que correspondam ao filtro selecionado.</p>
+                    <a href="?id=<?php echo $id_assunto; ?>&filtro=todas" class="btn">Ver Todas as Questões</a>
+                </div>
+            <?php endif; ?>
         </div>
     </div>
-
+    
     <script>
-        // Calcular estatísticas
-        function calcularEstatisticas() {
-            const cards = document.querySelectorAll('.questao-card');
-            let respondidas = 0;
-            let corretas = 0;
-            let incorretas = 0;
-            
-            cards.forEach(card => {
-                const status = card.dataset.status;
-                if (status === 'correta') {
-                    respondidas++;
-                    corretas++;
-                } else if (status === 'incorreta') {
-                    respondidas++;
-                    incorretas++;
-                }
-            });
-            
-            document.getElementById('questoes-respondidas').textContent = respondidas;
-            document.getElementById('questoes-corretas').textContent = corretas;
-            document.getElementById('questoes-incorretas').textContent = incorretas;
-        }
-        
-        // Filtrar questões
-        function filtrarQuestoes(filtro) {
-            const cards = document.querySelectorAll('.questao-card');
-            
-            cards.forEach(card => {
-                const status = card.dataset.status;
-                let mostrar = false;
-                
-                switch(filtro) {
-                    case 'todas':
-                        mostrar = true;
-                        break;
-                    case 'respondidas':
-                        mostrar = status === 'correta' || status === 'incorreta';
-                        break;
-                    case 'nao-respondidas':
-                        mostrar = status === 'nao-respondida';
-                        break;
-                    case 'corretas':
-                        mostrar = status === 'correta';
-                        break;
-                    case 'incorretas':
-                        mostrar = status === 'incorreta';
-                        break;
-                }
-                
-                card.style.display = mostrar ? 'block' : 'none';
-            });
-        }
-        
-        // Event listeners para os filtros
-        document.querySelectorAll('.btn-filtro').forEach(btn => {
-            btn.addEventListener('click', function() {
-                // Remover classe active de todos os botões
-                document.querySelectorAll('.btn-filtro').forEach(b => b.classList.remove('active'));
-                // Adicionar classe active ao botão clicado
-                this.classList.add('active');
-                // Salvar filtro ativo no localStorage
-                localStorage.setItem('filtro_ativo', this.dataset.filtro);
-                // Filtrar questões
-                filtrarQuestoes(this.dataset.filtro);
-            });
-        });
-        
-        // Função simplificada para abrir questão (GLOBAL)
-        function abrirQuestao(idQuestao) {
-                try {
-                    console.log('=== INICIANDO ABERTURA DE QUESTÃO ===');
-                    console.log('ID da questão recebido:', idQuestao);
-                    console.log('Tipo do ID:', typeof idQuestao);
-                    
-                    if (!idQuestao) {
-                        throw new Error('ID da questão não fornecido');
-                    }
-                    
-                    const filtroAtivo = localStorage.getItem('filtro_ativo') || 'todas';
-                    const urlParams = new URLSearchParams(window.location.search);
-                    const idAssunto = urlParams.get('id');
-                    
-                    console.log('Filtro ativo:', filtroAtivo);
-                    console.log('ID Assunto da URL:', idAssunto);
-                    console.log('URL atual:', window.location.href);
-                    
-                    let url;
-                    
-                    // Se há filtro ativo e não é "todas", vai para quiz sequencial
-                    if (filtroAtivo && filtroAtivo !== 'todas') {
-                        url = `http://localhost:8000/questoes/quiz_sequencial.php?id=${idAssunto}&filtro=${filtroAtivo}&questao=${idQuestao}`;
-                        console.log('REDIRECIONANDO PARA QUIZ SEQUENCIAL:', url);
-                    } else {
-                        // Comportamento normal - vai para quiz individual
-                        url = `http://localhost:8000/questoes/quiz.php?id=${idQuestao}`;
-                        console.log('REDIRECIONANDO PARA QUIZ INDIVIDUAL:', url);
-                    }
-                    
-                    console.log('URL final construída:', url);
-                    console.log('Executando redirecionamento...');
-                    
-                    // Redirecionar
-                    window.location.href = url;
-                    
-                    console.log('Redirecionamento executado');
-                    
-                } catch (error) {
-                    console.error('ERRO AO ABRIR QUESTÃO:', error);
-                    console.error('Stack trace:', error.stack);
-                    alert('Erro ao abrir questão: ' + error.message);
-                }
-        }
-        
-        // Verificar se há um filtro na URL ou no localStorage
-        document.addEventListener('DOMContentLoaded', function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const filtroUrl = urlParams.get('filtro');
-            const filtroSalvo = localStorage.getItem('filtro_ativo');
-            const filtroParaAplicar = filtroUrl || filtroSalvo || 'todas';
-            
-            // Aplicar o filtro
-            const btnFiltro = document.querySelector(`[data-filtro="${filtroParaAplicar}"]`);
-            if (btnFiltro) {
-                document.querySelectorAll('.btn-filtro').forEach(b => b.classList.remove('active'));
-                btnFiltro.classList.add('active');
-                filtrarQuestoes(filtroParaAplicar);
-                localStorage.setItem('filtro_ativo', filtroParaAplicar);
-            }
-            
-            // Calcular estatísticas
-            calcularEstatisticas();
-        });
-        
-        // Função para redirecionar questão baseada no filtro ativo (mantida para compatibilidade)
-        function redirecionarQuestao(idQuestao, statusQuestao) {
-            abrirQuestao(idQuestao);
-        }
+        // Salvar filtro ativo no localStorage para manter após responder questão
+        const filtroAtivo = '<?php echo $filtro; ?>';
+        localStorage.setItem('filtro_ativo', filtroAtivo);
     </script>
 </body>
 </html>

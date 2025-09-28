@@ -1,12 +1,5 @@
 <?php
 session_start();
-
-// Verifica se a sessão de administrador está ativa com as variáveis corretas
-if (!isset($_SESSION['id_usuario']) || $_SESSION['tipo_usuario'] !== 'admin') {
-    header('Location: login.php');
-    exit;
-}
-
 require_once __DIR__ . '/../conexao.php'; // Caminho para o arquivo conexao.php
 
 // Debug: Log para verificar se o arquivo está sendo executado
@@ -23,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!validate_csrf()) {
         error_log("deletar_questao.php: Erro de CSRF");
         // Erro de CSRF - redireciona com mensagem específica
-        header('Location: gerenciar_questoes.php?status=csrf_error');
+        header('Location: ../gerenciar_questoes_sem_auth.php?status=csrf_error');
         exit;
     }
     
@@ -32,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Verifica se o ID foi fornecido
     if (!isset($_POST['id'])) {
         error_log("deletar_questao.php: ID não fornecido");
-        header('Location: gerenciar_questoes.php?status=no_id');
+        header('Location: ../gerenciar_questoes_sem_auth.php?status=no_id');
         exit;
     }
     
@@ -63,18 +56,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         error_log("deletar_questao.php: Transação commitada com sucesso");
         
         // Redireciona de volta para a página de gerenciamento com uma mensagem de sucesso
-        header('Location: gerenciar_questoes.php?status=deleted');
+        header('Location: ../gerenciar_questoes_sem_auth.php?status=deleted');
         exit;
     } catch (Exception $e) {
         $pdo->rollBack();
         error_log("deletar_questao.php: Erro na transação: " . $e->getMessage());
         // Redireciona com uma mensagem de erro em caso de falha
-        header('Location: gerenciar_questoes.php?status=error');
+        header('Location: ../gerenciar_questoes_sem_auth.php?status=error');
         exit;
     }
 } else {
     // Requisição inválida
-    header('Location: gerenciar_questoes.php?status=invalid');
+    header('Location: ../gerenciar_questoes_sem_auth.php?status=invalid');
     exit;
 }
 ?>

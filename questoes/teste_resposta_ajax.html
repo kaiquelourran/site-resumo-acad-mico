@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teste AJAX Resposta</title>
+</head>
+<body>
+    <h1>Teste de Envio de Resposta via AJAX</h1>
+    <button onclick="testarResposta()">Testar Envio de Resposta</button>
+    <div id="resultado"></div>
+
+    <script>
+        function testarResposta() {
+            const resultadoDiv = document.getElementById('resultado');
+            resultadoDiv.innerHTML = 'Enviando...';
+            
+            fetch('processar_resposta.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `id_questao=76&id_alternativa=322`
+            })
+            .then(response => {
+                console.log('Status:', response.status);
+                console.log('Headers:', response.headers);
+                return response.json();
+            })
+            .then(data => {
+                console.log('Resposta:', data);
+                resultadoDiv.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                resultadoDiv.innerHTML = 'Erro: ' + error.message;
+            });
+        }
+    </script>
+</body>
+</html>

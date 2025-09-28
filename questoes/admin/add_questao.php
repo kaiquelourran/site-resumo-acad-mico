@@ -23,7 +23,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $correta_index = (int)$_POST['correta'];
 
     if (empty($enunciado) || empty($alternativas[$correta_index - 1]) || empty($id_assunto)) {
-        $mensagem_status = '<p style="color:red;">Por favor, preencha o enunciado, a alternativa correta e selecione um assunto.</p>';
+        $mensagem_status = 'error';
+        $mensagem_texto = 'Por favor, preencha o enunciado, a alternativa correta e selecione um assunto.';
     } else {
         try {
             $pdo->beginTransaction();
@@ -43,10 +44,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             }
 
             $pdo->commit();
-            $mensagem_status = '<p style="color:green;">Questão adicionada com sucesso!</p>';
+            $mensagem_status = 'success';
+            $mensagem_texto = 'Questão adicionada com sucesso!';
         } catch (Exception $e) {
             $pdo->rollBack();
-            $mensagem_status = '<p style="color:red;">Erro ao adicionar a questão: ' . $e->getMessage() . '</p>';
+            $mensagem_status = 'error';
+            $mensagem_texto = 'Erro ao adicionar a questão: ' . $e->getMessage();
         }
     }
 }
@@ -61,83 +64,95 @@ $assuntos = $stmt_assuntos->fetchAll(PDO::FETCH_ASSOC);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Adicionar Questão</title>
-    <link rel="stylesheet" href="../../style.css">
-    <style>
-        .conteudo-principal {
-            max-width: 900px;
-            margin: 173px auto 10px auto;
-            background-color: #FFFFFF;
-            padding: 20px;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.432);
-            border-radius: 10px;
-        }
-        form {
-            text-align: left;
-        }
-        label, input, textarea, select {
-            display: block;
-            width: 100%;
-            margin-bottom: 10px;
-        }
-        textarea {
-            height: 100px;
-        }
-        .actions-right { display:flex; justify-content:flex-end; gap:10px; margin-top:20px; }
-    </style>
+    <title>Adicionar Questão - Resumo Acadêmico</title>
+    <link rel="stylesheet" href="../modern-style.css">
 </head>
 <body>
-    <header>
-        <h1>Adicionar Nova Questão</h1>
-        <p>Preencha os dados da nova questão.</p>
-    </header>
-
-    <main class="conteudo-principal">
-        <?= $mensagem_status ?>
-        <form action="add_questao.php" method="post">
-            <?php echo csrf_field(); ?>
-            
-            <label for="id_assunto">Assunto:</label>
-            <select id="id_assunto" name="id_assunto" required>
-                <?php foreach ($assuntos as $assunto): ?>
-                    <option value="<?= htmlspecialchars($assunto['id_assunto']) ?>"><?= htmlspecialchars($assunto['nome']) ?></option>
-                <?php endforeach; ?>
-            </select>
-
-            <label for="enunciado">Enunciado da Questão:</label>
-            <textarea id="enunciado" name="enunciado" required></textarea>
-            
-            <label for="alt1">Alternativa A:</label>
-            <input type="text" id="alt1" name="alt1" required>
-            
-            <label for="alt2">Alternativa B:</label>
-            <input type="text" id="alt2" name="alt2" required>
-
-            <label for="alt3">Alternativa C:</label>
-            <input type="text" id="alt3" name="alt3" required>
-
-            <label for="alt4">Alternativa D:</label>
-            <input type="text" id="alt4" name="alt4" required>
-            
-            <label for="correta">Qual é a alternativa correta?</label>
-            <select id="correta" name="correta" required>
-                <option value="1">A</option>
-                <option value="2">B</option>
-                <option value="3">C</option>
-                <option value="4">D</option>
-            </select>
-            
-            <div class="actions-right">
-                <a href="dashboard.php" class="btn btn-outline">Voltar</a>
-                <button type="submit" class="btn btn-success btn-lg">Adicionar Questão</button>
+    <div class="main-container fade-in">
+        <header class="header">
+            <div class="logo">
+                <img src="../../fotos/Logotipo_resumo_academico.png" alt="Resumo Acadêmico">
             </div>
-        </form>
-    </main>
+            <div class="title-section">
+                <h1>Adicionar Nova Questão</h1>
+                <p class="subtitle">Preencha os dados da nova questão</p>
+            </div>
+        </header>
 
-    <footer>
-        <div class="footer-creditos">
-            <p>Desenvolvido por Resumo Acadêmico &copy; 2025</p>
+        <div class="user-info">
+            <a href="dashboard.php" class="btn btn-outline">Voltar ao Dashboard</a>
         </div>
-    </footer>
+
+        <main class="content">
+            <?php if (!empty($mensagem_status)): ?>
+                <div class="alert alert-<?= $mensagem_status ?> fade-in">
+                    <?= htmlspecialchars($mensagem_texto) ?>
+                </div>
+            <?php endif; ?>
+
+            <div class="form-container">
+                <form action="add_questao.php" method="post" class="modern-form">
+                    <?php echo csrf_field(); ?>
+                    
+                    <div class="form-group">
+                        <label for="id_assunto">Assunto:</label>
+                        <select id="id_assunto" name="id_assunto" required class="form-control">
+                            <option value="">Selecione um assunto</option>
+                            <?php foreach ($assuntos as $assunto): ?>
+                                <option value="<?= htmlspecialchars($assunto['id_assunto']) ?>"><?= htmlspecialchars($assunto['nome']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="enunciado">Enunciado da Questão:</label>
+                        <textarea id="enunciado" name="enunciado" required class="form-control" rows="4" placeholder="Digite o enunciado da questão..."></textarea>
+                    </div>
+                    
+                    <div class="alternatives-grid">
+                        <div class="form-group">
+                            <label for="alt1">Alternativa A:</label>
+                            <input type="text" id="alt1" name="alt1" required class="form-control" placeholder="Digite a alternativa A">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="alt2">Alternativa B:</label>
+                            <input type="text" id="alt2" name="alt2" required class="form-control" placeholder="Digite a alternativa B">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="alt3">Alternativa C:</label>
+                            <input type="text" id="alt3" name="alt3" required class="form-control" placeholder="Digite a alternativa C">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="alt4">Alternativa D:</label>
+                            <input type="text" id="alt4" name="alt4" required class="form-control" placeholder="Digite a alternativa D">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="correta">Qual é a alternativa correta?</label>
+                        <select id="correta" name="correta" required class="form-control">
+                            <option value="">Selecione a alternativa correta</option>
+                            <option value="1">A</option>
+                            <option value="2">B</option>
+                            <option value="3">C</option>
+                            <option value="4">D</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <a href="dashboard.php" class="btn btn-outline">Cancelar</a>
+                        <button type="submit" class="btn btn-success">Adicionar Questão</button>
+                    </div>
+                </form>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>Desenvolvido por Resumo Acadêmico &copy; 2025</p>
+        </footer>
+    </div>
 </body>
 </html>

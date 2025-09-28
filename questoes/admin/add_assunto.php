@@ -15,15 +15,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $nome_assunto = trim($_POST['nome_assunto']);
 
     if (empty($nome_assunto)) {
-        $mensagem_status = '<p style="color:red;">Por favor, digite o nome do novo assunto.</p>';
+        $mensagem_status = 'error';
+        $mensagem_texto = 'Por favor, digite o nome do novo assunto.';
     } else {
         try {
             // Insere o novo assunto na tabela 'assuntos'
             $stmt = $pdo->prepare("INSERT INTO assuntos (nome) VALUES (?)");
             $stmt->execute([$nome_assunto]);
-            $mensagem_status = '<p style="color:green;">Assunto "' . htmlspecialchars($nome_assunto) . '" adicionado com sucesso!</p>';
+            $mensagem_status = 'success';
+            $mensagem_texto = 'Assunto "' . htmlspecialchars($nome_assunto) . '" adicionado com sucesso!';
         } catch (Exception $e) {
-            $mensagem_status = '<p style="color:red;">Erro ao adicionar o assunto: ' . $e->getMessage() . '</p>';
+            $mensagem_status = 'error';
+            $mensagem_texto = 'Erro ao adicionar o assunto: ' . $e->getMessage();
         }
     }
 }
@@ -33,52 +36,52 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Adicionar Assunto</title>
-    <link rel="stylesheet" href="../../style.css">
-    <style>
-        .conteudo-principal {
-            max-width: 600px;
-            margin: 173px auto 10px auto;
-            background-color: #FFFFFF;
-            padding: 20px;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.432);
-            border-radius: 10px;
-            text-align: center;
-        }
-        form {
-            text-align: left;
-        }
-        label, input[type="text"] {
-            display: block;
-            width: 100%;
-            margin-bottom: 10px;
-        }
-        .actions-right { display:flex; justify-content:flex-end; gap:10px; margin-top:20px; }
-    </style>
+    <title>Adicionar Assunto - Resumo Acadêmico</title>
+    <link rel="stylesheet" href="../modern-style.css">
 </head>
 <body>
-    <header>
-        <h1>Adicionar Novo Assunto</h1>
-        <p>Preencha os dados do novo assunto.</p>
-    </header>
-
-    <main class="conteudo-principal">
-        <?= $mensagem_status ?>
-        <form action="add_assunto.php" method="post">
-            <?= csrf_field() ?>
-            <label for="nome_assunto">Nome do Assunto:</label>
-            <input type="text" id="nome_assunto" name="nome_assunto" required>
-            <div class="actions-right">
-                <a href="dashboard.php" class="btn btn-outline">Voltar</a>
-                <button type="submit" class="btn btn-primary">Salvar Assunto</button>
+    <div class="main-container fade-in">
+        <header class="header">
+            <div class="logo">
+                <img src="../../fotos/Logotipo_resumo_academico.png" alt="Resumo Acadêmico">
             </div>
-        </form>
-    </main>
+            <div class="title-section">
+                <h1>Adicionar Novo Assunto</h1>
+                <p class="subtitle">Preencha os dados do novo assunto</p>
+            </div>
+        </header>
 
-    <footer>
-        <div class="footer-creditos">
-            <p>Desenvolvido por Resumo Acadêmico &copy; 2025</p>
+        <div class="user-info">
+            <a href="dashboard.php" class="btn btn-outline">Voltar ao Dashboard</a>
         </div>
-    </footer>
+
+        <main class="content">
+            <?php if (!empty($mensagem_status)): ?>
+                <div class="alert alert-<?= $mensagem_status ?> fade-in">
+                    <?= htmlspecialchars($mensagem_texto) ?>
+                </div>
+            <?php endif; ?>
+
+            <div class="form-container">
+                <form action="add_assunto.php" method="post" class="modern-form">
+                    <?= csrf_field() ?>
+                    
+                    <div class="form-group">
+                        <label for="nome_assunto">Nome do Assunto:</label>
+                        <input type="text" id="nome_assunto" name="nome_assunto" required class="form-control" placeholder="Digite o nome do assunto...">
+                    </div>
+                    
+                    <div class="form-actions">
+                        <a href="dashboard.php" class="btn btn-outline">Cancelar</a>
+                        <button type="submit" class="btn btn-primary">Salvar Assunto</button>
+                    </div>
+                </form>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>Desenvolvido por Resumo Acadêmico &copy; 2025</p>
+        </footer>
+    </div>
 </body>
 </html>

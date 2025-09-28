@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Quiz.js - Teste de Comunicação</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        .result { margin: 10px 0; padding: 10px; background: #f5f5f5; }
+        .error { background: #ffebee; color: #c62828; }
+        .success { background: #e8f5e8; color: #2e7d32; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        pre { background: #f0f0f0; padding: 10px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>Debug Quiz.js - Teste de Comunicação</h1>
+    
+    <div class="test-section">
+        <h2>Simulação Exata do Quiz.js</h2>
+        <p>Este teste simula exatamente como o quiz.js envia dados para processar_resposta.php</p>
+        
+        <!-- Simula o form do quiz -->
+        <div id="questoes-form" data-id-questao="76">
+            <label data-id-alternativa="322">
+                <input type="radio" name="alternativa" value="322">
+                Alternativa de teste
+            </label>
+        </div>
+        
+        <button onclick="simularClique()">Simular Clique na Alternativa</button>
+        <div id="resultado" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Teste de Dados Recebidos</h2>
+        <button onclick="verificarDados()">Verificar Dados POST</button>
+        <div id="dados-resultado" class="result"></div>
+    </div>
+
+    <script>
+        // Simula exatamente o comportamento do quiz.js
+        function simularClique() {
+            const resultado = document.getElementById('resultado');
+            resultado.innerHTML = 'Enviando dados...';
+            
+            const questoesForm = document.getElementById('questoes-form');
+            const alternativaSelecionada = questoesForm.querySelector('label');
+            const respostaId = alternativaSelecionada.dataset.idAlternativa;
+            const idQuestao = questoesForm.dataset.idQuestao;
+            
+            console.log('Dados a enviar:', { idQuestao, respostaId });
+            
+            // Exatamente como no quiz.js
+            fetch('processar_resposta.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `id_questao=${idQuestao}&id_alternativa=${respostaId}`
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                console.log('Response headers:', [...response.headers.entries()]);
+                return response.text(); // Primeiro como texto para debug
+            })
+            .then(text => {
+                console.log('Response text:', text);
+                try {
+                    const data = JSON.parse(text);
+                    console.log('Parsed data:', data);
+                    
+                    if (data.sucesso) {
+                        resultado.innerHTML = `
+                            <div class="success">
+                                <strong>✅ Sucesso!</strong><br>
+                                Resposta correta: ${data.correta}<br>
+                                Total de acertos: ${data.acertos}<br>
+                                <strong>Dados salvos com sucesso!</strong>
+                            </div>
+                        `;
+                    } else {
+                        resultado.innerHTML = `
+                            <div class="error">
+                                <strong>❌ Erro do servidor:</strong><br>
+                                ${data.erro || 'Erro desconhecido'}<br>
+                                <pre>${JSON.stringify(data, null, 2)}</pre>
+                            </div>
+                        `;
+                    }
+                } catch (e) {
+                    resultado.innerHTML = `
+                        <div class="error">
+                            <strong>❌ Erro ao parsear JSON:</strong><br>
+                            ${e.message}<br>
+                            <strong>Resposta raw:</strong><br>
+                            <pre>${text}</pre>
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('Fetch error:', error);
+                resultado.innerHTML = `
+                    <div class="error">
+                        <strong>❌ Erro de requisição:</strong><br>
+                        ${error.message}
+                    </div>
+                `;
+            });
+        }
+        
+        function verificarDados() {
+            const resultado = document.getElementById('dados-resultado');
+            resultado.innerHTML = 'Verificando...';
+            
+            fetch('debug_post_data.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `id_questao=76&id_alternativa=322`
+            })
+            .then(response => response.json())
+            .then(data => {
+                resultado.innerHTML = `
+                    <div class="success">
+                        <strong>Dados recebidos pelo servidor:</strong><br>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    </div>
+                `;
+            })
+            .catch(error => {
+                resultado.innerHTML = `
+                    <div class="error">
+                        <strong>Erro:</strong> ${error.message}
+                    </div>
+                `;
+            });
+        }
+    </script>
+</body>
+</html>

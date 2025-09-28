@@ -2,7 +2,17 @@
 session_start();
 require_once __DIR__ . '/conexao.php';
 
+// Headers CORS para permitir requisições cross-origin
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization');
 header('Content-Type: application/json');
+
+// Responde a requisições OPTIONS (preflight)
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit();
+}
 
 // Verifica se o usuário está logado; se não estiver, não grava no banco, apenas responde.
 $usuario_logado = isset($_SESSION['id_usuario']);
@@ -13,9 +23,23 @@ if (!isset($_SESSION['quiz_progress'])) {
     $_SESSION['quiz_progress'] = ['acertos' => 0, 'respondidas' => []];
 }
 
+// Criar tabela de respostas_usuario se não existir (para o sistema de tracking)
+$sql_create_table = "CREATE TABLE IF NOT EXISTS respostas_usuario (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_questao INT NOT NULL,
+    id_alternativa INT NOT NULL,
+    acertou TINYINT(1) NOT NULL DEFAULT 0,
+    data_resposta TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY unique_questao (id_questao)
+)";
+$pdo->query($sql_create_table);
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id_questao = isset($_POST['id_questao']) ? (int)$_POST['id_questao'] : 0;
     $id_alternativa_selecionada = isset($_POST['id_alternativa']) ? (int)$_POST['id_alternativa'] : 0;
+
+    // Debug: log dos dados recebidos
+    error_log("DEBUG processar_resposta: id_questao=$id_questao, id_alternativa=$id_alternativa_selecionada");
 
     if ($id_questao > 0 && $id_alternativa_selecionada > 0) {
         // Encontra a alternativa correta no banco de dados
@@ -37,8 +61,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $data_resposta = date("Y-m-d H:i:s");
 
         try {
+            // Salvar resposta na tabela de tracking (sempre, mesmo sem login)
+            $stmt_tracking = $pdo->prepare("INSERT INTO respostas_usuario (id_questao, id_alternativa, acertou) 
+                                           VALUES (?, ?, ?) 
+                                           ON DUPLICATE KEY UPDATE 
+                                           id_alternativa = VALUES(id_alternativa), 
+                                           acertou = VALUES(acertou), 
+                                           data_resposta = CURRENT_TIMESTAMP");
+            $stmt_tracking->execute([$id_questao, $id_alternativa_selecionada, $resposta_correta ? 1 : 0]);
+            
             if ($usuario_logado) {
-                // Insere a resposta apenas para usuários logados
+                // Insere a resposta apenas para usuários logados (tabela original)
                 $stmt_salvar = $pdo->prepare("INSERT INTO respostas_usuarios (id_usuario, id_questao, acertou, data_resposta) VALUES (?, ?, ?, ?)");
                 $stmt_salvar->execute([$id_usuario, $id_questao, $resposta_correta ? 1 : 0, $data_resposta]);
             }
@@ -53,16 +86,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'acertos' => $_SESSION['quiz_progress']['acertos']
             ]);
             exit;
-        } catch (PDOException $e) {
+        } catch (Exception $e) {
             // Exibe o erro completo do banco de dados
+            error_log("ERRO processar_resposta: " . $e->getMessage());
             http_response_code(500);
             echo json_encode(['sucesso' => false, 'erro' => 'Erro ao salvar a resposta. Mensagem: ' . $e->getMessage()]);
             exit;
         }
+    } else {
+        // Debug: log quando dados são inválidos
+        error_log("DEBUG processar_resposta: Dados inválidos - id_questao=$id_questao, id_alternativa=$id_alternativa_selecionada");
     }
 }
 
 // Código para lidar com requisições inválidas
+error_log("DEBUG processar_resposta: Chegou ao final - retornando erro 400");
 http_response_code(400);
 echo json_encode(['sucesso' => false, 'erro' => 'Requisição inválida']);
 ?>

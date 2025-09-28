@@ -1,0 +1,20 @@
+﻿{
+    "method": "POST",
+    "post_data": {
+        "id_questao": "76",
+        "id_alternativa": "322"
+    },
+    "raw_input": "id_questao=76&id_alternativa=322",
+    "content_type": "application\/x-www-form-urlencoded",
+    "session_data": [],
+    "validation_results": {
+        "id_questao_raw": "76",
+        "id_alternativa_raw": "322",
+        "id_questao_int": 76,
+        "id_alternativa_int": 322,
+        "id_questao_valid": true,
+        "id_alternativa_valid": true,
+        "both_valid": true
+    },
+    "status": "Dados v\u00e1lidos - processamento seria executado"
+}

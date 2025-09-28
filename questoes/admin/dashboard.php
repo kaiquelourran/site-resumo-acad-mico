@@ -80,148 +80,101 @@ $buckets = $pdo->query($sql_buckets)->fetch(PDO::FETCH_ASSOC);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Admin</title>
-    <link rel="stylesheet" href="../../style.css">
-    <style>
-        .conteudo-principal {
-            text-align: center;
-            padding: 20px;
-        }
-        .conteudo-principal h2 {
-            margin-top: 10px;
-        }
-        .botoes-admin {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            justify-content: center;
-            margin: 20px 0;
-        }
-        
-        .botoes-admin .btn {
-            flex: 1;
-            min-width: 150px;
-            max-width: 200px;
-        }
-        .dashboard-geral {
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px dashed #ccc;
-        }
-        .cards-inline { display:flex; flex-wrap:wrap; gap:20px; justify-content:center; margin-top: 20px; }
-        .mini-card { background:#fff; border-radius:8px; padding:14px 18px; box-shadow:0 2px 6px rgba(0,0,0,0.08); min-width:220px; }
-        .mini-card h4 { margin:0 0 8px 0; font-size:1em; color:#333; }
-        .mini-card ul { list-style:none; padding:0; margin:0; text-align:left; }
-        .mini-card ul li { margin: 6px 0; font-size:0.95em; }
-        .dashboard-info {
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap; /* Adicionado para quebrar a linha se a tela for pequena */
-            gap: 20px;
-        }
-        .info-card {
-            background-color: #f0f8ff;
-            padding: 20px;
-            border-radius: 8px;
-            text-align: center;
-            flex: 1; /* Adicionado para que os cards ocupem espaço igual */
-            min-width: 200px; /* Garante que os cards não fiquem muito pequenos */
-        }
-        .info-card h3 {
-            margin-bottom: 5px;
-            color: #333;
-        }
-        .info-card p {
-            font-size: 2em;
-            font-weight: bold;
-            color: #007bff;
-        }
-    </style>
+    <title>Painel Admin - Resumo Acadêmico</title>
+    <link rel="stylesheet" href="../modern-style.css">
 </head>
 <body>
-    <header>
-        <h1>Painel de Administração</h1>
-        <p>Bem-vindo, <?= htmlspecialchars($_SESSION['nome_usuario']) ?>!</p>
-        <div class="login-area">
-            <a href="../perfil_usuario.php">Meu Desempenho</a>
-            <a href="../logout.php" class="logout-link" aria-label="Sair da conta">Sair</a>
-        </div>
-    </header>
-
-    <main class="conteudo-principal">
-        <h2>Gerenciamento de Conteúdo</h2>
-        <div class="botoes-admin">
-            <a href="gerenciar_questoes.php" class="btn btn-primary">Gerenciar Questões</a>
-            <a href="add_questao.php" class="btn btn-success">Adicionar Questão</a>
-            <a href="add_assunto.php" class="btn btn-secondary">Adicionar Assunto</a>
-            <a href="../index.php" class="btn btn-outline">Voltar ao Site</a>
-            <a href="login.php?logout=1" class="btn btn-danger">Sair</a>
-        </div>
-        
-        <div class="dashboard-geral">
-            <h2>Métricas Gerais do Site</h2>
-            <div class="dashboard-info">
-                <div class="info-card">
-                    <h3>Usuários Cadastrados</h3>
-                    <p><?= htmlspecialchars($total_usuarios) ?></p>
-                </div>
-                <div class="info-card">
-                    <h3>Questões Respondidas</h3>
-                    <p><?= htmlspecialchars($total_respostas_geral) ?></p>
-                </div>
-                <div class="info-card">
-                    <h3>Logins Hoje</h3>
-                    <p><?= htmlspecialchars($usuarios_hoje) ?></p>
-                </div>
-                <div class="info-card">
-                    <h3>Logins Última Semana</h3>
-                    <p><?= htmlspecialchars($usuarios_semana) ?></p>
-                </div>
-                <div class="info-card">
-                    <h3>Logins Último Mês</h3>
-                    <p><?= htmlspecialchars($usuarios_mes) ?></p>
-                </div>
+    <div class="main-container fade-in">
+        <header class="header">
+            <div class="logo">
+                <img src="../../fotos/Logotipo_resumo_academico.png" alt="Resumo Acadêmico">
             </div>
+            <div class="title-section">
+                <h1>Painel de Administração</h1>
+                <p class="subtitle">Bem-vindo, <?= htmlspecialchars($_SESSION['nome_usuario']) ?>!</p>
+            </div>
+        </header>
+
+        <div class="user-info">
+            <a href="../perfil_usuario.php" class="btn btn-outline">Meu Desempenho</a>
+            <a href="../logout.php" class="btn btn-danger">Sair</a>
         </div>
 
-        <div class="cards-inline">
-            <div class="mini-card">
-                <h4>Assuntos mais difíceis (taxa de acerto)</h4>
-                <ul>
-                    <?php if (!empty($assuntos_mais_dificeis)): foreach ($assuntos_mais_dificeis as $row): ?>
-                        <li><?= htmlspecialchars($row['assunto']) ?> — <?= htmlspecialchars($row['taxa']) ?>%</li>
-                    <?php endforeach; else: ?>
-                        <li>Sem dados suficientes.</li>
-                    <?php endif; ?>
-                </ul>
-            </div>
-            <div class="mini-card">
-                <h4>Distribuição de dificuldade</h4>
-                <ul>
-                    <li>Difíceis (< 40%): <?= htmlspecialchars($buckets['dificeis'] ?? 0) ?></li>
-                    <li>Médias (40–70%): <?= htmlspecialchars($buckets['medias'] ?? 0) ?></li>
-                    <li>Fáceis (> 70%): <?= htmlspecialchars($buckets['faceis'] ?? 0) ?></li>
-                </ul>
-            </div>
-            <div class="mini-card">
-                <h4>Questões mais erradas</h4>
-                <ul>
-                    <?php if (!empty($questoes_mais_erradas)): foreach ($questoes_mais_erradas as $q): ?>
-                        <li>#<?= htmlspecialchars($q['id_questao']) ?> — <?= htmlspecialchars($q['taxa_erro']) ?>% erros</li>
-                    <?php endforeach; else: ?>
-                        <li>Sem dados suficientes.</li>
-                    <?php endif; ?>
-                </ul>
-            </div>
-        </div>
+        <main class="content">
+            <section class="admin-section">
+                <h2>Gerenciamento de Conteúdo</h2>
+                <div class="buttons-grid">
+                    <a href="gerenciar_questoes_sem_auth.php" class="btn btn-primary">Gerenciar Questões</a>
+                    <a href="gerenciar_assuntos.php" class="btn btn-primary">Gerenciar Assuntos</a>
+                    <a href="add_questao.php" class="btn btn-success">Adicionar Questão</a>
+                    <a href="add_assunto.php" class="btn btn-secondary">Adicionar Assunto</a>
+                    <a href="../index.php" class="btn btn-outline">Voltar ao Site</a>
+                </div>
+            </section>
+            
+            <section class="metrics-section">
+                <h2>Métricas Gerais do Site</h2>
+                <div class="stats-container">
+                    <div class="stat-card slide-in">
+                        <h3>Usuários Cadastrados</h3>
+                        <div class="stat-number"><?= htmlspecialchars($total_usuarios) ?></div>
+                    </div>
+                    <div class="stat-card slide-in">
+                        <h3>Questões Respondidas</h3>
+                        <div class="stat-number"><?= htmlspecialchars($total_respostas_geral) ?></div>
+                    </div>
+                    <div class="stat-card slide-in">
+                        <h3>Logins Hoje</h3>
+                        <div class="stat-number"><?= htmlspecialchars($usuarios_hoje) ?></div>
+                    </div>
+                    <div class="stat-card slide-in">
+                        <h3>Logins Última Semana</h3>
+                        <div class="stat-number"><?= htmlspecialchars($usuarios_semana) ?></div>
+                    </div>
+                    <div class="stat-card slide-in">
+                        <h3>Logins Último Mês</h3>
+                        <div class="stat-number"><?= htmlspecialchars($usuarios_mes) ?></div>
+                    </div>
+                </div>
+            </section>
 
-        
-    </main>
+            <section class="analytics-section">
+                <div class="cards-container">
+                    <div class="card">
+                        <h4>Assuntos mais difíceis (taxa de acerto)</h4>
+                        <ul class="analytics-list">
+                            <?php if (!empty($assuntos_mais_dificeis)): foreach ($assuntos_mais_dificeis as $row): ?>
+                                <li><?= htmlspecialchars($row['assunto']) ?> — <?= htmlspecialchars($row['taxa']) ?>%</li>
+                            <?php endforeach; else: ?>
+                                <li>Sem dados suficientes.</li>
+                            <?php endif; ?>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Distribuição de dificuldade</h4>
+                        <ul class="analytics-list">
+                            <li>Difíceis (< 40%): <?= htmlspecialchars($buckets['dificeis'] ?? 0) ?></li>
+                            <li>Médias (40–70%): <?= htmlspecialchars($buckets['medias'] ?? 0) ?></li>
+                            <li>Fáceis (> 70%): <?= htmlspecialchars($buckets['faceis'] ?? 0) ?></li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Questões mais erradas</h4>
+                        <ul class="analytics-list">
+                            <?php if (!empty($questoes_mais_erradas)): foreach ($questoes_mais_erradas as $q): ?>
+                                <li>#<?= htmlspecialchars($q['id_questao']) ?> — <?= htmlspecialchars($q['taxa_erro']) ?>% erros</li>
+                            <?php endforeach; else: ?>
+                                <li>Sem dados suficientes.</li>
+                            <?php endif; ?>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+        </main>
 
-    <footer>
-        <div class="footer-creditos">
+        <footer class="footer">
             <p>Desenvolvido por Resumo Acadêmico &copy; 2025</p>
-        </div>
-    </footer>
+        </footer>
+    </div>
 </body>
 </html>

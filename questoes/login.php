@@ -1,439 +1,343 @@
 <?php
 session_start();
+require_once 'conexao.php';
 
-// Permite trocar de conta: se ?trocar=1, encerra a sessão atual e mostra o formulário
-if (isset($_GET['trocar'])) {
-    $_SESSION = array();
-    if (ini_get('session.use_cookies')) {
-        $params = session_get_cookie_params();
-        setcookie(session_name(), '', time() - 42000, $params['path'], $params['domain'], $params['secure'], $params['httponly']);
-    }
-    session_destroy();
-    session_start();
+// Gerar token CSRF se não existir
+if (!isset($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
-// Verifica se o usuário já está logado e o redireciona, exceto quando enviando login (POST) ou trocando de conta
-if (isset($_SESSION['id_usuario']) && $_SERVER['REQUEST_METHOD'] !== 'POST' && !isset($_GET['trocar'])) {
-    if ($_SESSION['tipo_usuario'] === 'admin') {
-        header('Location: admin/dashboard.php');
-    } else {
-        header('Location: index.php');
-    }
+$error_message = '';
+$success_message = '';
+
+// Verificar se já está logado
+if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
+    header('Location: index.php');
     exit;
 }
 
-// CORREÇÃO: Caminho do arquivo de conexão
-require_once __DIR__ . '/conexao.php';
-
-$mensagem = '';
-
+// Processar login
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $email = trim($_POST['email']);
-    $senha = $_POST['senha'];
-    $tipo_login = isset($_POST['tipo_login']) ? $_POST['tipo_login'] : '';
-
-    if (empty($email) || empty($senha)) {
-        $mensagem = "Por favor, preencha todos os campos.";
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        $error = 'Token de segurança inválido.';
     } else {
-        // Verifica CSRF
-        if (!validate_csrf()) {
-            $mensagem = "Sessão expirada ou requisição inválida. Atualize a página e tente novamente.";
+        $email = trim($_POST['email']);
+        $password = $_POST['password'];
+        $user_type = $_POST['user_type'];
+        
+        if (empty($email) || empty($password) || empty($user_type)) {
+            $error = 'Por favor, preencha todos os campos.';
         } else {
-        // A consulta SQL busca o usuário pelo email
-        $stmt = $pdo->prepare("SELECT id_usuario, nome, senha, tipo FROM usuarios WHERE email = ?");
-        $stmt->execute([$email]);
-        $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if ($usuario) {
-            if (password_verify($senha, $usuario['senha'])) {
-                if ($usuario['tipo'] === $tipo_login) {
-                    // Regera o ID da sessão para evitar reaproveitar sessão antiga ao trocar de conta
+            try {
+                // Buscar usuário no banco de dados
+                $stmt = $pdo->prepare("SELECT id_usuario, nome, email, senha, tipo FROM usuarios WHERE email = ? AND tipo = ?");
+                $stmt->execute([$email, $user_type]);
+                $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                if ($usuario && password_verify($password, $usuario['senha'])) {
+                    // Login bem-sucedido
                     session_regenerate_id(true);
-                    // Limpa progresso de quiz de sessões anteriores
-                    unset($_SESSION['quiz_progress']);
-                    // SESSÃO ATUALIZADA: Define as variáveis de sessão de forma unificada
+                    $_SESSION['logged_in'] = true;
                     $_SESSION['id_usuario'] = $usuario['id_usuario'];
-                    $_SESSION['nome_usuario'] = $usuario['nome'];
-                    $_SESSION['tipo_usuario'] = $usuario['tipo'];
+                    $_SESSION['user_name'] = $usuario['nome'];
+                    $_SESSION['user_type'] = $usuario['tipo'];
+                    $_SESSION['tipo_usuario'] = $usuario['tipo']; // Para compatibilidade com admin
                     
-                    // NOVO: Adicionei a atualização da data de login aqui
+                    // Atualizar último login
                     $stmt_update = $pdo->prepare("UPDATE usuarios SET ultimo_login = NOW() WHERE id_usuario = ?");
                     $stmt_update->execute([$usuario['id_usuario']]);
-
-                    // Redireciona com base no tipo de usuário
-                    if ($usuario['tipo'] === 'admin') {
-                        header('Location: admin/dashboard.php');
-                    } else {
-                        header('Location: index.php');
-                    }
+                    
+                    header('Location: index.php');
                     exit;
                 } else {
-                    $mensagem = "Credenciais de login inválidas para este tipo de acesso.";
+                    $error = 'Email, senha ou tipo de usuário incorretos.';
                 }
-            } else {
-                $mensagem = "Senha incorreta.";
+            } catch (PDOException $e) {
+                $error = 'Erro no sistema. Tente novamente.';
             }
-        } else {
-            $mensagem = "Email não encontrado.";
-        }
         }
     }
 }
 ?>
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Questões Complementares</title>
-    <link rel="icon" href="../fotos/minha-logo-apple.png" type="image/png">
+    <title>Login - Resumo Acadêmico</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-
+        
         body {
-            background-image: linear-gradient(to bottom, #4A90E2, #50E3C2);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            font-family: Arial, sans-serif;
             display: flex;
-            flex-direction: column;
-        }
-
-        header {
-            min-height: 120px;
-            background-image: linear-gradient(to bottom, #0072FF, #00C6FF);
-            text-align: center;
-            font-size: 1.2em;
-            padding-top: 20px;
-            color: white;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-            position: fixed;
-            width: 100%;
-            top: 0;
-            left: 0;
-            z-index: 1000;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-            animation: fadeInDown 0.8s ease;
-        }
-
-        @keyframes fadeInDown {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        main {
-            display: flex;
-            justify-content: center;
             align-items: center;
-            min-height: 100vh;
+            justify-content: center;
             padding: 20px;
         }
         
         .login-container {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
             width: 100%;
-            max-width: 450px;
-            margin: 150px auto 30px;
-            animation: fadeIn 0.8s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .formulario-card {
-            width: 100%;
-            padding: 40px 30px;
-            background-color: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            max-width: 400px;
             text-align: center;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
         
-        .formulario-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+        .logo {
+            font-size: 3em;
+            margin-bottom: 10px;
         }
         
-        .formulario-card h2 {
-            margin-bottom: 25px;
+        .title {
             color: #333;
-            font-size: 2em;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+            font-size: 1.8em;
+            font-weight: 600;
+            margin-bottom: 8px;
         }
         
-        .formulario-card h2:after {
-            content: '';
-            display: block;
-            width: 60px;
-            height: 4px;
-            background: linear-gradient(to right, #0072FF, #00C6FF);
-            margin: 15px auto 0;
-            border-radius: 2px;
-        }
-        
-        .login-opcoes {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
+        .subtitle {
+            color: #666;
+            font-size: 1em;
             margin-bottom: 30px;
         }
         
-        .login-opcoes button {
-            flex: 1;
-            padding: 15px;
-            font-size: 1.1em;
-            font-weight: bold;
-            background-color: #f8f9fa;
-            color: #495057;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        
-        .login-opcoes button.active {
-            background: linear-gradient(to right, #0072FF, #00C6FF);
-            color: white;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        }
-        
-        .login-opcoes button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 10px rgba(0,0,0,0.15);
-        }
-        
-        .formulario-card .campo-grupo {
-            margin-bottom: 25px;
-            text-align: left;
-        }
-        
-        .formulario-card label {
-            display: block;
-            margin-bottom: 10px;
-            font-weight: bold;
-            color: #444;
-            font-size: 1.1em;
-        }
-        
-        .formulario-card input[type="email"],
-        .formulario-card input[type="password"] {
-            width: 100%;
-            padding: 15px;
-            border: 2px solid #dde1e7;
-            border-radius: 10px;
-            font-size: 1.1em;
-            background-color: #f8f9fa;
-            transition: all 0.3s ease;
-        }
-        
-        .formulario-card input[type="email"]:focus,
-        .formulario-card input[type="password"]:focus {
-            border-color: #0072FF;
-            outline: none;
-            box-shadow: 0 0 0 4px rgba(0, 114, 255, 0.2);
-            background-color: #fff;
-        }
-
-        .formulario-card button[type="submit"] {
-            width: 100%;
-            padding: 16px;
-            background: linear-gradient(to right, #0072FF, #00C6FF);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 1.2em;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 20px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        }
-        
-        .formulario-card button[type="submit"]:hover {
-            background: linear-gradient(to right, #005cc8, #00b3e6);
-            transform: translateY(-3px);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.25);
-        }
-        
-        .formulario-card .link-cadastro {
-            display: inline-block;
-            margin-top: 30px;
-            color: #0072FF;
-            text-decoration: none;
-            font-weight: bold;
-            font-size: 1.1em;
-            padding: 5px;
-            transition: all 0.3s ease;
-            position: relative;
-        }
-        
-        .formulario-card .link-cadastro:after {
-            content: '';
-            position: absolute;
-            width: 100%;
-            height: 2px;
-            bottom: 0;
-            left: 0;
-            background-color: #0072FF;
-            transform: scaleX(0);
-            transition: transform 0.3s ease;
-        }
-        
-        .formulario-card .link-cadastro:hover {
-            color: #00C6FF;
-        }
-        
-        .formulario-card .link-cadastro:hover:after {
-            transform: scaleX(1);
-        }
-        
-        .mensagem-erro {
-            background-color: #ffebee;
-            color: #c62828;
+        .alert {
             padding: 12px;
             border-radius: 8px;
             margin-bottom: 20px;
-            border-left: 4px solid #c62828;
-            font-weight: bold;
-            animation: shake 0.5s ease;
+            font-size: 0.9em;
         }
         
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        .alert-error {
+            background: #fee;
+            color: #c33;
+            border: 1px solid #fcc;
         }
         
-        @media (max-width: 768px) {
-            .login-container {
-                margin-top: 130px;
-                padding: 0 15px;
-            }
-            
-            .formulario-card {
-                padding: 30px 20px;
-            }
-            
-            .formulario-card h2 {
-                font-size: 1.8em;
-            }
-            
-            .login-opcoes button {
-                padding: 12px;
-                font-size: 1em;
-            }
+        .alert-success {
+            background: #efe;
+            color: #363;
+            border: 1px solid #cec;
         }
         
-        @media (max-width: 480px) {
-            header h1 {
-                font-size: 2em;
-            }
-            
-            .login-container {
-                margin-top: 110px;
-            }
-            
-            .formulario-card {
-                padding: 25px 15px;
-            }
-            
-            .formulario-card h2 {
-                font-size: 1.6em;
-            }
-            
-            .login-opcoes {
-                flex-direction: column;
-                gap: 10px;
-            }
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
         }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            color: #333;
+            font-weight: 500;
+            font-size: 0.9em;
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            background: #fff;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .btn-login {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+        
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-login:active {
+            transform: translateY(0);
+        }
+        
+        .help-section {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 25px;
+            text-align: left;
+        }
+        
+        .help-title {
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 12px;
+            font-size: 0.95em;
+        }
+        
+        .help-item {
+            margin-bottom: 8px;
+            font-size: 0.85em;
+            color: #555;
+        }
+        
+        .help-item strong {
+             color: #667eea;
+         }
+         
+         .user-type-buttons {
+             display: flex;
+             gap: 10px;
+             margin-bottom: 25px;
+         }
+         
+         .type-btn {
+             flex: 1;
+             padding: 16px;
+             border: 2px solid #e1e5e9;
+             border-radius: 8px;
+             background: white;
+             color: #333;
+             font-size: 1em;
+             font-weight: 500;
+             cursor: pointer;
+             transition: all 0.3s ease;
+         }
+         
+         .type-btn:hover {
+             border-color: #667eea;
+             background: #f8f9ff;
+         }
+         
+         .type-btn.active {
+             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+             color: white;
+             border-color: #667eea;
+             box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+         }
+         
+         @media (max-width: 480px) {
+             .login-container {
+                 padding: 30px 20px;
+             }
+             
+             .logo {
+                 font-size: 2.5em;
+             }
+             
+             .title {
+                 font-size: 1.5em;
+             }
+             
+             .user-type-buttons {
+                 flex-direction: column;
+                 gap: 8px;
+             }
+         }
     </style>
 </head>
 <body>
-    <header>
-        <h1>Questões Complementares</h1>
-    </header>
+    <div class="login-container">
+        <div class="logo">🎓</div>
+        <h1 class="title">Resumo Acadêmico</h1>
+        <p class="subtitle">Sistema de Questões</p>
+        
+        <?php if (isset($_GET['message']) && $_GET['message'] === 'logout_success'): ?>
+            <div class="alert alert-success">
+                ✅ Logout realizado com sucesso!
+            </div>
+        <?php endif; ?>
 
-    <main>
-        <div class="login-container">
-            <div class="formulario-card">
-                <h2>Login</h2>
-                
-                <div class="login-opcoes">
-                    <button type="button" class="active" onclick="setTipoLogin('usuario')">Login Usuário</button>
-                    <button type="button" onclick="setTipoLogin('admin')">Login Admin</button>
-                </div>
-                
-                <?php if (!empty($mensagem)): ?>
-                    <div class="mensagem-erro"><?php echo $mensagem; ?></div>
-                <?php endif; ?>
-                
-                <form method="post" action="login.php">
-                    <input type="hidden" name="csrf_token" value="<?php echo generate_csrf(); ?>">
-                    <input type="hidden" name="tipo_login" id="tipo_login" value="usuario">
-                    
-                    <div class="campo-grupo">
-                        <label for="email">Email:</label>
-                        <input type="email" id="email" name="email" required value="<?php echo isset($_POST['email']) ? htmlspecialchars($_POST['email']) : ''; ?>">
-                    </div>
-                    
-                    <div class="campo-grupo">
-                        <label for="senha">Senha:</label>
-                        <input type="password" id="senha" name="senha" required>
-                    </div>
-                    
-                    <button type="submit" class="btn btn-primary btn-lg">Entrar</button>
-                </form>
-                
-                <a href="cadastro.php" class="link-cadastro">Ainda não tem uma conta? Cadastre-se aqui</a>
+        <?php if (isset($error)): ?>
+            <div class="alert alert-error">
+                ❌ <?php echo htmlspecialchars($error); ?>
+            </div>
+        <?php endif; ?>
+        
+        <div class="user-type-buttons">
+             <button type="button" class="type-btn" data-type="usuario" onclick="selectUserType('usuario')">
+                 👤 Usuário Normal
+             </button>
+             <button type="button" class="type-btn" data-type="admin" onclick="selectUserType('admin')">
+                 👨‍💼 Administrador
+             </button>
+         </div>
+
+         <form method="POST" id="loginForm">
+             <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
+             <input type="hidden" name="user_type" id="user_type" value="" required>
+
+            <div class="form-group">
+                <label for="email">E-mail</label>
+                <input type="email" name="email" id="email" required placeholder="seu@email.com">
+            </div>
+
+            <div class="form-group">
+                <label for="password">Senha</label>
+                <input type="password" name="password" id="password" required placeholder="Digite sua senha">
+            </div>
+            
+            <button type="submit" class="btn-login">Entrar</button>
+        </form>
+        
+        <div class="help-section">
+            <div class="help-title">💡 Como fazer login:</div>
+            <div class="help-item">
+                <strong>Usuário Normal:</strong> Selecione "Usuário Normal" e use suas credenciais
+            </div>
+            <div class="help-item">
+                <strong>Administrador:</strong> Selecione "Administrador" e use suas credenciais de admin
+            </div>
+            <div class="help-item" style="margin-top: 12px; color: #666;">
+                <strong>Não tem conta?</strong> <a href="cadastro.php" style="color: #667eea; text-decoration: none; font-weight: 600;">Cadastre-se aqui</a>
             </div>
         </div>
-    </main>
-
-    <script>
-        function setTipoLogin(tipo) {
-            document.getElementById('tipo_login').value = tipo;
-            
-            // Atualiza os botões
-            const botoes = document.querySelectorAll('.login-opcoes button');
-            botoes.forEach(botao => {
-                botao.classList.remove('active');
-            });
-            
-            if (tipo === 'usuario') {
-                botoes[0].classList.add('active');
-            } else {
-                botoes[1].classList.add('active');
-            }
-        }
-    </script>
-</body>
-</html>
-
-<?php
-// Função para gerar token CSRF
-function generate_csrf() {
-    if (!isset($_SESSION['csrf_token'])) {
-        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-    }
-    return $_SESSION['csrf_token'];
-}
-
-// Função para validar token CSRF
-function validate_csrf() {
-    if (!isset($_SESSION['csrf_token']) || !isset($_POST['csrf_token']) || $_SESSION['csrf_token'] !== $_POST['csrf_token']) {
-        return false;
-    }
-    return true;
-}
-?>
+     </div>
+     
+     <script>
+         function selectUserType(type) {
+             // Remove active class from all buttons
+             document.querySelectorAll('.type-btn').forEach(btn => {
+                 btn.classList.remove('active');
+             });
+             
+             // Add active class to selected button
+             document.querySelector(`[data-type="${type}"]`).classList.add('active');
+             
+             // Set hidden input value
+             document.getElementById('user_type').value = type;
+         }
+         
+         // Prevent form submission if no user type is selected
+         document.getElementById('loginForm').addEventListener('submit', function(e) {
+             if (!document.getElementById('user_type').value) {
+                 e.preventDefault();
+                 alert('Por favor, selecione o tipo de usuário.');
+             }
+         });
+     </script>
+ </body>
+ </html>

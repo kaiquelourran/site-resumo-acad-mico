@@ -1,0 +1,85 @@
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste de Questões - Sem Login</title>
+    <link rel="stylesheet" href="modern-style.css">
+</head>
+<body>
+    <div class="main-container fade-in">
+        <div class="header">
+            <div class="logo">🎯</div>
+            <h1 class="title">Teste de Questões</h1>
+            <p class="subtitle">Sistema de Questões - Terapia Ocupacional</p>
+        </div>
+        
+                
+                    <div class="questoes-container fade-in-up">
+                <!-- Progress Indicator -->
+                <div class="progress-container">
+                                        <div class="progress-bar" style="width: 0%"></div>
+                </div>
+                <div class="progress-text">
+                    Progresso: 0 de 5 questões
+                </div>
+
+                <!-- Question Header -->
+                <div class="question-header">
+                    <div class="question-number">
+                        🎯 Questão 1 de 5                    </div>
+                    <div class="question-stats">
+                        ✅ Acertos: 0 | 
+                        📊 Aproveitamento: 0%
+                    </div>
+                </div>
+                
+                <div class="question-card fade-in-up">
+                    <div class="question-text"><strong>(Fonte: adaptada de prova de concurso para prefeitura)</strong><br><br>Com que idade é esperado que uma criança demonstre a capacidade de caminhar de forma autônoma, sem necessidade de apoio?</div>
+                </div>
+                
+                <form method="POST">
+                    <input type="hidden" name="id_questao" value="77">
+                    
+                    <div class="alternatives">
+                                                    <label class="alternative slide-in-left " style="animation-delay: 0s;" data-letter="A">
+                                <input type="radio" name="resposta" value="326" required >
+                                <span>12 meses.</span>
+                            </label>
+                                                    <label class="alternative slide-in-left " style="animation-delay: 0.1s;" data-letter="B">
+                                <input type="radio" name="resposta" value="325" required >
+                                <span>10 meses.</span>
+                            </label>
+                                                    <label class="alternative slide-in-left " style="animation-delay: 0.2s;" data-letter="C">
+                                <input type="radio" name="resposta" value="327" required >
+                                <span>18 meses.</span>
+                            </label>
+                                                    <label class="alternative slide-in-left " style="animation-delay: 0.3s;" data-letter="D">
+                                <input type="radio" name="resposta" value="328" required >
+                                <span>24 meses.</span>
+                            </label>
+                                            </div>
+                    
+                                        <button type="submit" class="btn-submit">
+                        <span style="position: relative; z-index: 1;">✅ Responder</span>
+                    </button>
+                                    </form>
+            </div>
+                
+        <div style="text-align: center; margin-top: 40px; padding: 30px; border-top: 2px solid #f0f0f0; background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%); border-radius: 16px;">
+            <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;">
+                <a href='listar_questoes.php?id=8&filtro=nao-respondidas' style='color: #667eea; text-decoration: none; padding: 12px 24px; border: 2px solid #667eea; border-radius: 25px; font-weight: 600; transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 8px;'>
+                            📋 Voltar à Lista
+                          </a>                <a href="index.php" style="color: #667eea; text-decoration: none; padding: 12px 24px; border: 2px solid #667eea; border-radius: 25px; font-weight: 600; transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 8px;">
+                    🏠 Voltar ao Início
+                </a>
+                <a href="escolher_assunto.php" style="color: #764ba2; text-decoration: none; padding: 12px 24px; border: 2px solid #764ba2; border-radius: 25px; font-weight: 600; transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 8px;">
+                    📋 Escolher Assunto
+                </a>
+            </div>
+        </div>
+    </div>
+    <script src="quiz.js"></script>
+</body>
+</html>

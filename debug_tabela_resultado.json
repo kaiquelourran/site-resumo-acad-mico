@@ -1,0 +1,68 @@
+{
+    "tabela_existe": true,
+    "estrutura_tabela": [
+        {
+            "Field": "id",
+            "Type": "int(11)",
+            "Null": "NO",
+            "Key": "PRI",
+            "Default": null,
+            "Extra": "auto_increment"
+        },
+        {
+            "Field": "id_questao",
+            "Type": "int(11)",
+            "Null": "NO",
+            "Key": "UNI",
+            "Default": null,
+            "Extra": ""
+        },
+        {
+            "Field": "id_alternativa",
+            "Type": "int(11)",
+            "Null": "NO",
+            "Key": "MUL",
+            "Default": null,
+            "Extra": ""
+        },
+        {
+            "Field": "acertou",
+            "Type": "tinyint(1)",
+            "Null": "NO",
+            "Key": "",
+            "Default": "0",
+            "Extra": ""
+        },
+        {
+            "Field": "data_resposta",
+            "Type": "timestamp",
+            "Null": "NO",
+            "Key": "",
+            "Default": "current_timestamp()",
+            "Extra": ""
+        }
+    ],
+    "total_registros": 1,
+    "ultimos_registros": [
+        {
+            "id": 1,
+            "id_questao": 76,
+            "id_alternativa": 322,
+            "acertou": 1,
+            "data_resposta": "2025-09-26 21:54:05"
+        }
+    ],
+    "questao_76_existe": true,
+    "alternativa_322_existe": true,
+    "resposta_questao_76": [
+        {
+            "id": 1,
+            "id_questao": 76,
+            "id_alternativa": 322,
+            "acertou": 1,
+            "data_resposta": "2025-09-26 21:54:05"
+        }
+    ],
+    "erro_teste_insercao": "SQLSTATE[23000]: Integrity constraint violation: 1452 Cannot add or update a child row: a foreign key constraint fails (`resumo_quiz`.`respostas_usuario`, CONSTRAINT `respostas_usuario_ibfk_1` FOREIGN KEY (`id_questao`) REFERENCES `questoes` (`id_questao`))",
+    "timestamp": "2025-09-27 02:55:34"
+}
