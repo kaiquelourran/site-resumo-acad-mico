@@ -108,7 +108,7 @@ switch($filtro_ativo) {
     case 'nao-respondidas':
         // Para não-respondidas, não aplicar filtro adicional pois já não carregamos respostas
         break;
-    case 'acertadas':
+    case 'certas':
         $sql .= " AND r.acertou = 1";
         break;
     case 'erradas':
@@ -148,7 +148,7 @@ function getNomeFiltro($filtro) {
         case 'todas': return 'Todas as Questões';
         case 'respondidas': return 'Questões Respondidas';
         case 'nao-respondidas': return 'Questões Não Respondidas';
-        case 'acertadas': return 'Questões Acertadas';
+        case 'certas': return 'Questões Certas';
         case 'erradas': return 'Questões Erradas';
         default: return 'Questões';
     }
@@ -846,7 +846,7 @@ function getNomeFiltro($filtro) {
                                     // Questão respondida deve sair do filtro "não respondidas"
                                     deveRemover = true;
                                     break;
-                                case 'acertadas':
+                                case 'certas':
                                     // Se errou, deve sair do filtro "acertadas"
                                     deveRemover = !data.acertou;
                                     break;

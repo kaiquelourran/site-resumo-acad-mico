@@ -16,7 +16,7 @@ if ($id_assunto > 0) {
 // Query base com LEFT JOIN para respostas
 $sql = "SELECT q.*, a.nome as assunto_nome, 
                CASE 
-                   WHEN r.id_questao IS NOT NULL AND r.acertou = 1 THEN 'acertada'
+                   WHEN r.id_questao IS NOT NULL AND r.acertou = 1 THEN 'certa'
                    WHEN r.id_questao IS NOT NULL AND r.acertou = 0 THEN 'errada'
                    WHEN r.id_questao IS NOT NULL THEN 'respondida'
                    ELSE 'nao-respondida'
@@ -40,7 +40,7 @@ switch($filtro_ativo) {
     case 'nao-respondidas':
         $sql .= " AND r.id_questao IS NULL";
         break;
-    case 'acertadas':
+    case 'certas':
         $sql .= " AND r.acertou = 1";
         break;
     case 'erradas':
@@ -60,7 +60,7 @@ $contadores = [
     'todas' => 0,
     'respondidas' => 0,
     'nao-respondidas' => 0,
-    'acertadas' => 0,
+    'certas' => 0,
     'erradas' => 0
 ];
 
@@ -81,13 +81,13 @@ $contadores['respondidas'] = $stmt_count_respondidas->fetchColumn();
 // Contar questões não respondidas
 $contadores['nao-respondidas'] = $contadores['todas'] - $contadores['respondidas'];
 
-// Contar questões acertadas
-$sql_count_acertadas = "SELECT COUNT(DISTINCT q.id_questao) FROM questoes q 
+// Contar questões certas
+$sql_count_certas = "SELECT COUNT(DISTINCT q.id_questao) FROM questoes q 
                         INNER JOIN respostas_usuario r ON q.id_questao = r.id_questao 
                         WHERE q.id_assunto = ? AND r.acertou = 1";
-$stmt_count_acertadas = $pdo->prepare($sql_count_acertadas);
-$stmt_count_acertadas->execute([$id_assunto]);
-$contadores['acertadas'] = $stmt_count_acertadas->fetchColumn();
+$stmt_count_certas = $pdo->prepare($sql_count_certas);
+$stmt_count_certas->execute([$id_assunto]);
+$contadores['certas'] = $stmt_count_certas->fetchColumn();
 
 // Contar questões erradas
 $sql_count_erradas = "SELECT COUNT(DISTINCT q.id_questao) FROM questoes q 
@@ -265,7 +265,7 @@ $contadores['erradas'] = $stmt_count_erradas->fetchColumn();
             border: 1px solid #dee2e6;
         }
 
-        .status-acertada {
+        .status-certa {
             background: #d4edda;
             color: #155724;
             border: 1px solid #c3e6cb;
@@ -448,10 +448,10 @@ $contadores['erradas'] = $stmt_count_erradas->fetchColumn();
                         <span class="filter-count"><?php echo $contadores['respondidas']; ?></span>
                     </a>
                     
-                    <a href="?id=<?php echo $id_assunto; ?>&filtro=acertadas" 
-                       class="filter-btn <?php echo $filtro_ativo === 'acertadas' ? 'active' : ''; ?>">
-                        <span class="filter-label">🎯 Acertadas</span>
-                        <span class="filter-count"><?php echo $contadores['acertadas']; ?></span>
+                    <a href="?id=<?php echo $id_assunto; ?>&filtro=certas" 
+                       class="filter-btn <?php echo $filtro_ativo === 'certas' ? 'active' : ''; ?>">
+                        <span class="filter-label">🎯 Certas</span>
+                        <span class="filter-count"><?php echo $contadores['certas']; ?></span>
                     </a>
                     
                     <a href="?id=<?php echo $id_assunto; ?>&filtro=erradas" 
@@ -488,7 +488,7 @@ $contadores['erradas'] = $stmt_count_erradas->fetchColumn();
                                                 echo '❓ Não Respondida';
                                                 break;
                                             case 'acertada':
-                                                echo '✅ Acertada';
+                                                echo '✅ Certa';
                                                 break;
                                             case 'errada':
                                                 echo '❌ Errada';
@@ -509,10 +509,7 @@ $contadores['erradas'] = $stmt_count_erradas->fetchColumn();
                        class="btn-action btn-primary">
                         🎯 Responder
                     </a>
-                    <a href="ver_questao.php?id=<?php echo $questao['id_questao']; ?>&volta=listar&assunto=<?php echo $id_assunto; ?>&filtro=<?php echo $filtro_ativo; ?>" 
-                       class="btn-action btn-secondary">
-                        👁️ Visualizar
-                    </a>
+
                 </div>
                             </div>
                         <?php endforeach; ?>
@@ -523,10 +520,7 @@ $contadores['erradas'] = $stmt_count_erradas->fetchColumn();
             <!-- Navegação -->
             <div class="navigation-section">
                 <div class="nav-buttons">
-                    <a href="quiz_sem_login.php?id=<?php echo $id_assunto; ?>&filtro=<?php echo $filtro_ativo; ?>" 
-                       class="nav-btn nav-btn-primary">
-                        🎯 Iniciar Quiz Individual
-                    </a>
+
                     <a href="index.php" class="nav-btn nav-btn-outline">
                         🏠 Voltar ao Início
                     </a>
