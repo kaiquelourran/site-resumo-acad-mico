@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Direto - Quiz</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        
+        .questao-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .questao-texto {
+            font-size: 16px;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        
+        .alternativas-container {
+            margin-bottom: 20px;
+        }
+        
+        .alternativa {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            margin: 8px 0;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        
+        .alternativa:hover {
+            border-color: #007bff;
+            background: #f8f9ff;
+        }
+        
+        .alternativa.selecionada {
+            border-color: #007bff;
+            background: #007bff;
+            color: white;
+        }
+        
+        .letra-alternativa {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #007bff;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+        
+        .alternativa.selecionada .letra-alternativa {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        .btn-submit {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-submit:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .btn-submit:not(:disabled):hover {
+            background: #218838;
+        }
+        
+        .feedback {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 6px;
+        }
+        
+        .feedback.sucesso {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .feedback.erro {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <h1>Teste Direto - Funcionalidade do Quiz</h1>
+    
+    <div class="questao-card">
+        <h3>Questão Teste</h3>
+        <div class="questao-texto">
+            Qual é a capital do Brasil?
+        </div>
+        
+        <form method="POST" class="form-questao" data-questao-id="999">
+            <input type="hidden" name="id_questao" value="999">
+            <input type="hidden" name="alternativa_selecionada" class="alternativa-selecionada">
+            
+            <div class="alternativas-container">
+                <div class="alternativa" data-letra="A">
+                    <div class="letra-alternativa">A</div>
+                    <div class="texto-alternativa">São Paulo</div>
+                </div>
+                <div class="alternativa" data-letra="B">
+                    <div class="letra-alternativa">B</div>
+                    <div class="texto-alternativa">Rio de Janeiro</div>
+                </div>
+                <div class="alternativa" data-letra="C">
+                    <div class="letra-alternativa">C</div>
+                    <div class="texto-alternativa">Brasília</div>
+                </div>
+                <div class="alternativa" data-letra="D">
+                    <div class="letra-alternativa">D</div>
+                    <div class="texto-alternativa">Salvador</div>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn-submit" disabled>
+                📝 Responder
+            </button>
+        </form>
+        
+        <div class="resultado-container"></div>
+    </div>
+
+    <script>
+        console.log('Script iniciado');
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM carregado');
+            
+            const form = document.querySelector('.form-questao');
+            const alternativas = form.querySelectorAll('.alternativa');
+            const inputSelecionada = form.querySelector('.alternativa-selecionada');
+            const btnSubmit = form.querySelector('.btn-submit');
+            const resultadoContainer = document.querySelector('.resultado-container');
+            
+            console.log('Elementos encontrados:', {
+                form: !!form,
+                alternativas: alternativas.length,
+                inputSelecionada: !!inputSelecionada,
+                btnSubmit: !!btnSubmit,
+                resultadoContainer: !!resultadoContainer
+            });
+            
+            alternativas.forEach((alternativa, index) => {
+                alternativa.addEventListener('click', function() {
+                    console.log(`Alternativa ${index} clicada:`, this.dataset.letra);
+                    
+                    // Remover seleção anterior
+                    alternativas.forEach(alt => alt.classList.remove('selecionada'));
+                    
+                    // Selecionar atual
+                    this.classList.add('selecionada');
+                    
+                    // Atualizar input hidden
+                    const letra = this.dataset.letra;
+                    inputSelecionada.value = letra;
+                    
+                    console.log('Input atualizado:', inputSelecionada.value);
+                    
+                    // Habilitar botão
+                    btnSubmit.disabled = false;
+                    console.log('Botão habilitado');
+                });
+            });
+
+            // Envio do formulário
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                console.log('Formulário enviado');
+                
+                const formData = new FormData(this);
+                console.log('Dados:', {
+                    id_questao: formData.get('id_questao'),
+                    alternativa_selecionada: formData.get('alternativa_selecionada')
+                });
+                
+                btnSubmit.disabled = true;
+                btnSubmit.textContent = '⏳ Enviando...';
+                
+                // Simular resposta para teste
+                setTimeout(() => {
+                    const alternativaSelecionada = formData.get('alternativa_selecionada');
+                    const respostaCorreta = 'C'; // Brasília
+                    const acertou = alternativaSelecionada === respostaCorreta;
+                    
+                    console.log('Simulando resposta:', {
+                        selecionada: alternativaSelecionada,
+                        correta: respostaCorreta,
+                        acertou: acertou
+                    });
+                    
+                    const feedbackClass = acertou ? 'sucesso' : 'erro';
+                    const feedbackText = acertou ? '🎉 Correto!' : '❌ Incorreto!';
+                    
+                    resultadoContainer.innerHTML = `
+                        <div class="feedback ${feedbackClass}">
+                            <h4>${feedbackText}</h4>
+                            <p><strong>Resposta correta:</strong> ${respostaCorreta}</p>
+                            <p><strong>Sua resposta:</strong> ${alternativaSelecionada}</p>
+                            <p><strong>Explicação:</strong> Brasília é a capital federal do Brasil desde 1960.</p>
+                        </div>
+                    `;
+                    
+                    // Marcar alternativas
+                    alternativas.forEach(alt => {
+                        const letra = alt.dataset.letra;
+                        if (letra === respostaCorreta) {
+                            alt.style.background = '#28a745';
+                            alt.style.color = 'white';
+                            alt.style.borderColor = '#28a745';
+                        } else if (letra === alternativaSelecionada && !acertou) {
+                            alt.style.background = '#dc3545';
+                            alt.style.color = 'white';
+                            alt.style.borderColor = '#dc3545';
+                        }
+                        alt.style.pointerEvents = 'none';
+                    });
+                    
+                    btnSubmit.textContent = '✅ Respondido';
+                }, 1000);
+            });
+        });
+    </script>
+</body>
+</html>

@@ -31,6 +31,7 @@ $assuntos = $stmt_assuntos->fetchAll(PDO::FETCH_ASSOC);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gerenciar Assuntos - Admin</title>
     <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         .container {
             max-width: 1200px;
@@ -145,11 +146,48 @@ $assuntos = $stmt_assuntos->fetchAll(PDO::FETCH_ASSOC);
             font-weight: bold;
             color: #667eea;
         }
+        
+        .header {
+            position: relative;
+        }
+        
+        .header-nav {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 2;
+        }
+
+        .btn-back {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-back:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-2px);
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
+            <div class="header-nav">
+                <button onclick="goBack()" class="btn-back">
+                    <i class="fas fa-arrow-left"></i> Voltar
+                </button>
+            </div>
             <h1>🎯 Gerenciar Assuntos</h1>
             <p>Administre os assuntos do sistema</p>
             <div style="margin-top: 15px;">
@@ -244,5 +282,18 @@ $assuntos = $stmt_assuntos->fetchAll(PDO::FETCH_ASSOC);
             font-weight: 500;
         }
     </style>
+
+    <script>
+        // Função para voltar à página anterior
+        function goBack() {
+            // Verifica se há histórico de navegação
+            if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                // Se não há histórico, vai para a página principal
+                window.location.href = '../../index.php';
+            }
+        }
+    </script>
 </body>
 </html>

@@ -37,17 +37,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     ];
     $correta_index = (int)$form_data['correta'];
 
-    // Validação melhorada
+    // Validação básica - apenas campos essenciais para funcionamento
     $errors = [];
-    if (empty($enunciado)) $errors[] = 'O enunciado é obrigatório';
-    if (empty($id_assunto)) $errors[] = 'Selecione um assunto';
-    if ($correta_index < 1 || $correta_index > 4) $errors[] = 'Selecione a alternativa correta';
     
-    // Verificar se todas as alternativas estão preenchidas
-    foreach ($alternativas as $i => $alt) {
-        if (empty($alt)) {
-            $letra = chr(65 + $i); // A, B, C, D
-            $errors[] = "A alternativa {$letra} é obrigatória";
+    // Só validar se pelo menos um campo foi preenchido para evitar inserções completamente vazias
+    $has_content = !empty($enunciado) || !empty($explicacao) || array_filter($alternativas);
+    
+    if (!$has_content) {
+        $errors[] = 'Preencha pelo menos um campo para criar a questão';
+    }
+    
+    // Se uma alternativa correta foi selecionada, verificar se ela existe
+    if ($correta_index >= 1 && $correta_index <= 4) {
+        if (empty($alternativas[$correta_index - 1])) {
+            $letra = chr(64 + $correta_index); // A, B, C, D
+            $errors[] = "A alternativa {$letra} selecionada como correta está vazia";
         }
     }
     
@@ -59,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $pdo->beginTransaction();
 
             // Insere a questão com explicação
-            $stmt = $pdo->prepare("INSERT INTO questoes (enunciado, explicacao, id_assunto, data_criacao) VALUES (?, ?, ?, NOW())");
+            $stmt = $pdo->prepare("INSERT INTO questoes (enunciado, explicacao, id_assunto, created_at) VALUES (?, ?, ?, NOW())");
             $stmt->execute([$enunciado, $explicacao, $id_assunto]);
             $id_questao = $pdo->lastInsertId();
 
@@ -137,12 +141,40 @@ try {
         }
 
         .header {
-            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-            color: white;
-            padding: 30px;
-            text-align: center;
-            position: relative;
-        }
+             background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+             color: white;
+             padding: 30px;
+             text-align: center;
+             position: relative;
+         }
+
+         .header-nav {
+             position: absolute;
+             top: 20px;
+             left: 20px;
+             z-index: 2;
+         }
+
+         .btn-back {
+             background: rgba(255, 255, 255, 0.2);
+             color: white;
+             border: 2px solid rgba(255, 255, 255, 0.3);
+             padding: 10px 20px;
+             border-radius: 25px;
+             font-size: 0.9rem;
+             cursor: pointer;
+             transition: all 0.3s ease;
+             display: flex;
+             align-items: center;
+             gap: 8px;
+             backdrop-filter: blur(10px);
+         }
+
+         .btn-back:hover {
+             background: rgba(255, 255, 255, 0.3);
+             border-color: rgba(255, 255, 255, 0.5);
+             transform: translateY(-2px);
+         }
 
         .header::before {
             content: '';
@@ -481,6 +513,11 @@ try {
 <body>
     <div class="container">
         <div class="header">
+            <div class="header-nav">
+                <button onclick="goBack()" class="btn-back">
+                    <i class="fas fa-arrow-left"></i> Voltar
+                </button>
+            </div>
             <h1><i class="fas fa-plus-circle"></i> Adicionar Questão</h1>
             <p>Crie novas questões para enriquecer o banco de dados do sistema</p>
         </div>
@@ -512,9 +549,9 @@ try {
                 <div class="form-grid">
                     <div class="form-group">
                         <label for="id_assunto">
-                            <i class="fas fa-tag"></i> Assunto <span class="required">*</span>
+                            <i class="fas fa-tag"></i> Assunto
                         </label>
-                        <select name="id_assunto" id="id_assunto" class="form-control" required>
+                        <select name="id_assunto" id="id_assunto" class="form-control">
                             <option value="">Selecione um assunto</option>
                             <?php foreach ($assuntos as $assunto): ?>
                                 <option value="<?php echo $assunto['id_assunto']; ?>" 
@@ -528,10 +565,10 @@ try {
 
                     <div class="form-group">
                         <label for="enunciado">
-                            <i class="fas fa-question-circle"></i> Enunciado da Questão <span class="required">*</span>
+                            <i class="fas fa-question-circle"></i> Enunciado da Questão
                         </label>
                         <div class="input-wrapper">
-                            <textarea name="enunciado" id="enunciado" class="form-control" required 
+                            <textarea name="enunciado" id="enunciado" class="form-control"
                                       placeholder="Digite o enunciado da questão de forma clara e objetiva..."
                                       maxlength="1000"><?php echo htmlspecialchars($form_data['enunciado'] ?? ''); ?></textarea>
                             <div class="char-counter" id="enunciado-counter">0/1000</div>
@@ -541,7 +578,7 @@ try {
 
                     <div class="form-group">
                         <label>
-                            <i class="fas fa-list"></i> Alternativas <span class="required">*</span>
+                            <i class="fas fa-list"></i> Alternativas
                         </label>
                         <div class="alternatives-grid">
                             <?php 
@@ -555,7 +592,7 @@ try {
                                         Alternativa <?php echo $letters[$i]; ?>
                                     </div>
                                     <input type="text" name="<?php echo $alt_names[$i]; ?>" 
-                                           id="<?php echo $alt_names[$i]; ?>" class="form-control" required 
+                                           id="<?php echo $alt_names[$i]; ?>" class="form-control"
                                            placeholder="Digite a alternativa <?php echo $letters[$i]; ?>"
                                            maxlength="500"
                                            value="<?php echo htmlspecialchars($form_data[$alt_names[$i]] ?? ''); ?>">
@@ -579,13 +616,13 @@ try {
 
                     <div class="correct-answer-section">
                         <label>
-                            <i class="fas fa-check-circle"></i> Alternativa Correta <span class="required">*</span>
+                            <i class="fas fa-check-circle"></i> Alternativa Correta
                         </label>
                         <div class="radio-group">
                             <?php for ($i = 1; $i <= 4; $i++): ?>
                                 <div class="radio-item">
                                     <input type="radio" name="correta" id="correta<?php echo $i; ?>" 
-                                           value="<?php echo $i; ?>" required
+                                           value="<?php echo $i; ?>"
                                            <?php echo (isset($form_data['correta']) && $form_data['correta'] == $i) ? 'checked' : ''; ?>>
                                     <label for="correta<?php echo $i; ?>" class="radio-label">
                                         Alternativa <?php echo chr(64 + $i); ?>
@@ -677,12 +714,10 @@ try {
             let isValid = true;
             let message = '';
 
-            if (field.hasAttribute('required') && !value) {
+            // Remover validação obrigatória - agora apenas validações opcionais
+            if (field.type === 'select-one' && value && !field.options[field.selectedIndex].value) {
                 isValid = false;
-                message = 'Este campo é obrigatório';
-            } else if (field.type === 'select-one' && !value) {
-                isValid = false;
-                message = 'Selecione uma opção';
+                message = 'Selecione uma opção válida';
             }
 
             if (isValid) {
@@ -702,14 +737,9 @@ try {
             const correctaError = document.getElementById('correta-error');
             const isChecked = Array.from(radioButtons).some(radio => radio.checked);
 
-            if (!isChecked) {
-                correctaError.textContent = 'Selecione a alternativa correta';
-                correctaError.classList.add('show');
-                return false;
-            } else {
-                correctaError.classList.remove('show');
-                return true;
-            }
+            // Não é mais obrigatório selecionar alternativa correta
+            correctaError.classList.remove('show');
+            return true;
         }
 
         // Pré-visualização
@@ -768,6 +798,36 @@ try {
             previewSection.classList.add('show');
         }
 
+        // Limpar formulário após sucesso
+        function clearFormAfterSuccess() {
+            const form = document.getElementById('questionForm');
+            
+            // Limpar todos os campos do formulário
+            form.reset();
+            
+            // Limpar mensagens de validação
+            document.querySelectorAll('.validation-message').forEach(msg => {
+                msg.classList.remove('show');
+            });
+            
+            // Remover classes de erro
+            document.querySelectorAll('.form-control').forEach(field => {
+                field.classList.remove('error');
+            });
+            
+            // Fechar pré-visualização se estiver aberta
+            document.getElementById('preview-section').classList.remove('show');
+            
+            // Resetar contadores de caracteres
+            setupCharCounters();
+            
+            // Focar no primeiro campo para facilitar nova entrada
+            const firstField = document.getElementById('id_assunto');
+            if (firstField) {
+                firstField.focus();
+            }
+        }
+
         // Limpar formulário
         function clearForm() {
             if (confirm('Tem certeza que deseja limpar todos os campos?')) {
@@ -782,6 +842,12 @@ try {
                 setupCharCounters(); // Resetar contadores
             }
         }
+
+        // Função para voltar à página anterior
+        function goBack() {
+    // Sempre vai para a página index.php
+    window.location.href = '../index.php';
+}
 
         // Auto-save (localStorage)
         function setupAutoSave() {
@@ -810,32 +876,18 @@ try {
                 fields.forEach(fieldName => {
                     localStorage.removeItem('questao_' + fieldName);
                 });
+                // Limpar todos os campos do formulário
+                clearFormAfterSuccess();
             <?php endif; ?>
         }
 
-        // Validação do formulário antes do envio
+        // Validação do formulário antes do envio - agora opcional
         document.getElementById('questionForm').addEventListener('submit', function(e) {
-            let isValid = true;
-            
-            // Validar campos obrigatórios
-            const requiredFields = ['id_assunto', 'enunciado', 'alt1', 'alt2', 'alt3', 'alt4'];
-            requiredFields.forEach(fieldName => {
-                const field = document.getElementById(fieldName);
-                const errorDiv = document.getElementById(fieldName + '-error');
-                if (!validateField(field, errorDiv)) {
-                    isValid = false;
-                }
+            // Remover validação obrigatória - permitir envio com campos vazios
+            // Apenas limpar mensagens de erro existentes
+            document.querySelectorAll('.validation-message').forEach(msg => {
+                msg.classList.remove('show');
             });
-
-            // Validar alternativa correta
-            if (!validateCorrectAnswer()) {
-                isValid = false;
-            }
-
-            if (!isValid) {
-                e.preventDefault();
-                alert('Por favor, corrija os erros antes de enviar o formulário.');
-            }
         });
 
         // Inicializar funcionalidades

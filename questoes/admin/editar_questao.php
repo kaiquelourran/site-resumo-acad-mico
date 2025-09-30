@@ -32,7 +32,7 @@ if (isset($_GET['id']) && !empty($_GET['id'])) {
         
         if ($questao) {
             // Buscar alternativas da questão
-            $stmt_alternativas = $pdo->prepare("SELECT * FROM alternativas WHERE id_questao = ? ORDER BY letra");
+            $stmt_alternativas = $pdo->prepare("SELECT * FROM alternativas WHERE id_questao = ? ORDER BY id_alternativa");
             $stmt_alternativas->execute([$id_questao]);
             $alternativas = $stmt_alternativas->fetchAll(PDO::FETCH_ASSOC);
         }
@@ -47,6 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['id_questao'])) {
     } else {
     $id_questao = (int)$_POST['id_questao'];
     $enunciado = trim($_POST['enunciado']);
+    $explicacao = trim($_POST['explicacao'] ?? '');
     $id_assunto = $_POST['id_assunto'];
     $alternativas_post = $_POST['alternativas'];
     $correta_index = (int)$_POST['correta'];
@@ -57,15 +58,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['id_questao'])) {
         try {
             $pdo->beginTransaction();
 
-            // Atualiza a questão
-            $stmt_update_questao = $pdo->prepare("UPDATE questoes SET enunciado = ?, id_assunto = ? WHERE id_questao = ?");
-            $stmt_update_questao->execute([$enunciado, $id_assunto, $id_questao]);
+            // Atualizar questão
+            $stmt_update = $pdo->prepare("UPDATE questoes SET enunciado = ?, explicacao = ?, id_assunto = ? WHERE id_questao = ?");
+            $stmt_update->execute([$enunciado, $explicacao, $id_assunto, $id_questao]);
 
-            // Atualiza as alternativas
-            $stmt_update_alternativa = $pdo->prepare("UPDATE alternativas SET texto = ?, correta = ? WHERE id_alternativa = ?");
+            // Atualizar alternativas
+            $stmt_update_alternativa = $pdo->prepare("UPDATE alternativas SET texto = ?, eh_correta = ? WHERE id_alternativa = ?");
             foreach ($alternativas_post as $id_alternativa => $texto) {
-                $correta = ($id_alternativa == $correta_index) ? 1 : 0;
-                $stmt_update_alternativa->execute([trim($texto), $correta, $id_alternativa]);
+                $eh_correta = ($id_alternativa == $correta_index) ? 1 : 0;
+                $stmt_update_alternativa->execute([trim($texto), $eh_correta, $id_alternativa]);
             }
 
             $pdo->commit();
@@ -88,6 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['id_questao'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Editar Questão - Resumo Acadêmico</title>
     <link rel="stylesheet" href="../modern-style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         .form-container {
             background: white;
@@ -245,11 +247,48 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['id_questao'])) {
             color: #721c24;
             border: 1px solid #f5c6cb;
         }
+        
+        .header {
+            position: relative;
+        }
+        
+        .header-nav {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 2;
+        }
+
+        .btn-back {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-back:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-2px);
+        }
     </style>
 </head>
 <body>
     <div class="main-container">
         <div class="header">
+            <div class="header-nav">
+                <button onclick="goBack()" class="btn-back">
+                    <i class="fas fa-arrow-left"></i> Voltar
+                </button>
+            </div>
             <div class="logo">📚</div>
             <h1 class="title">Editar Questão</h1>
             <p class="subtitle">Atualize os dados da questão selecionada</p>
@@ -287,6 +326,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['id_questao'])) {
                         <textarea id="enunciado" name="enunciado" required placeholder="Digite o enunciado da questão..."><?= htmlspecialchars($questao['enunciado']) ?></textarea>
                     </div>
 
+                    <div class="form-group">
+                        <label for="explicacao">💡 Explicação (opcional):</label>
+                        <textarea id="explicacao" name="explicacao" placeholder="Digite uma explicação para a resposta..."><?= htmlspecialchars($questao['explicacao'] ?? '') ?></textarea>
+                    </div>
+
                     <div class="alternativas-section">
                         <div class="alternativas-header">
                             <span>✅ Alternativas</span>
@@ -294,10 +338,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['id_questao'])) {
                         </div>
                         
                         <?php $letras = ['A','B','C','D','E','F']; foreach ($alternativas as $i => $alt): ?>
-                            <div class="alternativa-row <?= $alt['correta'] ? 'correta' : '' ?>">
+                            <div class="alternativa-row <?= $alt['eh_correta'] ? 'correta' : '' ?>">
                                 <div class="alt-letra"><?= $letras[$i] ?? ($i+1) ?></div>
                                 <input type="text" name="alternativas[<?= htmlspecialchars($alt['id_alternativa']) ?>]" value="<?= htmlspecialchars($alt['texto']) ?>" required placeholder="Digite a alternativa <?= $letras[$i] ?? ($i+1) ?>...">
-                                <input type="radio" name="correta" value="<?= htmlspecialchars($alt['id_alternativa']) ?>" <?= ($alt['correta'] ? 'checked' : '') ?> title="Marcar <?= $letras[$i] ?? ($i+1) ?> como correta">
+                                <input type="radio" name="correta" value="<?= htmlspecialchars($alt['id_alternativa']) ?>" <?= ($alt['eh_correta'] ? 'checked' : '') ?> title="Marcar <?= $letras[$i] ?? ($i+1) ?> como correta">
                             </div>
                         <?php endforeach; ?>
                     </div>
@@ -316,10 +360,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['id_questao'])) {
             <?php endif; ?>
         </div>
     </div>
+    <script>
+        // Função para voltar à página anterior
+        function goBack() {
+            // Verifica se há histórico de navegação
+            if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                // Se não há histórico, vai para a página principal
+                window.location.href = '../../index.php';
+            }
+        }
+    </script>
 </body>
 </html>
-
-<script>
 // Destaque visual da alternativa correta e confirmação ao salvar
 document.addEventListener('DOMContentLoaded', function () {
     var radios = document.querySelectorAll('input[type="radio"][name="correta"]');

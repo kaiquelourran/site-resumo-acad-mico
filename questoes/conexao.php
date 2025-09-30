@@ -1,4 +1,8 @@
 <?php
+// Configurar para não mostrar erros na saída
+ini_set('display_errors', 0);
+ini_set('log_errors', 1);
+
 $host = "localhost";
 $db   = "resumo_quiz"; // Nome do seu banco de dados local
 $user = "root";   // Usuário padrão do XAMPP
@@ -8,7 +12,17 @@ try {
     $pdo = new PDO("mysql:host=$host;dbname=$db;charset=utf8", $user, $pass);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 } catch (PDOException $e) {
-    die("Erro ao conectar: " . $e->getMessage());
+    // Log do erro em vez de exibir
+    error_log("Erro ao conectar ao banco: " . $e->getMessage());
+    
+    // Se for uma requisição AJAX, retornar JSON
+    if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'message' => 'Erro de conexão com o banco de dados']);
+        exit;
+    }
+    
+    die("Erro ao conectar com o banco de dados");
 }
 
 // Helpers de segurança e sessão

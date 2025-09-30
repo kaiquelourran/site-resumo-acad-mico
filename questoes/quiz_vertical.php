@@ -76,13 +76,7 @@ $sql = "SELECT q.*, a.nome as assunto_nome,
                    WHEN r.id_questao IS NOT NULL THEN 'respondida'
                    ELSE 'nao-respondida'
                END as status_questao,
-               CASE 
-                   WHEN r.id_alternativa = (SELECT id_alternativa FROM alternativas WHERE id_questao = q.id_questao AND texto = q.alternativa_a) THEN 'A'
-                   WHEN r.id_alternativa = (SELECT id_alternativa FROM alternativas WHERE id_questao = q.id_questao AND texto = q.alternativa_b) THEN 'B'
-                   WHEN r.id_alternativa = (SELECT id_alternativa FROM alternativas WHERE id_questao = q.id_questao AND texto = q.alternativa_c) THEN 'C'
-                   WHEN r.id_alternativa = (SELECT id_alternativa FROM alternativas WHERE id_questao = q.id_questao AND texto = q.alternativa_d) THEN 'D'
-                   ELSE NULL
-               END as resposta_usuario
+               r.id_alternativa as resposta_usuario_id
         FROM questoes q 
         LEFT JOIN assuntos a ON q.id_assunto = a.id_assunto
         LEFT JOIN respostas_usuario r ON q.id_questao = r.id_questao";
@@ -227,23 +221,67 @@ unset($_SESSION['feedback_questao']); // Limpar da sessão após usar
             cursor: pointer;
             transition: all 0.3s ease;
             background: #f8f9fa;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .alternative::before {
+            content: attr(data-letter);
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 35px;
+            height: 35px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+            z-index: 2;
+        }
+
+        .alternative span {
+            flex: 1;
+            font-size: 1.05em;
+            line-height: 1.5;
+            color: #2d3748;
+            margin-left: 50px;
+            font-weight: 500;
         }
 
         .alternative:hover {
             border-color: #667eea;
             background: #f0f4ff;
+            transform: translateX(8px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
         }
 
-        .alternative input[type="radio"] {
-            margin-right: 12px;
-            transform: scale(1.2);
+        .alternative:hover::before {
+            transform: translateY(-50%) scale(1.1);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
         }
 
-        .alternative label {
-            cursor: pointer;
-            flex: 1;
-            font-size: 1em;
-            line-height: 1.4;
+        .alternative.selected {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #f0f4ff 0%, #e8ecff 100%);
+            transform: translateX(12px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.2);
+        }
+
+        .alternative.selected::before {
+            background: linear-gradient(135deg, #4c51bf 0%, #553c9a 100%);
+            transform: translateY(-50%) scale(1.15);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .alternative.selected span {
+            color: #667eea;
+            font-weight: 600;
         }
 
         .navigation-section {
@@ -486,9 +524,16 @@ unset($_SESSION['feedback_questao']); // Limpar da sessão após usar
             text-decoration: none;
             display: inline-block;
             margin: 10px;
+            opacity: 0.5;
+            cursor: not-allowed;
         }
 
-        .btn-submit:hover {
+        .btn-submit:not(:disabled) {
+            opacity: 1;
+            cursor: pointer;
+        }
+
+        .btn-submit:not(:disabled):hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
         }
@@ -612,50 +657,46 @@ unset($_SESSION['feedback_questao']); // Limpar da sessão após usar
                         
                         <div class="alternatives">
                             <?php
-                            $alternativas = ['A', 'B', 'C', 'D'];
-                            foreach ($alternativas as $letra) {
-                                $campo = 'alternativa_' . strtolower($letra);
-                                if (!empty($questao[$campo])) {
-                                    // Corrigir comparação da resposta do usuário
-                                    $is_selected = ($questao['resposta_usuario'] == $letra);
-                                    $is_correct = ($questao['resposta_correta'] == $letra);
-                                    $class = '';
-                                    
-                                    if ($questao['status_questao'] != 'nao-respondida') {
-                                        if ($is_correct) {
-                                            $class = 'alternative-correct';
-                                        } elseif ($is_selected && !$is_correct) {
-                                            $class = 'alternative-incorrect';
-                                        }
+                            // Buscar alternativas da questão atual
+                            $stmt_alt = $pdo->prepare("SELECT * FROM alternativas WHERE id_questao = ? ORDER BY id_alternativa");
+                            $stmt_alt->execute([$questao['id_questao']]);
+                            $alternativas_questao = $stmt_alt->fetchAll(PDO::FETCH_ASSOC);
+                            
+                            $letras = ['A', 'B', 'C', 'D'];
+                            foreach ($alternativas_questao as $index => $alternativa) {
+                                $letra = $letras[$index] ?? ($index + 1);
+                                
+                                // Verificar se esta alternativa foi selecionada pelo usuário
+                                $is_selected = ($questao['resposta_usuario_id'] == $alternativa['id_alternativa']);
+                                $is_correct = ($alternativa['eh_correta'] == 1);
+                                $class = '';
+                                $clickable = '';
+                                
+                                if ($questao['status_questao'] != 'nao-respondida') {
+                                    if ($is_correct) {
+                                        $class = 'alternative-correct';
+                                    } elseif ($is_selected && !$is_correct) {
+                                        $class = 'alternative-incorrect';
                                     }
-                                    
-                                    echo '<div class="alternative ' . $class . '">';
-                                    echo '<strong>' . $letra . ')</strong> ';
-                                    echo htmlspecialchars($questao[$campo]);
-                                    if ($is_selected) echo ' <span class="selected-mark">👈 Sua resposta</span>';
-                                    if ($is_correct && $questao['status_questao'] != 'nao-respondida') echo ' <span class="correct-mark">✓ Correta</span>';
-                                    echo '</div>';
+                                } else {
+                                    $clickable = 'clickable-alternative';
                                 }
+                                
+                                echo '<div class="alternative ' . $class . ' ' . $clickable . '" data-letter="' . $letra . '" data-question-id="' . $questao['id_questao'] . '" data-alternative-letter="' . $letra . '">';
+                                echo '<span>' . htmlspecialchars($alternativa['texto']) . '</span>';
+                                if ($is_selected) echo ' <span class="selected-mark">👈 Sua resposta</span>';
+                                if ($is_correct && $questao['status_questao'] != 'nao-respondida') echo ' <span class="correct-mark">✓ Correta</span>';
+                                echo '</div>';
                             }
                             ?>
                         </div>
                         
                         <div class="submit-section">
                             <?php if ($questao['status_questao'] == 'nao-respondida'): ?>
-                                <form method="POST" class="answer-form" style="display: inline;">
+                                <form method="POST" class="answer-form" id="form-<?php echo $questao['id_questao']; ?>" style="display: inline;">
                                     <input type="hidden" name="id_questao" value="<?php echo $questao['id_questao']; ?>">
-                                    <select name="alternativa_selecionada" required class="answer-select">
-                                        <option value="">Selecione sua resposta</option>
-                                        <?php
-                                        foreach ($alternativas as $letra) {
-                                            $campo = 'alternativa_' . strtolower($letra);
-                                            if (!empty($questao[$campo])) {
-                                                echo '<option value="' . $letra . '">' . $letra . ') ' . htmlspecialchars(substr($questao[$campo], 0, 50)) . '...</option>';
-                                            }
-                                        }
-                                        ?>
-                                    </select>
-                                    <button type="submit" class="btn-submit">
+                                    <input type="hidden" name="alternativa_selecionada" id="selected-<?php echo $questao['id_questao']; ?>" value="">
+                                    <button type="submit" class="btn-submit" id="btn-<?php echo $questao['id_questao']; ?>" disabled>
                                         🎯 Responder
                                     </button>
                                 </form>
@@ -721,10 +762,11 @@ unset($_SESSION['feedback_questao']); // Limpar da sessão após usar
                     
                     const formData = new FormData(form);
                     const button = form.querySelector('.btn-submit');
-                    const select = form.querySelector('.answer-select');
+                    const hiddenInput = form.querySelector('input[name="alternativa_selecionada"]');
+                    const questionId = form.querySelector('input[name="id_questao"]').value;
                     
                     // Verificar se uma alternativa foi selecionada
-                    if (!select.value) {
+                    if (!hiddenInput.value) {
                         alert('Por favor, selecione uma alternativa antes de responder.');
                         return;
                     }
@@ -733,17 +775,21 @@ unset($_SESSION['feedback_questao']); // Limpar da sessão após usar
                     button.disabled = true;
                     button.textContent = '⏳ Enviando...';
                     
+                    // Adicionar parâmetro para indicar que é uma requisição AJAX
+                    formData.append('ajax', '1');
+                    
                     // Enviar via AJAX
-                    fetch(window.location.href, {
+                    fetch('processar_resposta.php', {
                         method: 'POST',
                         body: formData
                     })
-                    .then(response => {
-                        if (response.ok) {
-                            // Recarregar a página para mostrar o resultado
-                            window.location.reload();
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Mostrar resultado na própria página
+                            showAnswerResult(questionId, data);
                         } else {
-                            throw new Error('Erro na resposta do servidor');
+                            throw new Error(data.message || 'Erro ao processar resposta');
                         }
                     })
                     .catch(error => {
@@ -754,6 +800,88 @@ unset($_SESSION['feedback_questao']); // Limpar da sessão após usar
                         button.disabled = false;
                         button.textContent = '🎯 Responder';
                     });
+                });
+            });
+            
+            // Função para mostrar o resultado da resposta
+            function showAnswerResult(questionId, data) {
+                const questionDiv = document.querySelector(`[data-question-id="${questionId}"]`).closest('.question-card');
+                const alternativesDiv = questionDiv.querySelector('.alternatives');
+                const submitSection = questionDiv.querySelector('.submit-section');
+                
+                // Atualizar as alternativas para mostrar qual é a correta
+                const alternatives = alternativesDiv.querySelectorAll('.alternative');
+                alternatives.forEach(alt => {
+                    const letter = alt.getAttribute('data-letter');
+                    alt.classList.remove('clickable-alternative', 'selected');
+                    
+                    if (letter === data.resposta_correta) {
+                        alt.classList.add('alternative-correct');
+                        alt.innerHTML += ' <span class="correct-mark">✓ Correta</span>';
+                    } else if (letter === data.alternativa_selecionada && !data.acertou) {
+                        alt.classList.add('alternative-incorrect');
+                        alt.innerHTML += ' <span class="selected-mark">👈 Sua resposta</span>';
+                    }
+                });
+                
+                // Atualizar a seção de submit para mostrar o resultado
+                const statusBadge = data.acertou ? 
+                    '<span class="status-badge status-correct">✅ Você acertou!</span>' :
+                    '<span class="status-badge status-incorrect">❌ Você errou</span>';
+                
+                submitSection.innerHTML = `
+                    <div class="answered-info">
+                        ${statusBadge}
+                    </div>
+                `;
+                
+                // Mostrar explicação se disponível
+                if (data.explicacao) {
+                    const feedbackDiv = document.createElement('div');
+                    feedbackDiv.className = `feedback-section ${data.acertou ? 'feedback-correct' : 'feedback-incorrect'}`;
+                    feedbackDiv.innerHTML = `
+                        <div class="feedback-icon">
+                            ${data.acertou ? '✅' : '❌'}
+                        </div>
+                        <div class="feedback-text">
+                            <strong>${data.acertou ? 'Parabéns!' : 'Não foi dessa vez!'}</strong><br>
+                            ${data.explicacao}
+                        </div>
+                    `;
+                    questionDiv.appendChild(feedbackDiv);
+                }
+            }
+        });
+
+        // Funcionalidade de clique nas alternativas
+        document.addEventListener('DOMContentLoaded', function() {
+            // Adicionar evento de clique para alternativas clicáveis
+            document.querySelectorAll('.clickable-alternative').forEach(function(alternative) {
+                alternative.addEventListener('click', function() {
+                    const questionId = this.getAttribute('data-question-id');
+                    const alternativeLetter = this.getAttribute('data-alternative-letter');
+                    
+                    // Remover seleção anterior da mesma questão
+                    document.querySelectorAll(`[data-question-id="${questionId}"].clickable-alternative`).forEach(function(alt) {
+                        alt.classList.remove('selected');
+                    });
+                    
+                    // Adicionar seleção à alternativa clicada
+                    this.classList.add('selected');
+                    
+                    // Atualizar campo hidden
+                    const hiddenInput = document.getElementById(`selected-${questionId}`);
+                    if (hiddenInput) {
+                        hiddenInput.value = alternativeLetter;
+                    }
+                    
+                    // Habilitar botão de responder
+                    const submitBtn = document.getElementById(`btn-${questionId}`);
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.style.opacity = '1';
+                        submitBtn.style.cursor = 'pointer';
+                    }
                 });
             });
         });

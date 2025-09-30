@@ -38,10 +38,49 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Adicionar Assunto - Resumo Acadêmico</title>
     <link rel="stylesheet" href="../modern-style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .header {
+            position: relative;
+        }
+        
+        .header-nav {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 2;
+        }
+
+        .btn-back {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-back:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-2px);
+        }
+    </style>
 </head>
 <body>
     <div class="main-container fade-in">
         <header class="header">
+            <div class="header-nav">
+                <button onclick="goBack()" class="btn-back">
+                    <i class="fas fa-arrow-left"></i> Voltar
+                </button>
+            </div>
             <div class="logo">
                 <img src="../../fotos/Logotipo_resumo_academico.png" alt="Resumo Acadêmico">
             </div>
@@ -83,5 +122,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <p>Desenvolvido por Resumo Acadêmico &copy; 2025</p>
         </footer>
     </div>
+
+    <script>
+        // Função para voltar à página anterior
+        function goBack() {
+            // Verifica se há histórico de navegação
+            if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                // Se não há histórico, vai para a página principal
+                window.location.href = '../../index.php';
+            }
+        }
+    </script>
 </body>
 </html>

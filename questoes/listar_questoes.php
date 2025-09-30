@@ -505,22 +505,15 @@ $contadores['erradas'] = $stmt_count_erradas->fetchColumn();
                                 </div>
                                 
                                 <div class="question-actions">
-                                    <?php if ($filtro_ativo === 'nao-respondidas'): ?>
-                                        <a href="quiz_vertical.php?id=<?php echo $id_assunto; ?>&filtro=<?php echo $filtro_ativo; ?>" 
-                                           class="btn-action btn-primary">
-                                            📝 Responder Todas
-                                        </a>
-                                    <?php else: ?>
-                                        <a href="quiz_sem_login.php?id=<?php echo $id_assunto; ?>&questao=<?php echo $questao['id_questao']; ?>&filtro=<?php echo $filtro_ativo; ?>" 
-                                           class="btn-action btn-primary">
-                                            🎯 Responder
-                                        </a>
-                                    <?php endif; ?>
-                                    <a href="ver_questao.php?id=<?php echo $questao['id_questao']; ?>&volta=listar&assunto=<?php echo $id_assunto; ?>&filtro=<?php echo $filtro_ativo; ?>" 
-                                       class="btn-action btn-secondary">
-                                        👁️ Visualizar
-                                    </a>
-                                </div>
+                    <a href="quiz_vertical_filtros.php?id=<?php echo $id_assunto; ?>&filtro=<?php echo $filtro_ativo; ?>&questao_inicial=<?php echo $questao['id_questao']; ?>" 
+                       class="btn-action btn-primary">
+                        🎯 Responder
+                    </a>
+                    <a href="ver_questao.php?id=<?php echo $questao['id_questao']; ?>&volta=listar&assunto=<?php echo $id_assunto; ?>&filtro=<?php echo $filtro_ativo; ?>" 
+                       class="btn-action btn-secondary">
+                        👁️ Visualizar
+                    </a>
+                </div>
                             </div>
                         <?php endforeach; ?>
                     </div>
@@ -530,15 +523,9 @@ $contadores['erradas'] = $stmt_count_erradas->fetchColumn();
             <!-- Navegação -->
             <div class="navigation-section">
                 <div class="nav-buttons">
-                    <?php if ($filtro_ativo === 'nao-respondidas' && !empty($questoes)): ?>
-                        <a href="quiz_vertical.php?id=<?php echo $id_assunto; ?>&filtro=<?php echo $filtro_ativo; ?>" 
-                           class="nav-btn nav-btn-primary">
-                            📝 Quiz Vertical - Todas as Não Respondidas
-                        </a>
-                    <?php endif; ?>
                     <a href="quiz_sem_login.php?id=<?php echo $id_assunto; ?>&filtro=<?php echo $filtro_ativo; ?>" 
                        class="nav-btn nav-btn-primary">
-                        🎯 Iniciar Quiz
+                        🎯 Iniciar Quiz Individual
                     </a>
                     <a href="index.php" class="nav-btn nav-btn-outline">
                         🏠 Voltar ao Início
