@@ -21,6 +21,58 @@ if (!isset($_SESSION['csrf_token'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Questões - Resumo Acadêmico</title>
     <link rel="stylesheet" href="modern-style.css">
+    <style>
+    /* Padrão visual alinhado ao login */
+    body {
+        background-image: linear-gradient(to top, #00C6FF, #0072FF);
+        min-height: 100vh;
+        margin: 0;
+    }
+    .main-container {
+        max-width: 1100px;
+        margin: 40px auto;
+        background: #FFFFFF;
+        border-radius: 16px;
+        border: 1px solid transparent;
+        background-image: linear-gradient(#FFFFFF, #FFFFFF), linear-gradient(to top, #00C6FF, #0072FF);
+        background-origin: border-box;
+        background-clip: padding-box, border-box;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        padding: 30px;
+    }
+    .header .title { color: #333333; }
+    .header .subtitle { color: #333333; }
+    .user-info a { color: #0072FF; text-decoration: none; font-weight: 600; }
+    .user-info a:hover { text-decoration: underline; }
+    /* Estatísticas */
+    .stats-container { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
+    .stat-card { background: #FFFFFF; border: 1px solid #e1e5e9; border-radius: 12px; padding: 20px; min-width: 200px; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.06); }
+    .stat-number { color: #0072FF; font-weight: 700; font-size: 2rem; }
+    .stat-label { color: #333; }
+    /* Cards */
+    .cards-container { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
+    .card { background: #FFFFFF; border: 1px solid #e1e5e9; border-radius: 12px; padding: 24px; width: 300px; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.06); }
+    .card-title { color: #333333; }
+    .card-description { color: #666666; }
+    .btn { display: inline-block; padding: 12px 18px; border-radius: 8px; background: linear-gradient(to top, #00C6FF, #0072FF); color: #fff; border: none; font-weight: 600; text-decoration: none; transition: transform .2s ease, box-shadow .2s ease; }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,114,255,0.3); }
+    .btn:active { transform: translateY(0); }
+    /* Interações e acessibilidade */
+    .btn:focus { outline: 3px solid rgba(0,114,255,0.35); outline-offset: 2px; }
+    .btn[aria-busy="true"] { cursor: wait; opacity: .8; }
+    .card { transition: transform .2s ease, box-shadow .2s ease; }
+    .card:hover { transform: translateY(-4px); box-shadow: 0 14px 30px rgba(0,114,255,0.18); }
+    .header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .header .subtitle { font-size: 1rem; color: #555; }
+    @media (max-width: 768px) {
+        .main-container { margin: 20px; padding: 20px; }
+        .card { width: 100%; }
+    }
+    /* Legibilidade em cards com gradiente */
+    .card[style*="linear-gradient"] .card-title { color: #fff; }
+    .card[style*="linear-gradient"] .card-description { color: #f8f9fa; }
+    .card[style*="linear-gradient"] .btn { box-shadow: 0 6px 16px rgba(0,114,255,0.35); }
+    </style>
 </head>
 <body>
     <div class="main-container fade-in">
@@ -72,20 +124,20 @@ if (!isset($_SESSION['csrf_token'])) {
 
         <div class="cards-container">
             <!-- Card Questões -->
-            <div class="card fade-in">
+            <div class="card fade-in" style="background: linear-gradient(to top, #00C6FF, #0072FF); color: white;">
                 <span class="card-icon">🎯</span>
-                <h3 class="card-title">Fazer Questões</h3>
-                <p class="card-description">Teste seus conhecimentos</p>
-                <a href="escolher_assunto.php" class="btn">Iniciar Questões</a>
+                <h3 class="card-title" style="color:#fff;">Fazer Questões</h3>
+                <p class="card-description" style="color:#f8f9fa;">Teste seus conhecimentos</p>
+                <a href="escolher_assunto.php" class="btn" style="box-shadow:0 6px 16px rgba(0,114,255,0.35);">Iniciar Questões</a>
             </div>
 
             <?php if ($_SESSION['user_type'] === 'admin'): ?>
             <!-- Card Gerenciar - Apenas para Admins -->
-            <div class="card fade-in">
+            <div class="card fade-in" style="background: linear-gradient(to top, #00C6FF, #0072FF); color: white;">
                 <span class="card-icon">📋</span>
-                <h3 class="card-title">Gerenciar Questões</h3>
-                <p class="card-description">Visualize, edite e organize todas as questões do sistema de forma prática.</p>
-                <a href="gerenciar_questoes_sem_auth.php" class="btn">Gerenciar</a>
+                <h3 class="card-title" style="color:#fff;">Gerenciar Questões</h3>
+                <p class="card-description" style="color:#f8f9fa;">Visualize, edite e organize todas as questões do sistema de forma prática.</p>
+                <a href="gerenciar_questoes_sem_auth.php" class="btn" style="box-shadow:0 6px 16px rgba(0,114,255,0.35);">Gerenciar</a>
             </div>
 
 
@@ -96,24 +148,24 @@ if (!isset($_SESSION['csrf_token'])) {
         <div style="margin-top: 50px;">
             <h2 style="text-align: center; margin-bottom: 30px; color: #333; font-size: 2em;">🔧 Área Administrativa</h2>
             <div class="cards-container">
-                <div class="card fade-in" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <div class="card fade-in" style="background: linear-gradient(to top, #00C6FF, #0072FF); color: white;">
                     <span class="card-icon">👨‍💼</span>
-                    <h3 class="card-title">Dashboard Admin</h3>
-                    <p class="card-description">Acesse o painel administrativo completo do sistema.</p>
+                    <h3 class="card-title" style="color:#fff;">Dashboard Admin</h3>
+                    <p class="card-description" style="color:#f8f9fa;">Acesse o painel administrativo completo do sistema.</p>
                     <a href="admin/dashboard.php" class="btn" style="background: rgba(255,255,255,0.2); border: 2px solid white;">Dashboard</a>
                 </div>
 
-                <div class="card fade-in" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;">
+                <div class="card fade-in" style="background: linear-gradient(to top, #00C6FF, #0072FF); color: white;">
                     <span class="card-icon">📝</span>
-                    <h3 class="card-title">Adicionar Assunto</h3>
-                    <p class="card-description">Crie novos assuntos para organizar as questões.</p>
+                    <h3 class="card-title" style="color:#fff;">Adicionar Assunto</h3>
+                    <p class="card-description" style="color:#f8f9fa;">Crie novos assuntos para organizar as questões.</p>
                     <a href="admin/add_assunto.php" class="btn" style="background: rgba(255,255,255,0.2); border: 2px solid white;">Novo Assunto</a>
                 </div>
 
-                <div class="card fade-in" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white;">
+                <div class="card fade-in" style="background: linear-gradient(to top, #00C6FF, #0072FF); color: white;">
                     <span class="card-icon">❓</span>
-                    <h3 class="card-title">Adicionar Questão</h3>
-                    <p class="card-description">Interface administrativa para criar questões completas.</p>
+                    <h3 class="card-title" style="color:#fff;">Adicionar Questão</h3>
+                    <p class="card-description" style="color:#f8f9fa;">Interface administrativa para criar questões completas.</p>
                     <a href="admin/add_questao.php" class="btn" style="background: rgba(255,255,255,0.2); border: 2px solid white;">Nova Questão</a>
                 </div>
             </div>

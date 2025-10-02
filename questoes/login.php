@@ -74,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-image: linear-gradient(to top, #00C6FF, #0072FF);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -83,13 +83,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         .login-container {
-            background: white;
+            background: #FFFFFF;
             border-radius: 16px;
             padding: 40px;
             box-shadow: 0 15px 35px rgba(0,0,0,0.1);
             width: 100%;
             max-width: 400px;
             text-align: center;
+            border: 1px solid transparent;
+            background-image: linear-gradient(#FFFFFF, #FFFFFF), linear-gradient(to top, #00C6FF, #0072FF);
+            background-origin: border-box;
+            background-clip: padding-box, border-box;
         }
         
         .logo {
@@ -118,20 +122,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         .alert-error {
-            background: #fee;
-            color: #c33;
-            border: 1px solid #fcc;
+            background: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+            border: 1px solid #dc3545;
         }
         
         .alert-success {
-            background: #efe;
-            color: #363;
-            border: 1px solid #cec;
+            background: rgba(40, 167, 69, 0.1);
+            color: #28a745;
+            border: 1px solid #28a745;
         }
         
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 18px;
             text-align: left;
+        }
+        
+        .input-with-action {
+            position: relative;
+        }
+        
+        .input-with-action input {
+            padding-right: 44px;
+        }
+        
+        .toggle-password {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            color: #333;
+            padding: 6px;
+            border-radius: 6px;
+            transition: background 0.2s ease, color 0.2s ease;
+        }
+        
+        .toggle-password:hover {
+            background: #F0FBFF;
+            color: #0072FF;
         }
         
         .form-group label {
@@ -156,14 +188,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .form-group input:focus,
         .form-group select:focus {
             outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            border-color: #00C6FF;
+            box-shadow: 0 0 0 3px rgba(0, 198, 255, 0.15);
         }
         
         .btn-login {
             width: 100%;
             padding: 16px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(to top, #00C6FF, #0072FF);
             color: white;
             border: none;
             border-radius: 8px;
@@ -176,7 +208,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         .btn-login:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 8px 25px rgba(0, 114, 255, 0.3);
         }
         
         .btn-login:active {
@@ -184,11 +216,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         .help-section {
-            background: #f8f9fa;
+            background: #FFFFFF;
             border-radius: 8px;
             padding: 20px;
             margin-top: 25px;
             text-align: left;
+            border: 1px solid #e1e5e9;
+        }
+        
+        /* UX melhorias */
+        .btn-login[disabled] {
+            opacity: 0.75;
+            cursor: not-allowed;
+        }
+        .input-error {
+            border-color: #dc3545 !important;
+            box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.15) !important;
+        }
+        .caps-lock-indicator {
+            display: none;
+            margin-top: 6px;
+            color: #dc3545;
+            font-size: 0.85em;
         }
         
         .help-title {
@@ -205,7 +254,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         .help-item strong {
-             color: #667eea;
+             color: #0072FF;
          }
          
          .user-type-buttons {
@@ -228,15 +277,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
          }
          
          .type-btn:hover {
-             border-color: #667eea;
-             background: #f8f9ff;
+             border-color: #00C6FF;
+             background: #F0FBFF;
          }
          
          .type-btn.active {
-             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+             background: linear-gradient(to top, #00C6FF, #0072FF);
              color: white;
-             border-color: #667eea;
-             box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+             border-color: #0072FF;
+             box-shadow: 0 4px 15px rgba(0, 114, 255, 0.25);
          }
          
          @media (max-width: 480px) {
@@ -266,7 +315,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <p class="subtitle">Sistema de Questões</p>
         
         <?php if (isset($_GET['message']) && $_GET['message'] === 'logout_success'): ?>
-            <div class="alert alert-success">
+            <div class="alert alert-success" role="alert" aria-live="polite">
                 ✅ Logout realizado com sucesso!
             </div>
         <?php endif; ?>
@@ -292,12 +341,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <div class="form-group">
                 <label for="email">E-mail</label>
-                <input type="email" name="email" id="email" required placeholder="seu@email.com">
+                <input type="email" name="email" id="email" required placeholder="seu@email.com" autocomplete="email" inputmode="email">
+                <small style="display:block; margin-top:6px; color:#666">Use o e-mail cadastrado no sistema</small>
             </div>
 
             <div class="form-group">
                 <label for="password">Senha</label>
-                <input type="password" name="password" id="password" required placeholder="Digite sua senha">
+                <div class="input-with-action">
+                    <input type="password" name="password" id="password" required placeholder="Digite sua senha" autocomplete="current-password">
+                    <button type="button" class="toggle-password" aria-label="Mostrar/ocultar senha">👁️</button>
+                </div>
+                <small id="capsLockMsg" class="caps-lock-indicator">Caps Lock está ativado</small>
             </div>
             
             <button type="submit" class="btn-login">Entrar</button>
@@ -312,7 +366,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <strong>Administrador:</strong> Selecione "Administrador" e use suas credenciais de admin
             </div>
             <div class="help-item" style="margin-top: 12px; color: #666;">
-                <strong>Não tem conta?</strong> <a href="cadastro.php" style="color: #667eea; text-decoration: none; font-weight: 600;">Cadastre-se aqui</a>
+                <strong>Não tem conta?</strong> <a href="cadastro.php" style="color: #0072FF; text-decoration: none; font-weight: 600;">Cadastre-se aqui</a>
             </div>
         </div>
      </div>
@@ -336,8 +390,87 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
              if (!document.getElementById('user_type').value) {
                  e.preventDefault();
                  alert('Por favor, selecione o tipo de usuário.');
+                 return; // Evita continuar
+             }
+             // Estado de carregamento
+             const btn = document.querySelector('.btn-login');
+             if (btn) {
+                 btn.disabled = true;
+                 btn.dataset.originalText = btn.textContent;
+                 btn.textContent = 'Entrando...';
              }
          });
+     </script>
+     
+     <!-- Script adicional para UX sem alterar a lógica -->
+     <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const emailInput = document.getElementById('email');
+            const passwordInput = document.getElementById('password');
+            const togglePasswordBtn = document.querySelector('.toggle-password');
+            const capsLockMsg = document.getElementById('capsLockMsg');
+            const typeButtons = document.querySelectorAll('.type-btn');
+            const userTypeHidden = document.getElementById('user_type');
+            
+            // Restaurar tipo selecionado
+            const savedType = localStorage.getItem('user_type');
+            if (savedType) {
+                try { selectUserType(savedType); } catch (e) {}
+            }
+            
+            // Navegação por teclado entre tipos
+            document.addEventListener('keydown', function(e) {
+                if (!typeButtons.length) return;
+                const activeIndex = Array.from(typeButtons).findIndex(btn => btn.classList.contains('active'));
+                if (e.key === 'ArrowRight') {
+                    const next = activeIndex >= 0 ? (activeIndex + 1) % typeButtons.length : 0;
+                    typeButtons[next].click();
+                    localStorage.setItem('user_type', typeButtons[next].dataset.type);
+                } else if (e.key === 'ArrowLeft') {
+                    const prev = activeIndex >= 0 ? (activeIndex - 1 + typeButtons.length) % typeButtons.length : 0;
+                    typeButtons[prev].click();
+                    localStorage.setItem('user_type', typeButtons[prev].dataset.type);
+                }
+            });
+            
+            // Alternar visualização de senha
+            if (togglePasswordBtn && passwordInput) {
+                togglePasswordBtn.addEventListener('click', function () {
+                    const isPass = passwordInput.type === 'password';
+                    passwordInput.type = isPass ? 'text' : 'password';
+                    togglePasswordBtn.textContent = isPass ? '🙈' : '👁️';
+                    passwordInput.focus();
+                });
+            }
+            
+            // Indicador de Caps Lock
+            if (passwordInput && capsLockMsg) {
+                passwordInput.addEventListener('keyup', function(e) {
+                    const capsOn = e.getModifierState && e.getModifierState('CapsLock');
+                    capsLockMsg.style.display = capsOn ? 'block' : 'none';
+                });
+            }
+            
+            // Validação leve de campos (não substitui required)
+            document.getElementById('loginForm').addEventListener('submit', function(e) {
+                // Limpa estados
+                emailInput.classList.remove('input-error');
+                passwordInput.classList.remove('input-error');
+                
+                if (!emailInput.value.trim()) {
+                    emailInput.classList.add('input-error');
+                    emailInput.focus();
+                    e.preventDefault();
+                    return;
+                }
+                if (!passwordInput.value.trim()) {
+                    passwordInput.classList.add('input-error');
+                    passwordInput.focus();
+                    e.preventDefault();
+                    return;
+                }
+            });
+        });
      </script>
  </body>
  </html>

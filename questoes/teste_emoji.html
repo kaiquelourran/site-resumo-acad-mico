@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste de Emojis</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji';
+            padding: 20px;
+            background: linear-gradient(135deg, #00C6FF, #0072FF);
+            color: white;
+        }
+        
+        .emoji-test {
+            font-size: 2em;
+            margin: 10px 0;
+            padding: 10px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+        }
+        
+        .emoji-inline {
+            font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', 'Android Emoji', 'EmojiSymbols', sans-serif !important;
+        }
+        
+        .emoji-unicode::before {
+            font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
+        }
+        
+        .home::before { content: "\1F3E0"; }
+        .chart::before { content: "\1F4C8"; }
+        .target::before { content: "\1F3AF"; }
+        .check::before { content: "\2705"; }
+        .trophy::before { content: "\1F3C6"; }
+    </style>
+</head>
+<body>
+    <h1>🎯 Teste de Emojis - Diagnóstico</h1>
+    
+    <div class="emoji-test">
+        <h2>Emojis Diretos:</h2>
+        <p>🏠 Casa | 📈 Gráfico | 🎯 Alvo | ✅ Check | 🏆 Troféu | ⚡ Raio | 📚 Livros | 🔥 Fogo | 🎓 Formatura | 🎉 Festa | ⏰ Relógio | 📖 Livro | ❌ X</p>
+    </div>
+    
+    <div class="emoji-test">
+        <h2>Emojis com Classe Específica:</h2>
+        <p>
+            <span class="emoji-inline">🏠</span> Casa | 
+            <span class="emoji-inline">📈</span> Gráfico | 
+            <span class="emoji-inline">🎯</span> Alvo | 
+            <span class="emoji-inline">✅</span> Check | 
+            <span class="emoji-inline">🏆</span> Troféu
+        </p>
+    </div>
+    
+    <div class="emoji-test">
+        <h2>Emojis via Unicode CSS:</h2>
+        <p>
+            <span class="emoji-unicode home"></span> Casa | 
+            <span class="emoji-unicode chart"></span> Gráfico | 
+            <span class="emoji-unicode target"></span> Alvo | 
+            <span class="emoji-unicode check"></span> Check | 
+            <span class="emoji-unicode trophy"></span> Troféu
+        </p>
+    </div>
+    
+    <div class="emoji-test">
+        <h2>Informações do Navegador:</h2>
+        <p id="browser-info"></p>
+    </div>
+    
+    <script>
+        document.getElementById('browser-info').innerHTML = 
+            'User Agent: ' + navigator.userAgent + '<br>' +
+            'Plataforma: ' + navigator.platform + '<br>' +
+            'Idioma: ' + navigator.language;
+    </script>
+</body>
+</html>
