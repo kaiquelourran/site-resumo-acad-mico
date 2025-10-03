@@ -26,10 +26,11 @@ try {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gerenciar Questões</title>
     <link rel="stylesheet" href="../../style.css">
+    <link rel="stylesheet" href="../modern-style.css">
     <style>
         .conteudo-principal {
             max-width: 900px;
-            margin: 173px auto 10px auto;
+            margin: 40px auto;
             background-color: #FFFFFF;
             padding: 20px;
             box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.432);
@@ -52,10 +53,16 @@ try {
     </style>
 </head>
 <body>
-    <header>
-        <h1>Gerenciar Questões</h1>
-        <p>Edite ou exclua as questões existentes.</p>
-    </header>
+<?php
+$breadcrumb_items = [
+    ['icon' => '🏠', 'text' => 'Início', 'link' => '../index.php', 'current' => false],
+    ['icon' => '👨‍💼', 'text' => 'Admin', 'link' => 'dashboard.php', 'current' => false],
+    ['icon' => '📝', 'text' => 'Gerenciar Questões', 'link' => 'gerenciar_questoes.php', 'current' => true]
+];
+$page_title = 'Gerenciar Questões';
+$page_subtitle = 'Edite ou exclua as questões existentes.';
+include '../header.php';
+?>
 
     <main class="conteudo-principal">
         <?php if (isset($mensagem_status)): ?>
@@ -98,10 +105,6 @@ try {
         <div class="actions-right"><a href="dashboard.php" class="btn btn-outline">Voltar</a></div>
     </main>
 
-    <footer>
-        <div class="footer-creditos">
-            <p>Desenvolvido por Resumo Acadêmico &copy; 2025</p>
-        </div>
-    </footer>
+    <?php include '../footer.php'; ?>
 </body>
 </html>

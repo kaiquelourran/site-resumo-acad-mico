@@ -17,10 +17,10 @@ if (!isset($page_subtitle)) {
     $page_subtitle = 'Resumo Acadêmico - Terapia Ocupacional';
 }
 ?>
-
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <!-- Header Moderno Redesenhado -->
 <header class="header">
-    <div class="header-container">
+    <div class="header-container header-topbar">
         <!-- Logo Section - Novo Design -->
         <div class="logo-section">
             <div class="logo-icon">
@@ -47,6 +47,7 @@ if (!isset($page_subtitle)) {
                 <span>Desempenho</span>
             </a>
         </nav>
+
 
         <!-- User Info Section - Novo Design -->
         <div class="user-info">

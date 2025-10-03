@@ -107,14 +107,17 @@ $result = $pdo->query($sql)->fetchAll();
     </style>
 </head>
 <body>
+<?php
+$breadcrumb_items = [
+    ['icon' => '🏠', 'text' => 'Início', 'link' => 'index.php', 'current' => false],
+    ['icon' => '📚', 'text' => 'Assuntos', 'link' => 'escolher_assunto.php', 'current' => true]
+];
+$page_title = '🎯 Escolha um Assunto';
+$page_subtitle = 'Selecione o assunto que deseja estudar';
+include 'header.php';
+?>
     <div class="container">
         <div class="assuntos-container">
-            <a href="index.php" class="voltar-btn">← Voltar ao Início</a>
-            
-            <div class="page-header">
-                <h1>🎯 Escolha um Assunto</h1>
-                <p>Selecione o assunto que deseja estudar</p>
-            </div>
             
             <?php if ($result && count($result) > 0): ?>
                 <?php foreach($result as $assunto): ?>
@@ -138,5 +141,6 @@ $result = $pdo->query($sql)->fetchAll();
             <?php endif; ?>
         </div>
     </div>
+<?php include 'footer.php'; ?>
 </body>
 </html>

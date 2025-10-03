@@ -53,6 +53,7 @@ foreach ($respostas as $resposta) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel do Usuário</title>
     <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="modern-style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         .dashboard-container {
@@ -104,13 +105,15 @@ foreach ($respostas as $resposta) {
     </style>
 </head>
 <body>
-    <header>
-        <h1>Painel de Desempenho</h1>
-        <div class="login-area">
-            <a href="index.php" class="btn btn-outline btn-sm">Início</a>
-            <a href="logout.php" class="btn btn-danger btn-sm" aria-label="Sair da conta">Sair</a>
-        </div>
-    </header>
+<?php
+$breadcrumb_items = [
+    ['icon' => '🏠', 'text' => 'Início', 'link' => 'index.php', 'current' => false],
+    ['icon' => '👤', 'text' => 'Meu Desempenho', 'link' => 'perfil_usuario.php', 'current' => true]
+];
+$page_title = 'Painel de Desempenho';
+$page_subtitle = 'Acompanhe sua evolução';
+include 'header.php';
+?>
 
     <main class="conteudo-principal">
         <div class="dashboard-container">
@@ -148,11 +151,7 @@ foreach ($respostas as $resposta) {
         </div>
     </main>
 
-    <footer>
-        <div class="footer-creditos">
-            <p>Desenvolvido por Resumo Acadêmico &copy; 2025</p>
-        </div>
-    </footer>
+<?php include 'footer.php'; ?>
     
     <script>
         // Dados do PHP

@@ -129,6 +129,11 @@ $contadores['erradas'] = $stmt_count_erradas->fetchColumn();
             padding-bottom: 30px;
             border-bottom: 2px solid #f0f0f0;
         }
+        .page-header .breadcrumb { display: flex; align-items: center; gap: 10px; justify-content: center; margin-bottom: 14px; }
+        .page-header .breadcrumb-link { color: #111827; text-decoration: none; font-weight: 700; padding: 8px 12px; border-radius: 10px; background-color: #FFFFFF; border: 1px solid #E5E7EB; box-shadow: 0 1px 2px rgba(17,24,39,0.06); }
+        .page-header .breadcrumb-link:hover { background-color: #F0F7FF; color: #0057D9; border-color: #CFE8FF; }
+        .page-header .breadcrumb-current { color: #0057D9; font-weight: 800; }
+        .page-header .breadcrumb-separator { color: #6B7280; font-size: 0.95rem; }
 
         .page-title {
             font-size: 2.5em;
@@ -422,6 +427,13 @@ $contadores['erradas'] = $stmt_count_erradas->fetchColumn();
         <div class="content-wrapper">
             <!-- Header -->
             <div class="page-header">
+                <nav class="breadcrumb">
+                    <a href="index.php" class="breadcrumb-link">🏠 Início</a>
+                    <span class="breadcrumb-separator">›</span>
+                    <a href="escolher_assunto.php" class="breadcrumb-link">📚 Assuntos</a>
+                    <span class="breadcrumb-separator">›</span>
+                    <span class="breadcrumb-current">📋 Lista de Questões</span>
+                </nav>
                 <h1 class="page-title">📚 Lista de Questões</h1>
                 <p class="page-subtitle"><?php echo htmlspecialchars($assunto_nome); ?></p>
             </div>

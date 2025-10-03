@@ -94,5 +94,6 @@ unset($_SESSION['quiz_progress']);
             <a href="index.php" class="btn btn-secondary" style="margin: 10px;">🏠 Voltar ao Menu</a>
         </div>
     </div>
+<?php include 'footer.php'; ?>
 </body>
 </html>

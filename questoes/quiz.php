@@ -62,20 +62,19 @@ if ($questao) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quiz</title>
     <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="modern-style.css">
 </head>
 <body>
-    <header>
-        <h1>Quiz Interativo</h1>
-        <div class="login-area">
-            <?php if (isset($_SESSION['id_usuario'])): ?>
-                <a href="perfil_usuario.php" class="btn btn-outline btn-sm" aria-label="Ver meu desempenho">Meu Desempenho</a>
-                <a href="logout.php" class="btn btn-danger btn-sm" aria-label="Sair da conta">Sair</a>
-            <?php else: ?>
-                <a href="login.php" class="btn btn-outline btn-sm">Login</a>
-                <a href="cadastro.php" class="btn btn-primary btn-sm">Cadastro</a>
-            <?php endif; ?>
-        </div>
-    </header>
+<?php
+$breadcrumb_items = [
+    ['icon' => '🏠', 'text' => 'Início', 'link' => 'index.php', 'current' => false],
+    ['icon' => '📚', 'text' => 'Assuntos', 'link' => 'escolher_assunto.php', 'current' => false],
+    ['icon' => '❓', 'text' => 'Quiz', 'link' => 'quiz.php', 'current' => true]
+];
+$page_title = 'Quiz Interativo';
+$page_subtitle = 'Responda e aprenda';
+include 'header.php';
+?>
 
     <main class="conteudo-principal">
         <?php if ($questao): ?>
@@ -114,11 +113,7 @@ if ($questao) {
         </div>
     </main>
 
-    <footer>
-        <div class="footer-creditos">
-            <p>Desenvolvido por Resumo Acadêmico &copy; 2025</p>
-        </div>
-    </footer>
+    <?php include 'footer.php'; ?>
     
     <script src="quiz.js"></script>
 </body>

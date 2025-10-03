@@ -1,7 +1,106 @@
 <?php
 // Arquivo footer.php - Rodapé moderno padronizado com o header
 ?>
-    <footer class="footer-modern">
+<style>
+/* Footer Modern - Paleta Azul Resumo Acadêmico */
+.footer-modern { margin-top: 40px; }
+.footer-modern .footer-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  background: #FFFFFF;
+  border-radius: 16px;
+  border: 1px solid #e9eef3;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.08);
+  padding: 22px;
+  position: relative;
+}
+.footer-modern .footer-container::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+  background: linear-gradient(90deg, #00C6FF 0%, #0072FF 100%);
+}
+
+/* Layout principal */
+.footer-modern .footer-main { margin-bottom: 16px; }
+.footer-modern .footer-content {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+/* Branding */
+.footer-modern .footer-brand { display: flex; flex-direction: column; gap: 12px; }
+.footer-modern .footer-logo { display: flex; align-items: center; gap: 12px; }
+.footer-modern .footer-logo-icon { font-size: 1.6rem; }
+.footer-modern .footer-brand-title { margin: 0; font-size: 1.2rem; color: #222; }
+.footer-modern .footer-brand-subtitle { color: #666; font-size: 0.95rem; }
+.footer-modern .footer-description { color: #666; margin: 6px 0 0; }
+
+/* Seções e títulos */
+.footer-modern .footer-section-title { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; color: #222; font-size: 1.05rem; }
+.footer-modern .footer-section-icon { font-size: 1.05rem; }
+
+/* Links do footer */
+.footer-modern .footer-links { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.footer-modern .footer-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #0072FF;
+  text-decoration: none;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 8px;
+  transition: background-color .2s ease, color .2s ease, transform .2s ease;
+}
+.footer-modern .footer-link:hover { background-color: rgba(0,114,255,0.08); transform: translateX(4px); }
+.footer-modern .footer-link:focus { outline: 3px solid rgba(0,114,255,0.35); outline-offset: 2px; }
+.footer-modern .footer-link-icon { font-size: 1rem; }
+
+/* Contato */
+.footer-modern .footer-contact { display: flex; flex-direction: column; gap: 8px; }
+.footer-modern .footer-contact-item { display: flex; align-items: center; gap: 8px; color: #666; }
+.footer-modern .footer-contact-icon { font-size: 1rem; color: #0072FF; }
+.footer-modern .footer-contact-text { font-size: 0.95rem; }
+
+/* Tecnologias */
+.footer-modern .footer-tech-stack { display: flex; align-items: center; gap: 10px; }
+.footer-modern .footer-tech-item {
+  width: 36px; height: 36px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: #f4f7fb; border: 1px solid #e9eef3; color: #0072FF;
+  border-radius: 10px;
+  transition: transform .2s ease, background-color .2s ease;
+}
+.footer-modern .footer-tech-item:hover { transform: scale(1.08); background-color: #eaf3ff; }
+
+/* Rodapé inferior */
+.footer-modern .footer-bottom {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; margin-top: 12px; padding-top: 12px;
+  border-top: 1px solid #f0f2f5; color: #666; font-size: 0.95rem;
+}
+.footer-modern .footer-bottom-content { display: flex; align-items: center; justify-content: space-between; width: 100%; }
+.footer-modern .footer-credits { display: inline-flex; align-items: center; gap: 6px; }
+.footer-modern .credits-heart { color: #dc3545; display: inline-block; transition: transform .2s ease; }
+
+/* Responsividade */
+@media (max-width: 992px) {
+  .footer-modern .footer-content { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 768px) {
+  .footer-modern .footer-container { padding: 18px; }
+  .footer-modern .footer-content { grid-template-columns: 1fr; gap: 16px; }
+  .footer-modern .footer-bottom { flex-direction: column; align-items: flex-start; gap: 8px; }
+}
+</style>
+ 
+     <footer class="footer-modern">
         <div class="footer-container">
             <!-- Seção Principal do Footer -->
             <div class="footer-main">
