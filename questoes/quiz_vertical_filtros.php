@@ -154,84 +154,246 @@ function getNomeFiltro($filtro) {
     }
 }
 ?>
-
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz Vertical - <?php echo htmlspecialchars($assunto_nome); ?></title>
-    <link rel="stylesheet" href="../style.css">
+    <title>Quiz - <?php echo htmlspecialchars($assunto_nome); ?> - Resumo Acadêmico</title>
+    <link rel="stylesheet" href="modern-style.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        /* Background gradiente azul igual ao da listar_questoes.php */
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-image: linear-gradient(to top, #00C6FF, #0072FF);
             min-height: 100vh;
-            padding: 20px;
+            margin: 0;
         }
 
+        /* Container principal com mesmo estilo da listar_questoes.php */
         .main-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
-            border-radius: 25px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-            border: 2px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .content-wrapper {
-            padding: 40px;
-        }
-
-        .page-header {
-            text-align: center;
-            margin-bottom: 40px;
+            max-width: 1100px;
+            margin: 40px auto;
+            background: #FFFFFF;
+            border-radius: 16px;
+            border: 1px solid transparent;
+            background-image: linear-gradient(#FFFFFF, #FFFFFF), linear-gradient(to top, #00C6FF, #0072FF);
+            background-origin: border-box;
+            background-clip: padding-box, border-box;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
             padding: 30px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 20px;
-            color: white;
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
         }
 
-        .page-title {
-            font-size: 2.8em;
-            font-weight: 300;
-            margin-bottom: 10px;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        /* Header da subjects-page idêntico ao da listar_questoes.php */
+        .subjects-page .header .breadcrumb .header-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: #FFFFFF;
+            border: 2px solid #dbeafe;
+            box-shadow: 0 10px 24px rgba(0,114,255,0.12);
+            border-radius: 16px;
+            padding: 14px 20px 16px 44px;
+            position: relative;
+        }
+        .subjects-page .header .breadcrumb .header-container::before {
+            content: "";
+            position: absolute;
+            left: 16px;
+            top: 12px;
+            bottom: 12px;
+            width: 6px;
+            border-radius: 6px;
+            background: linear-gradient(180deg, #00C6FF 0%, #0072FF 100%);
+        }
+        .subjects-page .header .breadcrumb-link,
+        .subjects-page .header .breadcrumb-current {
+            font-size: 1.08rem;
+            font-weight: 800;
+            color: #111827;
+            padding: 10px 14px;
+            border-radius: 10px;
+            background-color: #FFFFFF;
+            border: 1px solid #CFE8FF;
+            box-shadow: 0 1px 3px rgba(0,114,255,0.10);
+        }
+        .subjects-page .header .breadcrumb-current { color: #0057D9; }
+        .subjects-page .header .breadcrumb-link:hover {
+            background-color: #F0F7FF;
+            color: #0057D9;
+            border-color: #BBDDFF;
+        }
+        .subjects-page .header .breadcrumb-separator { color: #6B7280; font-size: 1rem; }
+
+        .subjects-page .header .user-info {
+            background: transparent !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            border-radius: 0 !important;
+            margin-bottom: 0 !important;
+            animation: none !important;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .subjects-page .header .user-profile {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 10px;
+            border-radius: 8px;
+            background: transparent;
+            border: none;
+            color: #111827;
+            font-weight: 700;
+        }
+        .subjects-page .header .user-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(180deg, #00C6FF 0%, #0072FF 100%);
+            color: #fff;
+            font-weight: 800;
+            font-size: 0.9rem;
+            box-shadow: 0 3px 8px rgba(0,114,255,0.25);
+        }
+        .subjects-page .header .user-name {
+            font-size: 0.92rem;
+            color: #111827;
+            margin: 0;
+            line-height: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 160px;
+            font-weight: 600;
+        }
+        @media (max-width: 768px) {
+            .subjects-page .header .user-name { max-width: 120px; }
+        }
+        @media (max-width: 480px) {
+            .subjects-page .header .user-name { display: none; }
+            .subjects-page .header .user-avatar { width: 26px; height: 26px; font-size: 0.85rem; }
         }
 
-        .page-subtitle {
-            font-size: 1.3em;
-            opacity: 0.9;
-            font-weight: 400;
+        /* Ocultar o botão Entrar na subjects-page */
+        .subjects-page .header .header-btn.primary { display: none !important; }
+
+        /* Estilo destacado para o botão Sair */
+        .subjects-page .header a.header-btn[href="logout.php"] {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            background: linear-gradient(180deg, #ff4b5a 0%, #dc3545 100%);
+            color: #fff;
+            border: none;
+            font-weight: 700;
+            text-decoration: none;
+            box-shadow: 0 4px 10px rgba(220,53,69,0.30);
+            transition: transform .2s ease, box-shadow .2s ease, filter .2s ease;
+            letter-spacing: 0;
+            font-size: 0.95rem;
+        }
+        .subjects-page .header a.header-btn[href="logout.php"]:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 16px rgba(220,53,69,0.40);
+            filter: brightness(1.02);
+        }
+        .subjects-page .header a.header-btn[href="logout.php"]:focus {
+            outline: 3px solid rgba(220,53,69,0.45);
+            outline-offset: 2px;
+        }
+        .subjects-page .header a.header-btn[href="logout.php"]::before { content: none; }
+
+        /* Botão 'Ir para o Site' */
+        .subjects-page .header a.header-btn.site-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            background: linear-gradient(180deg, #00C6FF 0%, #0072FF 100%);
+            color: #fff;
+            border: none;
+            font-weight: 700;
+            text-decoration: none;
+            box-shadow: 0 4px 10px rgba(0,114,255,0.30);
+            transition: transform .2s ease, box-shadow .2s ease, filter .2s ease;
+            font-size: 0.95rem;
+        }
+        .subjects-page .header a.header-btn.site-link:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 16px rgba(0,114,255,0.40);
+            filter: brightness(1.02);
+        }
+        .subjects-page .header a.header-btn.site-link:focus {
+            outline: 3px solid rgba(0,114,255,0.35);
+            outline-offset: 2px;
+        }
+
+        /* Destaque para o título e subtítulo */
+        .subjects-page .page-header .header-container {
+            max-width: 1100px;
+            margin: 16px auto 24px;
+            background: #FFFFFF;
+            border: 2px solid #dbeafe;
+            box-shadow: 0 12px 28px rgba(0,114,255,0.14);
+            border-radius: 16px;
+            padding: 16px 24px 18px 48px;
+            position: relative;
+        }
+        .subjects-page .page-header .header-container::before {
+            content: "";
+            position: absolute;
+            left: 20px;
+            top: 14px;
+            bottom: 14px;
+            width: 6px;
+            border-radius: 6px;
+            background: linear-gradient(180deg, #00C6FF 0%, #0072FF 100%);
+        }
+        .subjects-page .page-title {
+            margin: 0;
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: #111827;
+            letter-spacing: 0.3px;
+        }
+        .subjects-page .page-subtitle {
+            margin-top: 8px;
+            color: #6B7280;
+            font-size: 1.05rem;
+        }
+        @media (max-width: 768px) {
+            .subjects-page .page-title { font-size: 1.45rem; }
+            .subjects-page .page-subtitle { font-size: 0.95rem; }
         }
 
         .quiz-info {
-            background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
-            border-radius: 15px;
-            padding: 20px;
+            background: linear-gradient(135deg, rgba(0, 198, 255, 0.08) 0%, rgba(0, 114, 255, 0.08) 100%);
+            border-radius: 12px;
+            padding: 20px 30px;
             margin-bottom: 30px;
-            border: 2px solid #f0f0f0;
+            border: 2px solid rgba(0, 114, 255, 0.15);
             text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 114, 255, 0.1);
         }
 
         .quiz-info h3 {
-            color: #333;
-            margin-bottom: 10px;
-            font-size: 1.3em;
+            color: #0072FF;
+            margin-bottom: 8px;
+            font-size: 1.4em;
+            font-weight: 700;
         }
 
         .quiz-info p {
-            color: #666;
+            color: #555;
             margin: 0;
-            font-size: 1.1em;
+            font-size: 1.05em;
+            font-weight: 600;
         }
 
         .questions-container {
@@ -242,11 +404,11 @@ function getNomeFiltro($filtro) {
 
         .question-card {
             background: white;
-            border-radius: 20px;
-            padding: 35px;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
-            border: 2px solid #f0f0f0;
-            transition: all 0.4s ease;
+            border-radius: 14px;
+            padding: 0;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.06);
+            border: 1px solid #e1e5e9;
+            transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
         }
@@ -256,38 +418,40 @@ function getNomeFiltro($filtro) {
             position: absolute;
             top: 0;
             left: 0;
-            width: 5px;
+            width: 6px;
             height: 100%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(to top, #00C6FF, #0072FF);
+            border-radius: 14px 0 0 14px;
         }
 
         .question-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
-            border-color: #667eea;
+            transform: translateY(-5px) scale(1.01);
+            box-shadow: 0 15px 35px rgba(0,114,255,0.2);
+            border-color: #00C6FF;
         }
 
         .question-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 25px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #f8f9fa;
+            margin-bottom: 0;
+            padding: 18px 24px;
+            background: linear-gradient(to top, #00C6FF, #0072FF);
+            border-radius: 14px 14px 0 0;
         }
 
         .question-number {
             font-weight: 700;
-            color: #667eea;
-            font-size: 1.3em;
+            color: #FFFFFF;
+            font-size: 1.1em;
             display: flex;
             align-items: center;
             gap: 10px;
         }
 
         .question-number::before {
-            content: '📝';
-            font-size: 1.2em;
+            content: '🎯';
+            font-size: 1.1em;
         }
 
         .question-status {
@@ -319,18 +483,22 @@ function getNomeFiltro($filtro) {
         }
 
         .question-text {
-            font-size: 1.15em;
-            line-height: 1.7;
-            color: #2c3e50;
-            margin-bottom: 30px;
+            font-size: 1.05em;
+            line-height: 1.6;
+            color: #333;
+            margin-bottom: 0;
+            padding: 24px;
+            background: #FFFFFF;
             font-weight: 500;
         }
 
         .alternatives-container {
             display: flex;
             flex-direction: column;
-            gap: 18px;
-            margin-bottom: 25px;
+            gap: 12px;
+            padding: 0 24px 24px 24px;
+            background: #FFFFFF;
+            margin-bottom: 0;
         }
 
         .alternative {
@@ -625,18 +793,80 @@ function getNomeFiltro($filtro) {
         }
     </style>
 </head>
-<body>
-    <div class="main-container">
-        <div class="content-wrapper">
-            <!-- Cabeçalho do Quiz -->
-            <div class="page-header">
-                <h1 class="page-title">🎯 Quiz Vertical</h1>
-                <p class="page-subtitle"><?php echo htmlspecialchars($assunto_nome); ?></p>
-            </div>
+<body class="subjects-page">
+<?php
+$breadcrumb_items = [
+    ['icon' => '🏠', 'text' => 'Início', 'link' => 'index.php', 'current' => false],
+    ['icon' => '📚', 'text' => 'Assuntos', 'link' => 'escolher_assunto.php', 'current' => false],
+    ['icon' => '📋', 'text' => 'Lista de Questões', 'link' => 'listar_questoes.php?id=' . $id_assunto . '&filtro=' . $filtro_ativo, 'current' => false],
+    ['icon' => '🎯', 'text' => 'Quiz', 'link' => '', 'current' => true]
+];
+$page_title = '🎯 Quiz';
+$page_subtitle = htmlspecialchars($assunto_nome) . ' - ' . getNomeFiltro($filtro_ativo);
+include 'header.php';
+?>
+    <script>
+    // Ajustes de header para subjects-page
+    document.addEventListener('DOMContentLoaded', function() {
+        if (!document.body.classList.contains('subjects-page')) return;
+        const header = document.querySelector('.header');
+        if (!header) return;
+        const userInfo = header.querySelector('.user-info');
+        if (!userInfo) return;
+        // garantir botão Sair
+        let logoutBtn = header.querySelector('a.header-btn[href="logout.php"]');
+        if (!logoutBtn) {
+            const a = document.createElement('a');
+            a.href = 'logout.php';
+            a.className = 'header-btn';
+            a.setAttribute('aria-label', 'Sair da sessão');
+            a.innerHTML = '<i class="fas fa-sign-out-alt"></i><span>Sair</span>';
+            userInfo.appendChild(a);
+        }
+        // perfil do usuário
+        let profile = userInfo.querySelector('.user-profile');
+        <?php
+        $displayNameSubjects = '';
+        foreach ([
+            'usuario_nome','usuario','nome','user_name','username','login','nome_usuario','nomeCompleto'
+        ] as $k) {
+            if (isset($_SESSION[$k]) && trim($_SESSION[$k]) !== '') { $displayNameSubjects = $_SESSION[$k]; break; }
+        }
+        ?>
+        const userName = "<?php echo htmlspecialchars($displayNameSubjects, ENT_QUOTES, 'UTF-8'); ?>";
+        if (userName) {
+            if (!profile) {
+                const p = document.createElement('div');
+                p.className = 'user-profile';
+                const avatar = document.createElement('div');
+                avatar.className = 'user-avatar';
+                avatar.textContent = userName.trim().charAt(0).toUpperCase() || '?';
+                const nameEl = document.createElement('span');
+                nameEl.className = 'user-name';
+                nameEl.textContent = userName;
+                p.appendChild(avatar);
+                p.appendChild(nameEl);
+                userInfo.insertBefore(p, userInfo.firstChild);
+            }
+        }
+        const loginBtn = header.querySelector('a.header-btn.primary[href="login.php"]');
+        if (loginBtn) loginBtn.style.display = 'none';
+        let siteBtn = header.querySelector('a.header-btn.site-link');
+        if (!siteBtn) {
+            const s = document.createElement('a');
+            s.href = '../index.html';
+            s.className = 'header-btn site-link';
+            s.target = '_blank';
+            s.rel = 'noopener';
+            s.innerHTML = '<i class="fas fa-globe"></i><span>Ir para o Site</span>';
+            userInfo.appendChild(s);
+        }
+    });
+    </script>
 
             <!-- Informações do Quiz -->
             <div class="quiz-info">
-                <h3><?php echo getNomeFiltro($filtro_ativo); ?></h3>
+                <h3>📊 <?php echo getNomeFiltro($filtro_ativo); ?></h3>
                 <p><?php echo count($questoes); ?> questão(ões) disponível(eis)</p>
             </div>
 
@@ -922,5 +1152,10 @@ function getNomeFiltro($filtro) {
             });
         });
     </script>
+
+</main>
+</div>
+    
+<?php include 'footer.php'; ?>
 </body>
 </html>

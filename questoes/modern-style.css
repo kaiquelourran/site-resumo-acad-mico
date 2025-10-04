@@ -506,15 +506,7 @@ body {
     transition: all 0.3s ease;
 }
 
-.question-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 4px;
-    height: 100%;
-    background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
-}
+/* Barra lateral removida */
 
 .question-card:hover {
     transform: translateY(-2px);
