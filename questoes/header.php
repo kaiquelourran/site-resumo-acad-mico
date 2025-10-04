@@ -51,12 +51,13 @@ if (!isset($page_subtitle)) {
 
         <!-- User Info Section - Novo Design -->
         <div class="user-info">
-            <?php if (isset($_SESSION['usuario_nome'])): ?>
+            <?php $display_name = $_SESSION['usuario_nome'] ?? $_SESSION['nome_usuario'] ?? null; ?>
+            <?php if ($display_name): ?>
                 <div class="user-profile">
                     <div class="user-avatar">
-                        <?php echo strtoupper(substr($_SESSION['usuario_nome'], 0, 1)); ?>
+                        <?php echo strtoupper(substr($display_name, 0, 1)); ?>
                     </div>
-                    <span class="user-name"><?php echo htmlspecialchars($_SESSION['usuario_nome']); ?></span>
+                    <span class="user-name"><?php echo htmlspecialchars($display_name); ?></span>
                 </div>
                 <a href="logout.php" class="header-btn">
                     <i class="fas fa-sign-out-alt"></i>
