@@ -84,6 +84,8 @@ if ($filtro_ativo === 'todas' || $filtro_ativo === 'nao-respondidas') {
                    q.alternativa_c, q.alternativa_d, q.alternativa_correta, q.explicacao,
                    a.nome,
                    CASE 
+                       WHEN r.id_questao IS NOT NULL AND r.acertou = 1 THEN 'certa'
+                       WHEN r.id_questao IS NOT NULL AND r.acertou = 0 THEN 'errada'
                        WHEN r.id_questao IS NOT NULL THEN 'respondida'
                        ELSE 'nao-respondida'
                    END as status_resposta,
@@ -399,7 +401,7 @@ function getNomeFiltro($filtro) {
         .questions-container {
             display: flex;
             flex-direction: column;
-            gap: 30px;
+            gap: 20px;
         }
 
         .question-card {
@@ -414,14 +416,8 @@ function getNomeFiltro($filtro) {
         }
 
         .question-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 6px;
-            height: 100%;
-            background: linear-gradient(to top, #00C6FF, #0072FF);
-            border-radius: 14px 0 0 14px;
+            display: none !important;
+            content: none !important;
         }
 
         .question-card:hover {
@@ -435,7 +431,7 @@ function getNomeFiltro($filtro) {
             justify-content: space-between;
             align-items: center;
             margin-bottom: 0;
-            padding: 18px 24px;
+            padding: 12px 20px;
             background: linear-gradient(to top, #00C6FF, #0072FF);
             border-radius: 14px 14px 0 0;
         }
@@ -443,15 +439,15 @@ function getNomeFiltro($filtro) {
         .question-number {
             font-weight: 700;
             color: #FFFFFF;
-            font-size: 1.1em;
+            font-size: 0.95em;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
         }
 
         .question-number::before {
             content: '🎯';
-            font-size: 1.1em;
+            font-size: 1em;
         }
 
         .question-status {
@@ -483,11 +479,11 @@ function getNomeFiltro($filtro) {
         }
 
         .question-text {
-            font-size: 1.05em;
-            line-height: 1.6;
+            font-size: 1em;
+            line-height: 1.5;
             color: #333;
             margin-bottom: 0;
-            padding: 24px;
+            padding: 18px 20px;
             background: #FFFFFF;
             font-weight: 500;
         }
@@ -495,67 +491,70 @@ function getNomeFiltro($filtro) {
         .alternatives-container {
             display: flex;
             flex-direction: column;
-            gap: 12px;
-            padding: 0 24px 24px 24px;
+            gap: 10px;
+            padding: 0 20px 20px 20px;
             background: #FFFFFF;
             margin-bottom: 0;
         }
 
         .alternative {
-            background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
-            border: 2px solid #e9ecef;
-            border-radius: 15px;
-            padding: 25px;
+            background: #FFFFFF;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            padding: 12px 16px;
             cursor: pointer;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s ease;
             display: flex;
             align-items: center;
             position: relative;
             overflow: hidden;
+            gap: 12px;
         }
 
         .alternative::before {
             content: '';
             position: absolute;
             top: 0;
-            left: -100%;
-            width: 100%;
+            left: 0;
+            width: 4px;
             height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.1), transparent);
-            transition: left 0.5s;
+            background: linear-gradient(to top, #00C6FF, #0072FF);
+            transform: scaleY(0);
+            transition: transform 0.3s ease;
+            border-radius: 10px 0 0 10px;
         }
 
         .alternative:hover::before {
-            left: 100%;
+            transform: scaleY(1);
         }
 
         .alternative:hover {
-            border-color: #667eea;
-            transform: translateX(8px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
+            border-color: #00C6FF;
+            transform: translateX(5px);
+            box-shadow: 0 6px 20px rgba(0, 114, 255, 0.15);
+            background: linear-gradient(135deg, rgba(0, 198, 255, 0.03) 0%, rgba(0, 114, 255, 0.03) 100%);
         }
 
         .alternative-letter {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #00C6FF 0%, #0072FF 100%);
             color: white;
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: 700;
-            margin-right: 20px;
+            font-weight: 800;
             flex-shrink: 0;
-            font-size: 1.1em;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            font-size: 1em;
+            box-shadow: 0 3px 10px rgba(0, 114, 255, 0.3);
         }
 
         .alternative-text {
             flex: 1;
-            font-size: 1.05em;
-            line-height: 1.6;
-            color: #2c3e50;
+            font-size: 0.95em;
+            line-height: 1.5;
+            color: #333;
             font-weight: 500;
         }
 
@@ -601,14 +600,14 @@ function getNomeFiltro($filtro) {
         }
 
         .explicacao-container {
-            background: linear-gradient(135deg, #e8f4fd 0%, #f0f8ff 100%);
-            border-left: 5px solid #2196f3;
-            padding: 25px;
-            margin-top: 25px;
-            border-radius: 0 15px 15px 0;
+            background: linear-gradient(135deg, rgba(0, 198, 255, 0.08) 0%, rgba(0, 114, 255, 0.08) 100%);
+            border-left: 4px solid #0072FF;
+            padding: 16px 20px;
+            margin: 16px 20px 20px 20px;
+            border-radius: 0 10px 10px 0;
             opacity: 0;
-            animation: fadeIn 0.8s ease-in-out forwards;
-            box-shadow: 0 6px 20px rgba(33, 150, 243, 0.15);
+            animation: fadeIn 0.5s ease-in-out forwards;
+            box-shadow: 0 4px 12px rgba(0, 114, 255, 0.1);
         }
 
         @keyframes fadeIn {
@@ -623,34 +622,34 @@ function getNomeFiltro($filtro) {
         }
 
         .explicacao-title {
-            color: #1976d2;
-            margin-bottom: 12px;
-            font-size: 1.2em;
-            font-weight: 600;
+            color: #0072FF;
+            margin-bottom: 8px;
+            font-size: 1em;
+            font-weight: 700;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
         }
 
         .explicacao-title::before {
             content: '💡';
-            font-size: 1.1em;
+            font-size: 1em;
         }
 
         .explicacao-text {
-            color: #2c3e50;
-            line-height: 1.7;
+            color: #333;
+            line-height: 1.6;
             margin: 0;
-            font-size: 1.05em;
+            font-size: 0.95em;
             font-weight: 500;
         }
 
         .navigation-section {
             text-align: center;
-            padding: 35px;
-            background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
-            border-radius: 20px;
-            border: 2px solid #f0f0f0;
+            padding: 25px 0;
+            background: transparent;
+            border-radius: 0;
+            border: none;
             margin-top: 30px;
         }
 
@@ -662,19 +661,17 @@ function getNomeFiltro($filtro) {
         }
 
         .nav-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 15px 30px;
+            padding: 14px 28px;
             border: none;
-            border-radius: 30px;
+            border-radius: 10px;
             text-decoration: none;
-            font-weight: 600;
+            font-weight: 700;
             font-size: 1em;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s ease;
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 10px;
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
             position: relative;
             overflow: hidden;
         }
@@ -888,23 +885,23 @@ include 'header.php';
                                 <div class="question-number">
                                     Questão #<?php echo $questao['id_questao']; ?>
                                 </div>
-                                <div class="question-status status-<?php echo $questao['status_resposta']; ?>">
-                                    <?php
-                                    switch($questao['status_resposta']) {
-                                        case 'nao-respondida':
-                                            echo '❓ Não Respondida';
-                                            break;
-                                        case 'acertada':
-                                            echo '✅ Acertada';
-                                            break;
-                                        case 'errada':
-                                            echo '❌ Errada';
-                                            break;
-                                        default:
-                                            echo '✅ Respondida';
-                                    }
-                                    ?>
-                                </div>
+                                    <div class="question-status status-<?php echo $questao['status_resposta']; ?>">
+                                        <?php
+                                        switch($questao['status_resposta']) {
+                                            case 'nao-respondida':
+                                                echo '❓ Não Respondida';
+                                                break;
+                                            case 'certa':
+                                                echo '✅ Acertou';
+                                                break;
+                                            case 'errada':
+                                                echo '❌ Errou';
+                                                break;
+                                            default:
+                                                echo '✅ Respondida';
+                                        }
+                                        ?>
+                                    </div>
                             </div>
                             
                             <div class="question-text">
@@ -1067,43 +1064,8 @@ include 'header.php';
                             // Mostrar resultado visual
                             mostrarFeedbackVisual(questaoId, alternativaSelecionada, data.alternativa_correta, data.explicacao);
                             
-                            // Verificar se a questão deve ser removida do filtro atual
-                            const filtroAtual = new URLSearchParams(window.location.search).get('filtro') || 'todas';
-                            let deveRemover = false;
-                            
-                            switch(filtroAtual) {
-                                case 'nao-respondidas':
-                                    // Questão respondida deve sair do filtro "não respondidas"
-                                    deveRemover = true;
-                                    break;
-                                case 'certas':
-                                    // Se errou, deve sair do filtro "acertadas"
-                                    deveRemover = !data.acertou;
-                                    break;
-                                case 'erradas':
-                                    // Se acertou, deve sair do filtro "erradas"
-                                    deveRemover = data.acertou;
-                                    break;
-                            }
-                            
-                            // Remover questão do DOM após um delay se necessário
-                            if (deveRemover) {
-                                setTimeout(() => {
-                                    questaoCard.style.transition = 'all 0.5s ease';
-                                    questaoCard.style.opacity = '0';
-                                    questaoCard.style.transform = 'translateX(-100%)';
-                                    
-                                    setTimeout(() => {
-                                        questaoCard.remove();
-                                        
-                                        // Verificar se ainda há questões
-                                        const questoesRestantes = document.querySelectorAll('.question-card');
-                                        if (questoesRestantes.length === 0) {
-                                            mostrarMensagemFiltroVazio();
-                                        }
-                                    }, 500);
-                                }, 2000);
-                            }
+                            // Questões permanecem no filtro atual até atualizar a página
+                            // Não removemos automaticamente para manter a consistência do filtro
                         } else {
                             console.error('Erro ao processar resposta:', data.message);
                             // Reabilitar cliques em caso de erro
