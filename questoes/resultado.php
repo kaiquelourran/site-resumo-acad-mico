@@ -2,15 +2,15 @@
 session_start();
 require_once __DIR__ . '/conexao.php';
 
-// Redireciona se a sessão do quiz não existir
-if (!isset($_SESSION['quiz_progress'])) {
+// Redireciona se a sessão das questões não existir
+if (!isset($_SESSION['questoes_progress'])) {
     header('Location: index.php');
     exit;
 }
 
-$acertos = $_SESSION['quiz_progress']['acertos'];
-$numero_de_questoes_por_quiz = 5;
-$porcentagem_acertos = ($acertos / $numero_de_questoes_por_quiz) * 100;
+$acertos = $_SESSION['questoes_progress']['acertos'];
+$numero_de_questoes_por_questoes = 5;
+$porcentagem_acertos = ($acertos / $numero_de_questoes_por_questoes) * 100;
 $mensagem_final = '';
 $class_mensagem = '';
 
@@ -25,8 +25,8 @@ if ($porcentagem_acertos >= 80) {
     $class_mensagem = "incorreta";
 }
 
-// Limpa a sessão do quiz para que um novo possa começar
-unset($_SESSION['quiz_progress']);
+// Limpa a sessão das questões para que um novo possa começar
+unset($_SESSION['questoes_progress']);
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -64,7 +64,7 @@ unset($_SESSION['quiz_progress']);
                 <div class="stat-label">Acertos</div>
             </div>
             <div class="stat-card slide-in-up">
-                <div class="stat-number"><?= htmlspecialchars($numero_de_questoes_por_quiz) ?></div>
+                <div class="stat-number"><?= htmlspecialchars($numero_de_questoes_por_questoes) ?></div>
                 <div class="stat-label">Total de Questões</div>
             </div>
             <div class="stat-card slide-in-right">

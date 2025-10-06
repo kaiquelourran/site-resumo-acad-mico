@@ -4,16 +4,16 @@ session_start();
 require_once __DIR__ . '/conexao.php';
 
 // Define o número de questões no início do arquivo
-$numero_de_questoes_por_quiz = 5;
+$numero_de_questoes_por_questoes = 5;
 
 // Sempre atualiza o ID do assunto da sessão com base no que foi passado pela URL
 if (isset($_GET['id'])) {
-    $_SESSION['quiz_progress']['id_assunto'] = (int)$_GET['id'];
+    $_SESSION['questoes_progress']['id_assunto'] = (int)$_GET['id'];
 }
 
-// Inicializa a sessão para o quiz, se ainda não estiver
-if (!isset($_SESSION['quiz_progress']) || isset($_GET['novo'])) {
-    $_SESSION['quiz_progress'] = [
+// Inicializa a sessão para as questões, se ainda não estiver
+if (!isset($_SESSION['questoes_progress']) || isset($_GET['novo'])) {
+    $_SESSION['questoes_progress'] = [
         'acertos' => 0,
         'respondidas' => [],
         'id_assunto' => isset($_GET['id']) ? (int)$_GET['id'] : 0,
@@ -21,14 +21,14 @@ if (!isset($_SESSION['quiz_progress']) || isset($_GET['novo'])) {
 }
 
 // Redireciona para a página de resultados se o número de questões foi alcançado
-if (count($_SESSION['quiz_progress']['respondidas']) >= $numero_de_questoes_por_quiz) {
+if (count($_SESSION['questoes_progress']['respondidas']) >= $numero_de_questoes_por_questoes) {
     header('Location: resultado.php');
     exit;
 }
 
 // Busca uma questão aleatória que ainda não foi respondida na sessão
-$id_assunto_atual = $_SESSION['quiz_progress']['id_assunto'];
-$questoes_respondidas = $_SESSION['quiz_progress']['respondidas'];
+$id_assunto_atual = $_SESSION['questoes_progress']['id_assunto'];
+$questoes_respondidas = $_SESSION['questoes_progress']['respondidas'];
 $sql = "SELECT * FROM questoes WHERE 1=1";
 $params = [];
 
@@ -50,9 +50,16 @@ $stmt_questao->execute($params);
 $questao = $stmt_questao->fetch(PDO::FETCH_ASSOC);
 
 if ($questao) {
-    $stmt_alternativas = $pdo->prepare("SELECT * FROM alternativas WHERE id_questao = ? ORDER BY RAND()");
+    // Buscar alternativas e embaralhar com seed consistente
+    $stmt_alternativas = $pdo->prepare("SELECT * FROM alternativas WHERE id_questao = ? ORDER BY id_alternativa");
     $stmt_alternativas->execute([$questao['id_questao']]);
     $alternativas = $stmt_alternativas->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Embaralhar as alternativas para que a resposta correta apareça em posições diferentes
+    // Usar seed aleatório para que as alternativas mudem a cada carregamento
+    $seed = $questao['id_questao'] + time() + rand(1, 1000); // Seed aleatório baseado no ID + timestamp + rand
+    srand($seed);
+    shuffle($alternativas);
 }
 ?>
 <!DOCTYPE html>
@@ -60,7 +67,7 @@ if ($questao) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz</title>
+    <title>Questões</title>
     <link rel="stylesheet" href="../style.css">
     <link rel="stylesheet" href="modern-style.css">
 </head>
@@ -69,9 +76,9 @@ if ($questao) {
 $breadcrumb_items = [
     ['icon' => '🏠', 'text' => 'Início', 'link' => 'index.php', 'current' => false],
     ['icon' => '📚', 'text' => 'Assuntos', 'link' => 'escolher_assunto.php', 'current' => false],
-    ['icon' => '❓', 'text' => 'Quiz', 'link' => 'quiz.php', 'current' => true]
+    ['icon' => '❓', 'text' => 'Questões', 'link' => 'quiz.php', 'current' => true]
 ];
-$page_title = 'Quiz Interativo';
+$page_title = 'Questões Interativas';
 $page_subtitle = 'Responda e aprenda';
 include 'header.php';
 ?>
@@ -79,8 +86,8 @@ include 'header.php';
     <main class="conteudo-principal">
         <?php if ($questao): ?>
             <div class="placar-progresso">
-                <p>Pontuação: <span id="placar-pontos"><?= htmlspecialchars($_SESSION['quiz_progress']['acertos']) ?></span></p>
-                <p>Questão <span id="questao-atual"><?= count($_SESSION['quiz_progress']['respondidas']) + 1 ?></span> de <span id="total-questoes"><?= $numero_de_questoes_por_quiz ?></span></p>
+                <p>Pontuação: <span id="placar-pontos"><?= htmlspecialchars($_SESSION['questoes_progress']['acertos']) ?></span></p>
+                <p>Questão <span id="questao-atual"><?= count($_SESSION['questoes_progress']['respondidas']) + 1 ?></span> de <span id="total-questoes"><?= $numero_de_questoes_por_questoes ?></span></p>
             </div>
             <div class="barra-progresso">
                 <div class="progresso" id="barra-progresso"></div>
@@ -93,7 +100,7 @@ include 'header.php';
                         <label 
                             for="alt-<?= htmlspecialchars($alternativa['id_alternativa']) ?>"
                             data-id-alternativa="<?= htmlspecialchars($alternativa['id_alternativa']) ?>"
-                            data-correta="<?= $alternativa['correta'] == 1 ? 'true' : 'false' ?>">
+                            data-correta="<?= $alternativa['eh_correta'] == 1 ? 'true' : 'false' ?>">
                             <input type="radio" id="alt-<?= htmlspecialchars($alternativa['id_alternativa']) ?>" name="resposta" value="<?= htmlspecialchars($alternativa['id_alternativa']) ?>">
                             <?= htmlspecialchars($alternativa['texto']) ?>
                         </label>

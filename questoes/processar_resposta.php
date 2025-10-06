@@ -130,7 +130,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($id_questao > 0 && $id_alternativa_selecionada > 0) {
         // Encontra a alternativa correta no banco de dados
-        $stmt_correta = $pdo->prepare("SELECT id_alternativa FROM alternativas WHERE id_questao = ? AND correta = 1");
+        $stmt_correta = $pdo->prepare("SELECT id_alternativa FROM alternativas WHERE id_questao = ? AND eh_correta = 1");
         $stmt_correta->execute([$id_questao]);
         $alternativa_correta = $stmt_correta->fetch(PDO::FETCH_ASSOC);
 

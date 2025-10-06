@@ -2,12 +2,12 @@
 session_start();
 require_once __DIR__ . '/conexao.php';
 
-echo "<h1>DEBUG DO QUIZ REAL</h1>";
+echo "<h1>DEBUG QUIZ REAL - SIMULAÇÃO DE CLIQUE</h1>";
 
 // Simular parâmetros do quiz_vertical_filtros.php
 $id_assunto = 8;
 $filtro_ativo = 'todas';
-$questao_inicial = 99;
+$questao_inicial = 92; // Usar a questão 92 que aparece na imagem
 
 echo "<h2>Simulando quiz_vertical_filtros.php com questão #$questao_inicial:</h2>";
 
@@ -67,30 +67,8 @@ try {
     echo "<p>ID da alternativa correta: " . $alternativa_correta['id_alternativa'] . "</p>";
     echo "<p>Texto: " . htmlspecialchars($alternativa_correta['texto']) . "</p>";
     
-    // Simular HTML que seria gerado
-    echo "<h3>4. HTML que seria gerado (como no quiz real):</h3>";
-    echo "<div style='border: 1px solid #ccc; padding: 15px; margin: 10px 0; background: #f9f9f9;'>";
-    echo "<div class='question-card' id='questao-" . $questao['id_questao'] . "'>";
-    echo "<h4>Questão #" . $questao['id_questao'] . "</h4>";
-    echo "<p>" . htmlspecialchars($questao['enunciado']) . "</p>";
-    echo "<div class='alternatives-container'>";
-    
-    foreach ($alternativas_questao as $index => $alternativa) {
-        $letra = $letras[$index] ?? ($index + 1);
-        // NÃO aplicar classes visuais automaticamente - deixar para o JavaScript
-        $class = '';
-        echo "<div class='alternative $class' data-alternativa='$letra' data-alternativa-id='" . $alternativa['id_alternativa'] . "' data-questao-id='" . $questao['id_questao'] . "'>";
-        echo "<div class='alternative-letter'>$letra</div>";
-        echo "<div class='alternative-text'>" . htmlspecialchars($alternativa['texto']) . "</div>";
-        echo "</div>";
-    }
-    
-    echo "</div>";
-    echo "</div>";
-    echo "</div>";
-    
-    // Simular diferentes cliques
-    echo "<h3>5. Simulando diferentes cliques:</h3>";
+    // Simular cliques em diferentes alternativas
+    echo "<h3>4. Simulando cliques (como no quiz real):</h3>";
     
     $cliques_teste = ['A', 'B', 'C', 'D'];
     foreach ($cliques_teste as $letra_clicada) {
@@ -129,12 +107,56 @@ try {
         echo "<hr>";
     }
     
+    // Simular o processamento do quiz_vertical_filtros.php
+    echo "<h3>5. Simulando processamento do quiz_vertical_filtros.php:</h3>";
+    
+    // Simular POST request
+    $_POST['id_questao'] = $questao['id_questao'];
+    $_POST['alternativa_selecionada'] = 'B'; // Simular clique na letra B
+    $_POST['ajax_request'] = '1';
+    
+    echo "<p>Simulando POST request:</p>";
+    echo "<p>id_questao: " . $_POST['id_questao'] . "</p>";
+    echo "<p>alternativa_selecionada: " . $_POST['alternativa_selecionada'] . "</p>";
+    
+    // Processar como no quiz_vertical_filtros.php
+    $id_questao = $_POST['id_questao'];
+    $alternativa_selecionada = $_POST['alternativa_selecionada'];
+    
+    // Mapear a letra selecionada para o ID
+    $id_alternativa_selecionada = null;
+    foreach ($alternativas_questao as $index => $alt) {
+        $letra = $letras[$index] ?? ($index + 1);
+        if ($letra === $alternativa_selecionada) {
+            $id_alternativa_selecionada = $alt['id_alternativa'];
+            break;
+        }
+    }
+    
+    echo "<p>ID da alternativa selecionada: $id_alternativa_selecionada</p>";
+    
+    // Verificar se acertou
+    $acertou = ($id_alternativa_selecionada == $alternativa_correta['id_alternativa']) ? 1 : 0;
+    
+    echo "<p>Acertou: " . ($acertou ? 'SIM' : 'NÃO') . "</p>";
+    
+    // Resposta JSON
+    $resposta_json = [
+        'success' => true,
+        'acertou' => (bool)$acertou,
+        'alternativa_correta' => $letra_correta,
+        'explicacao' => '',
+        'message' => $acertou ? 'Parabéns! Você acertou!' : 'Não foi dessa vez, mas continue tentando!'
+    ];
+    
+    echo "<p>Resposta JSON final: " . json_encode($resposta_json) . "</p>";
+    
 } catch (Exception $e) {
     echo "<p style='color: red;'>❌ Erro: " . $e->getMessage() . "</p>";
 }
 
 echo "<h2>6. Próximos passos:</h2>";
 echo "<p>1. Verifique se a lógica está funcionando corretamente</p>";
-echo "<p>2. Se estiver, o problema pode ser no JavaScript</p>";
-echo "<p>3. Teste no quiz real</p>";
+echo "<p>2. Se não estiver, preciso corrigir o código</p>";
+echo "<p>3. Se estiver, o problema pode ser no JavaScript</p>";
 ?>

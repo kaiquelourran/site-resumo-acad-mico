@@ -41,15 +41,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $id_alternativa = $alternativa['id_alternativa'];
                 
                 // Inserir ou atualizar resposta do usuário
+                $user_id = $_SESSION['id_usuario'] ?? $_SESSION['user_id'] ?? null;
+                if (!$user_id) {
+                    error_log("ERRO: user_id não encontrado na sessão");
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => false, 'message' => 'Usuário não identificado']);
+                    exit;
+                }
+                
                 $stmt_resposta = $pdo->prepare("
-                    INSERT INTO respostas_usuario (id_questao, id_alternativa, acertou, data_resposta) 
-                    VALUES (?, ?, ?, NOW())
+                    INSERT INTO respostas_usuario (user_id, id_questao, id_alternativa, acertou, data_resposta) 
+                    VALUES (?, ?, ?, ?, NOW())
                     ON DUPLICATE KEY UPDATE 
                     id_alternativa = VALUES(id_alternativa),
                     acertou = VALUES(acertou),
                     data_resposta = VALUES(data_resposta)
                 ");
-                $stmt_resposta->execute([$id_questao, $id_alternativa, $acertou]);
+                $stmt_resposta->execute([$user_id, $id_questao, $id_alternativa, $acertou]);
                 
                 // Salvar feedback na sessão
                 $_SESSION['feedback_questao'] = [

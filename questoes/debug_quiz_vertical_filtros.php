@@ -6,11 +6,11 @@ ini_set('display_errors', 1);
 session_start();
 require_once __DIR__ . '/conexao.php';
 
-echo "<h1>DEBUG COMPLETO - Questão 92</h1>";
+echo "<h1>DEBUG QUIZ VERTICAL FILTROS</h1>";
 
 // Simular dados de teste
-$_POST['id_questao'] = '92';
-$_POST['alternativa_selecionada'] = 'C';
+$_POST['id_questao'] = '1';
+$_POST['alternativa_selecionada'] = 'A';
 $_POST['ajax_request'] = '1';
 
 echo "<h2>1. Dados de entrada:</h2>";
@@ -21,7 +21,15 @@ try {
     $id_questao = (int)$_POST['id_questao'];
     $alternativa_selecionada = $_POST['alternativa_selecionada'];
     
-    echo "<h2>2. Buscando alternativas da questão $id_questao:</h2>";
+    echo "<h2>2. Testando conexão com banco:</h2>";
+    if ($pdo) {
+        echo "<p style='color: green;'>✅ Conexão com banco OK</p>";
+    } else {
+        echo "<p style='color: red;'>❌ ERRO: Falha na conexão com banco</p>";
+        exit;
+    }
+    
+    echo "<h2>3. Buscando alternativas da questão $id_questao:</h2>";
     
     // Buscar as alternativas da questão
     $stmt_alt = $pdo->prepare("SELECT * FROM alternativas WHERE id_questao = ? ORDER BY id_alternativa");
@@ -47,7 +55,7 @@ try {
     }
     echo "</table>";
     
-    echo "<h2>3. Embaralhando alternativas:</h2>";
+    echo "<h2>4. Embaralhando alternativas:</h2>";
     $seed = $id_questao + (int)date('Ymd');
     srand($seed);
     shuffle($alternativas_questao);
@@ -71,7 +79,7 @@ try {
     }
     echo "</table>";
     
-    echo "<h2>4. Encontrando alternativa correta:</h2>";
+    echo "<h2>5. Encontrando alternativa correta:</h2>";
     $alternativa_correta = null;
     foreach ($alternativas_questao as $alt) {
         if ($alt['eh_correta'] == 1) {
@@ -87,7 +95,7 @@ try {
         exit;
     }
     
-    echo "<h2>5. Mapeando letra selecionada para ID:</h2>";
+    echo "<h2>6. Mapeando letra selecionada para ID:</h2>";
     $id_alternativa = null;
     foreach ($alternativas_questao as $index => $alt) {
         $letra = $letras[$index] ?? ($index + 1);
@@ -105,18 +113,49 @@ try {
         exit;
     }
     
-    echo "<h2>6. Verificando se acertou:</h2>";
+    echo "<h2>7. Verificando se acertou:</h2>";
     if ($alternativa_correta && $id_alternativa) {
         $acertou = ($id_alternativa == $alternativa_correta['id_alternativa']) ? 1 : 0;
         echo "<p>ID selecionado: $id_alternativa</p>";
         echo "<p>ID correto: " . $alternativa_correta['id_alternativa'] . "</p>";
         echo "<p style='color: " . ($acertou ? 'green' : 'red') . ";'>" . ($acertou ? '✅ ACERTOU!' : '❌ ERROU!') . "</p>";
         
-        echo "<h2>7. Resposta JSON que seria enviada:</h2>";
+        echo "<h2>8. Testando inserção no banco:</h2>";
+        
+        // Simular user_id
+        $user_id = 1; // Para teste
+        
+        $stmt_resposta = $pdo->prepare("
+            INSERT INTO respostas_usuario (user_id, id_questao, id_alternativa, acertou, data_resposta) 
+            VALUES (?, ?, ?, ?, NOW()) 
+            ON DUPLICATE KEY UPDATE 
+            id_alternativa = VALUES(id_alternativa), 
+            acertou = VALUES(acertou), 
+            data_resposta = VALUES(data_resposta)
+        ");
+        
+        try {
+            $stmt_resposta->execute([$user_id, $id_questao, $id_alternativa, $acertou]);
+            echo "<p style='color: green;'>✅ Resposta salva no banco com sucesso!</p>";
+        } catch (Exception $e) {
+            echo "<p style='color: red;'>❌ ERRO ao salvar no banco: " . $e->getMessage() . "</p>";
+        }
+        
+        echo "<h2>9. Resposta JSON que seria enviada:</h2>";
+        
+        // Encontrar a letra da alternativa correta após embaralhamento
+        $letra_correta = '';
+        foreach ($alternativas_questao as $index => $alt) {
+            if ($alt['id_alternativa'] == $alternativa_correta['id_alternativa']) {
+                $letra_correta = $letras[$index] ?? ($index + 1);
+                break;
+            }
+        }
+        
         $resposta = [
             'success' => true,
             'acertou' => (bool)$acertou,
-            'alternativa_correta' => $alternativa_correta['id_alternativa'],
+            'alternativa_correta' => $letra_correta,
             'explicacao' => '',
             'message' => $acertou ? 'Parabéns! Você acertou!' : 'Não foi dessa vez, mas continue tentando!'
         ];
@@ -132,4 +171,21 @@ try {
     echo "<p>Arquivo: " . $e->getFile() . "</p>";
     echo "<p>Linha: " . $e->getLine() . "</p>";
 }
+
+echo "<h2>10. Teste de requisição AJAX simulada:</h2>";
+echo "<p>Testando se o processamento funciona via POST...</p>";
+
+// Simular requisição POST
+$_SERVER['REQUEST_METHOD'] = 'POST';
+$_POST['id_questao'] = '1';
+$_POST['alternativa_selecionada'] = 'A';
+$_POST['ajax_request'] = '1';
+
+// Capturar output
+ob_start();
+include 'quiz_vertical_filtros.php';
+$output = ob_get_clean();
+
+echo "<h3>Resposta do quiz_vertical_filtros.php:</h3>";
+echo "<pre>" . htmlspecialchars($output) . "</pre>";
 ?>

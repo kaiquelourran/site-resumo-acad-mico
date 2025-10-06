@@ -2,6 +2,14 @@
 session_start();
 require_once __DIR__ . '/conexao.php';
 
+// Gerar seed de sessão para embaralhamento consistente
+if (!isset($_SESSION['quiz_seed'])) {
+    $_SESSION['quiz_seed'] = rand(1, 10000);
+}
+
+// Adicionar timestamp para garantir embaralhamento diferente a cada carregamento
+$timestamp = time();
+
 // Captura parâmetros
 $id_assunto = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 $filtro_ativo = isset($_GET['filtro']) ? $_GET['filtro'] : 'todas';
@@ -17,50 +25,137 @@ if ($id_assunto > 0) {
 
 // Processar resposta se enviada via POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_questao']) && isset($_POST['alternativa_selecionada'])) {
+    try {
     $id_questao = (int)$_POST['id_questao'];
     $alternativa_selecionada = $_POST['alternativa_selecionada'];
     
-    // Converter letra da alternativa para ID (A=1, B=2, C=3, D=4, E=5)
-    $id_alternativa = ord(strtoupper($alternativa_selecionada)) - ord('A') + 1;
-    
-    // Buscar a questão para verificar a resposta correta
-    $stmt_questao = $pdo->prepare("SELECT alternativa_correta, explicacao FROM questoes WHERE id_questao = ?");
-    $stmt_questao->execute([$id_questao]);
-    $questao_data = $stmt_questao->fetch(PDO::FETCH_ASSOC);
-    
-    if ($questao_data) {
-        $acertou = ($alternativa_selecionada === $questao_data['alternativa_correta']) ? 1 : 0;
+        // Buscar as alternativas da questão para mapear a letra correta
+        $stmt_alt = $pdo->prepare("SELECT * FROM alternativas WHERE id_questao = ? ORDER BY id_alternativa");
+        $stmt_alt->execute([$id_questao]);
+        $alternativas_questao = $stmt_alt->fetchAll(PDO::FETCH_ASSOC);
         
-        // Inserir ou atualizar resposta
-        $stmt_resposta = $pdo->prepare("
-            INSERT INTO respostas_usuario (id_questao, id_alternativa, acertou, data_resposta) 
-            VALUES (?, ?, ?, NOW()) 
-            ON DUPLICATE KEY UPDATE 
-            id_alternativa = VALUES(id_alternativa), 
-            acertou = VALUES(acertou), 
-            data_resposta = VALUES(data_resposta)
-        ");
-        $stmt_resposta->execute([$id_questao, $id_alternativa, $acertou]);
+        // Embaralhar da mesma forma que na exibição
+        // Usar seed baseado no timestamp para garantir embaralhamento diferente a cada carregamento
+        $seed = $id_questao * 1000 + $timestamp; // Seed baseado no ID + timestamp
+        srand($seed);
+        shuffle($alternativas_questao);
         
-        // Se for uma requisição AJAX, retornar JSON
-        if (isset($_POST['ajax_request'])) {
-            header('Content-Type: application/json');
-            echo json_encode([
-                'success' => true,
-                'acertou' => (bool)$acertou,
-                'alternativa_correta' => $questao_data['alternativa_correta'],
-                'explicacao' => $questao_data['explicacao'] ?? '',
-                'message' => $acertou ? 'Parabéns! Você acertou!' : 'Não foi dessa vez, mas continue tentando!'
-            ]);
-            exit;
+        // Mapear a letra selecionada para o ID da alternativa
+        $letras = ['A', 'B', 'C', 'D', 'E'];
+        $id_alternativa = null;
+        foreach ($alternativas_questao as $index => $alternativa) {
+            $letra = $letras[$index] ?? ($index + 1);
+            if ($letra === strtoupper($alternativa_selecionada)) {
+                $id_alternativa = $alternativa['id_alternativa'];
+                break;
+            }
         }
-    } else {
+        
+        // Debug: verificar se encontrou a alternativa
+        if (!$id_alternativa) {
+            error_log("ERRO: Não encontrou alternativa para letra: " . $alternativa_selecionada);
+            error_log("Alternativas disponíveis: " . print_r($alternativas_questao, true));
+        }
+        
+        // Buscar a alternativa correta para esta questão
+        $alternativa_correta = null;
+        foreach ($alternativas_questao as $alt) {
+            // Usar apenas o campo que sabemos que existe
+            if ($alt['eh_correta'] == 1) {
+                $alternativa_correta = $alt;
+                break;
+            }
+        }
+        
+        if ($alternativa_correta && $id_alternativa) {
+            $acertou = ($id_alternativa == $alternativa_correta['id_alternativa']) ? 1 : 0;
+            
+            // Inserir ou atualizar resposta
+            $user_id = $_SESSION['id_usuario'] ?? $_SESSION['user_id'] ?? 1; // Usar 1 como padrão se não houver usuário
+            
+            // Verificar se a tabela tem a coluna user_id
+            try {
+                $stmt_check = $pdo->query("DESCRIBE respostas_usuario");
+                $colunas = $stmt_check->fetchAll(PDO::FETCH_COLUMN);
+                $tem_user_id = in_array('user_id', $colunas);
+                
+                if ($tem_user_id) {
+                    // Usar estrutura com user_id
+                    $stmt_resposta = $pdo->prepare("
+                        INSERT INTO respostas_usuario (user_id, id_questao, id_alternativa, acertou, data_resposta) 
+                        VALUES (?, ?, ?, ?, NOW()) 
+                        ON DUPLICATE KEY UPDATE 
+                        id_alternativa = VALUES(id_alternativa), 
+                        acertou = VALUES(acertou), 
+                        data_resposta = VALUES(data_resposta)
+                    ");
+                    $stmt_resposta->execute([$user_id, $id_questao, $id_alternativa, $acertou]);
+                } else {
+                    // Usar estrutura sem user_id (mais simples)
+                    $stmt_resposta = $pdo->prepare("
+                        INSERT INTO respostas_usuario (id_questao, id_alternativa, acertou, data_resposta) 
+                        VALUES (?, ?, ?, NOW()) 
+                        ON DUPLICATE KEY UPDATE 
+                        id_alternativa = VALUES(id_alternativa), 
+                        acertou = VALUES(acertou), 
+                        data_resposta = VALUES(data_resposta)
+                    ");
+                    $stmt_resposta->execute([$id_questao, $id_alternativa, $acertou]);
+                }
+            } catch (Exception $e) {
+                error_log("ERRO ao verificar estrutura da tabela: " . $e->getMessage());
+                // Fallback: tentar estrutura simples
+                $stmt_resposta = $pdo->prepare("
+                    INSERT INTO respostas_usuario (id_questao, id_alternativa, acertou, data_resposta) 
+                    VALUES (?, ?, ?, NOW()) 
+                    ON DUPLICATE KEY UPDATE 
+                    id_alternativa = VALUES(id_alternativa), 
+                    acertou = VALUES(acertou), 
+                    data_resposta = VALUES(data_resposta)
+                ");
+                $stmt_resposta->execute([$id_questao, $id_alternativa, $acertou]);
+            }
+            
+            // Se for uma requisição AJAX, retornar JSON
+            if (isset($_POST['ajax_request'])) {
+                // Encontrar a letra da alternativa correta após embaralhamento
+                $letra_correta = '';
+                $letras = ['A', 'B', 'C', 'D', 'E'];
+                foreach ($alternativas_questao as $index => $alt) {
+                    if ($alt['id_alternativa'] == $alternativa_correta['id_alternativa']) {
+                        $letra_correta = $letras[$index] ?? ($index + 1);
+                        break;
+                    }
+                }
+                
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'success' => true,
+                    'acertou' => (bool)$acertou,
+                    'alternativa_correta' => $letra_correta, // Retornar a LETRA, não o ID
+                    'explicacao' => '', // Explicação não disponível na tabela alternativas
+                    'message' => $acertou ? 'Parabéns! Você acertou!' : 'Não foi dessa vez, mas continue tentando!'
+                ]);
+                exit;
+            }
+        } else {
+            // Se for uma requisição AJAX, retornar erro
+            if (isset($_POST['ajax_request'])) {
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Erro ao processar resposta: alternativa não encontrada'
+                ]);
+                exit;
+            }
+        }
+    } catch (Exception $e) {
         // Se for uma requisição AJAX, retornar erro
         if (isset($_POST['ajax_request'])) {
             header('Content-Type: application/json');
             echo json_encode([
                 'success' => false,
-                'message' => 'Questão não encontrada'
+                'message' => 'Erro interno: ' . $e->getMessage()
             ]);
             exit;
         }
@@ -68,8 +163,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_questao']) && isse
 }
 
 // Construir query SQL baseada no filtro
-if ($filtro_ativo === 'todas' || $filtro_ativo === 'nao-respondidas') {
-    // Para "todas" e "não-respondidas", NUNCA carregar dados de resposta
+if ($filtro_ativo === 'nao-respondidas') {
+    // Para "não-respondidas", NUNCA carregar dados de resposta
     $sql = "SELECT q.id_questao, q.enunciado, q.alternativa_a, q.alternativa_b, 
                    q.alternativa_c, q.alternativa_d, q.alternativa_correta, q.explicacao,
                    a.nome,
@@ -79,7 +174,7 @@ if ($filtro_ativo === 'todas' || $filtro_ativo === 'nao-respondidas') {
             LEFT JOIN assuntos a ON q.id_assunto = a.id_assunto
             WHERE 1=1";
 } else {
-    // Para outros filtros, carregar dados de resposta normalmente
+    // Para todos os outros filtros (incluindo "todas"), carregar dados de resposta normalmente
     $sql = "SELECT q.id_questao, q.enunciado, q.alternativa_a, q.alternativa_b, 
                    q.alternativa_c, q.alternativa_d, q.alternativa_correta, q.explicacao,
                    a.nome,
@@ -161,28 +256,14 @@ function getNomeFiltro($filtro) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz - <?php echo htmlspecialchars($assunto_nome); ?> - Resumo Acadêmico</title>
+    <title>Questões - <?php echo htmlspecialchars($assunto_nome); ?> - Resumo Acadêmico</title>
     <link rel="stylesheet" href="modern-style.css">
+    <link rel="stylesheet" href="alternative-fix.css">
     <style>
         /* Background gradiente azul igual ao da listar_questoes.php */
         body {
             background-image: linear-gradient(to top, #00C6FF, #0072FF);
             min-height: 100vh;
-            margin: 0;
-        }
-
-        /* Container principal com mesmo estilo da listar_questoes.php */
-        .main-container {
-            max-width: 1100px;
-            margin: 40px auto;
-            background: #FFFFFF;
-            border-radius: 16px;
-            border: 1px solid transparent;
-            background-image: linear-gradient(#FFFFFF, #FFFFFF), linear-gradient(to top, #00C6FF, #0072FF);
-            background-origin: border-box;
-            background-clip: padding-box, border-box;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            padding: 30px;
         }
 
         /* Header da subjects-page idêntico ao da listar_questoes.php */
@@ -335,6 +416,36 @@ function getNomeFiltro($filtro) {
             outline: 3px solid rgba(0,114,255,0.35);
             outline-offset: 2px;
         }
+        
+        /* Garantir que as alternativas sejam clicáveis */
+        .alternative {
+            pointer-events: auto !important;
+            cursor: pointer !important;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .alternative::before {
+            pointer-events: none !important;
+            z-index: 0;
+        }
+        
+        .alternative * {
+            pointer-events: none !important;
+        }
+        
+        /* Garantir que as alternativas sejam clicáveis */
+        .alternative {
+            pointer-events: auto !important;
+            cursor: pointer !important;
+            position: relative !important;
+            z-index: 10 !important;
+        }
+        
+        .alternative::before {
+            pointer-events: none !important;
+            z-index: 0 !important;
+        }
 
         /* Destaque para o título e subtítulo */
         .subjects-page .page-header .header-container {
@@ -374,7 +485,7 @@ function getNomeFiltro($filtro) {
             .subjects-page .page-subtitle { font-size: 0.95rem; }
         }
 
-        .quiz-info {
+        .questoes-info {
             background: linear-gradient(135deg, rgba(0, 198, 255, 0.08) 0%, rgba(0, 114, 255, 0.08) 100%);
             border-radius: 12px;
             padding: 20px 30px;
@@ -384,14 +495,14 @@ function getNomeFiltro($filtro) {
             box-shadow: 0 4px 15px rgba(0, 114, 255, 0.1);
         }
 
-        .quiz-info h3 {
+        .questoes-info h3 {
             color: #0072FF;
             margin-bottom: 8px;
             font-size: 1.4em;
             font-weight: 700;
         }
 
-        .quiz-info p {
+        .questoes-info p {
             color: #555;
             margin: 0;
             font-size: 1.05em;
@@ -558,30 +669,28 @@ function getNomeFiltro($filtro) {
             font-weight: 500;
         }
 
-        /* Estilos para feedback visual */
-        .alternativa-correta {
+        /* Estilos para feedback visual - usando as classes corretas */
+        .alternative-correct {
             background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%) !important;
             border-color: #28a745 !important;
             color: #155724 !important;
-            animation: pulse-green 0.8s ease-in-out;
             box-shadow: 0 8px 25px rgba(40, 167, 69, 0.3) !important;
         }
 
-        .alternativa-correta .alternative-letter {
+        .alternative-correct::before {
             background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
             color: white !important;
             box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4) !important;
         }
 
-        .alternativa-incorreta {
+        .alternative-incorrect-chosen {
             background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%) !important;
             border-color: #dc3545 !important;
             color: #721c24 !important;
-            animation: pulse-red 0.8s ease-in-out;
             box-shadow: 0 8px 25px rgba(220, 53, 69, 0.3) !important;
         }
 
-        .alternativa-incorreta .alternative-letter {
+        .alternative-incorrect-chosen::before {
             background: linear-gradient(135deg, #dc3545 0%, #e74c3c 100%) !important;
             color: white !important;
             box-shadow: 0 4px 15px rgba(220, 53, 69, 0.4) !important;
@@ -618,6 +727,17 @@ function getNomeFiltro($filtro) {
             to { 
                 opacity: 1; 
                 transform: translateY(0); 
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
             }
         }
 
@@ -796,9 +916,9 @@ $breadcrumb_items = [
     ['icon' => '🏠', 'text' => 'Início', 'link' => 'index.php', 'current' => false],
     ['icon' => '📚', 'text' => 'Assuntos', 'link' => 'escolher_assunto.php', 'current' => false],
     ['icon' => '📋', 'text' => 'Lista de Questões', 'link' => 'listar_questoes.php?id=' . $id_assunto . '&filtro=' . $filtro_ativo, 'current' => false],
-    ['icon' => '🎯', 'text' => 'Quiz', 'link' => '', 'current' => true]
+    ['icon' => '🎯', 'text' => 'Questões', 'link' => '', 'current' => true]
 ];
-$page_title = '🎯 Quiz';
+$page_title = '🎯 Questões';
 $page_subtitle = htmlspecialchars($assunto_nome) . ' - ' . getNomeFiltro($filtro_ativo);
 include 'header.php';
 ?>
@@ -861,8 +981,8 @@ include 'header.php';
     });
     </script>
 
-            <!-- Informações do Quiz -->
-            <div class="quiz-info">
+            <!-- Informações das Questões -->
+            <div class="questoes-info">
                 <h3>📊 <?php echo getNomeFiltro($filtro_ativo); ?></h3>
                 <p><?php echo count($questoes); ?> questão(ões) disponível(eis)</p>
             </div>
@@ -885,30 +1005,30 @@ include 'header.php';
                                 <div class="question-number">
                                     Questão #<?php echo $questao['id_questao']; ?>
                                 </div>
-                                    <div class="question-status status-<?php echo $questao['status_resposta']; ?>">
-                                        <?php
-                                        switch($questao['status_resposta']) {
-                                            case 'nao-respondida':
-                                                echo '❓ Não Respondida';
-                                                break;
+                                <div class="question-status status-<?php echo $questao['status_resposta']; ?>">
+                                    <?php
+                                    switch($questao['status_resposta']) {
+                                        case 'nao-respondida':
+                                            echo '❓ Não Respondida';
+                                            break;
                                             case 'certa':
                                                 echo '✅ Acertou';
-                                                break;
-                                            case 'errada':
+                                            break;
+                                        case 'errada':
                                                 echo '❌ Errou';
-                                                break;
-                                            default:
-                                                echo '✅ Respondida';
-                                        }
-                                        ?>
-                                    </div>
+                                            break;
+                                        default:
+                                            echo '✅ Respondida';
+                                    }
+                                    ?>
+                                </div>
                             </div>
                             
                             <div class="question-text">
                                 <?php echo htmlspecialchars($questao['enunciado']); ?>
                             </div>
                             
-                            <form class="quiz-form" data-questao-id="<?php echo $questao['id_questao']; ?>">
+                            <form class="questoes-form" data-questao-id="<?php echo $questao['id_questao']; ?>">
                                 <input type="hidden" name="id_questao" value="<?php echo $questao['id_questao']; ?>">
                                 
                                 <div class="alternatives-container">
@@ -918,30 +1038,35 @@ include 'header.php';
                                     $stmt_alt->execute([$questao['id_questao']]);
                                     $alternativas_questao = $stmt_alt->fetchAll(PDO::FETCH_ASSOC);
                                     
+                                    // Embaralhar as alternativas para que a resposta correta apareça em posições diferentes
+                                    // Usar seed baseado no timestamp para garantir embaralhamento diferente a cada carregamento
+                                    $seed = $questao['id_questao'] * 1000 + $timestamp; // Seed baseado no ID + timestamp
+                                    srand($seed);
+                                    shuffle($alternativas_questao);
+                                    
+                                    // Mapear as letras corretas após o embaralhamento
                                     $letras = ['A', 'B', 'C', 'D', 'E'];
+                                    $letra_correta = '';
                                     foreach ($alternativas_questao as $index => $alternativa) {
                                         $letra = $letras[$index] ?? ($index + 1);
                                         
-                                        // Verificar se esta alternativa foi selecionada pelo usuário
-                                        // IMPORTANTE: Para filtros "todas" e "nao-respondidas", NUNCA mostrar como selecionada
-                                        $is_selected = false;
-                                        if ($filtro_ativo !== 'todas' && $filtro_ativo !== 'nao-respondidas') {
-                                            $is_selected = (!empty($questao['id_alternativa']) && $questao['id_alternativa'] == $alternativa['id_alternativa']);
+                                        // Identificar qual letra corresponde à resposta correta após embaralhamento
+                                        if ($alternativa['eh_correta'] == 1) {
+                                            $letra_correta = $letra;
                                         }
+                                        
+                                        // Identificar alternativa correta
                                         $is_correct = ($alternativa['eh_correta'] == 1);
-                                        // IMPORTANTE: is_answered deve ser false para filtros "todas" e "nao-respondidas"
+                                        
+                                        // Verificar se esta alternativa foi selecionada pelo usuário
+                                        $is_selected = (!empty($questao['id_alternativa']) && $questao['id_alternativa'] == $alternativa['id_alternativa']);
+                                        
+                                        // Verificar se a questão foi respondida (apenas para filtros que mostram respostas)
                                         $is_answered = ($filtro_ativo !== 'todas' && $filtro_ativo !== 'nao-respondidas') && !empty($questao['id_alternativa']);
                                         
                                         $class = '';
-                                        // IMPORTANTE: Só aplicar classes visuais nos filtros que mostram respostas
-                                        // NUNCA aplicar para "todas" e "nao-respondidas"
-                                        if ($is_answered && ($filtro_ativo !== 'todas' && $filtro_ativo !== 'nao-respondidas')) {
-                                            if ($is_correct) {
-                                                $class = 'alternativa-correta';
-                                            } elseif ($is_selected && !$is_correct) {
-                                                $class = 'alternativa-incorreta';
-                                            }
-                                        }
+                                        // NÃO aplicar classes visuais automaticamente - deixar para o JavaScript
+                                        // Isso permite que o usuário clique e responda novamente
                                         ?>
                                         <div class="alternative <?php echo $class; ?>" 
                                              data-alternativa="<?php echo $letra; ?>"
@@ -988,27 +1113,45 @@ include 'header.php';
     <script>
         // Função para mostrar feedback visual
         function mostrarFeedbackVisual(questaoId, alternativaSelecionada, alternativaCorreta, explicacao) {
-            const questaoCard = document.querySelector(`#questao-${questaoId}`);
-            const alternativas = questaoCard.querySelectorAll('.alternative');
-            
-            // Desabilitar cliques em todas as alternativas
-            alternativas.forEach(alt => {
-                alt.style.pointerEvents = 'none';
+            console.log('mostrarFeedbackVisual chamada com:', {
+                questaoId, alternativaSelecionada, alternativaCorreta, explicacao
             });
+            
+            const questaoCard = document.querySelector(`#questao-${questaoId}`);
+            
+            if (!questaoCard) {
+                console.error('Questão não encontrada:', questaoId);
+                return;
+            }
+            
+            console.log('Questão encontrada:', questaoCard);
+            
+            const alternativas = questaoCard.querySelectorAll('.alternative');
+            console.log('Alternativas encontradas:', alternativas.length);
+            
+            // NÃO desabilitar cliques aqui - será feito no JavaScript principal
             
             // Marcar alternativa correta como verde
             const alternativaCorretaEl = questaoCard.querySelector(`[data-alternativa="${alternativaCorreta}"]`);
+            console.log('Alternativa correta encontrada:', alternativaCorretaEl);
             if (alternativaCorretaEl) {
-                alternativaCorretaEl.classList.add('alternativa-correta');
+                alternativaCorretaEl.classList.add('alternative-correct');
+                console.log('Classe alternative-correct adicionada');
             }
             
-            // Se a alternativa selecionada estiver errada, marcar como vermelha
-            if (alternativaSelecionada !== alternativaCorreta) {
-                const alternativaSelecionadaEl = questaoCard.querySelector(`[data-alternativa="${alternativaSelecionada}"]`);
-                if (alternativaSelecionadaEl) {
-                    alternativaSelecionadaEl.classList.add('alternativa-incorreta');
+            // Marcar alternativa selecionada
+            const alternativaSelecionadaEl = questaoCard.querySelector(`[data-alternativa="${alternativaSelecionada}"]`);
+            console.log('Alternativa selecionada encontrada:', alternativaSelecionadaEl);
+            if (alternativaSelecionadaEl) {
+                // Se a alternativa selecionada for a correta, ela já foi marcada como verde acima
+                // Se for incorreta, marcar como vermelha
+                if (alternativaSelecionada !== alternativaCorreta) {
+                    alternativaSelecionadaEl.classList.add('alternative-incorrect-chosen');
+                    console.log('Classe alternative-incorrect-chosen adicionada');
                 }
             }
+            
+            // Manter feedback visual permanente
             
             // Mostrar explicação após um delay se disponível
             if (explicacao && explicacao.trim() !== '') {
@@ -1027,26 +1170,51 @@ include 'header.php';
             }
         }
 
-        // Event listeners para as alternativas
+        // Event listeners para as alternativas - VERSÃO SIMPLIFICADA
         document.addEventListener('DOMContentLoaded', function() {
-            const alternativas = document.querySelectorAll('.alternative');
+            console.log('DOM carregado, configurando alternativas...');
             
-            alternativas.forEach(alternativa => {
-                alternativa.classList.remove('alternativa-correta', 'alternativa-incorreta');
-                alternativa.style.pointerEvents = 'auto'; // Reativar cliques
-            });
-
-            alternativas.forEach(alternativa => {
-                alternativa.addEventListener('click', function() {
+            // Configurar TODAS as alternativas de uma vez
+            const todasAlternativas = document.querySelectorAll('.alternative');
+            console.log('Total de alternativas encontradas:', todasAlternativas.length);
+            
+            todasAlternativas.forEach((alternativa, index) => {
+                console.log('Configurando alternativa', index + 1);
+                
+                // Garantir que seja clicável
+                alternativa.style.pointerEvents = 'auto';
+                alternativa.style.cursor = 'pointer';
+                alternativa.style.position = 'relative';
+                alternativa.style.zIndex = '10';
+                
+                // Remover classes de feedback
+                alternativa.classList.remove('alternative-correct', 'alternative-incorrect-chosen');
+                
+                // Adicionar event listener
+                alternativa.addEventListener('click', function(e) {
                     const questaoId = this.dataset.questaoId;
                     const alternativaSelecionada = this.dataset.alternativa;
                     const questaoCard = this.closest('.question-card');
                     
-                    // Desabilitar cliques em todas as alternativas desta questão
+                    // Verificar se já foi respondida
+                    if (questaoCard.dataset.respondida === 'true') {
+                        return;
+                    }
+                    
+                    // Destacar a alternativa clicada imediatamente
                     const todasAlternativas = questaoCard.querySelectorAll('.alternative');
                     todasAlternativas.forEach(alt => {
-                        alt.style.pointerEvents = 'none';
+                        alt.classList.remove('alternative-correct', 'alternative-incorrect-chosen');
+                        alt.style.background = '';
+                        alt.style.borderColor = '';
                     });
+                    
+                    // Marcar como selecionada
+                    this.style.background = '#e3f2fd';
+                    this.style.borderColor = '#2196f3';
+                    
+                    // Marcar questão como respondida
+                    questaoCard.dataset.respondida = 'true';
                     
                     // Enviar resposta via AJAX
                     const formData = new FormData();
@@ -1058,28 +1226,37 @@ include 'header.php';
                         method: 'POST',
                         body: formData
                     })
-                    .then(response => response.json())
+                    .then(response => {
+                        console.log('Resposta recebida:', response);
+                        console.log('Status:', response.status);
+                        console.log('Headers:', response.headers);
+                        return response.json();
+                    })
                     .then(data => {
+                        console.log('Dados recebidos:', data);
                         if (data.success) {
+                            console.log('Sucesso! Mostrando feedback...');
                             // Mostrar resultado visual
                             mostrarFeedbackVisual(questaoId, alternativaSelecionada, data.alternativa_correta, data.explicacao);
                             
-                            // Questões permanecem no filtro atual até atualizar a página
-                            // Não removemos automaticamente para manter a consistência do filtro
+                            // Desabilitar cliques após mostrar feedback
+                            setTimeout(() => {
+                                todasAlternativas.forEach(alt => {
+                                    alt.style.pointerEvents = 'none';
+                                    alt.style.cursor = 'default';
+                                });
+                            }, 1000); // Aguardar 1 segundo para mostrar feedback
+                            
                         } else {
-                            console.error('Erro ao processar resposta:', data.message);
+                            console.log('Erro na resposta:', data.message);
                             // Reabilitar cliques em caso de erro
-                            todasAlternativas.forEach(alt => {
-                                alt.style.pointerEvents = 'auto';
-                            });
+                            questaoCard.dataset.respondida = 'false';
                         }
                     })
                     .catch(error => {
-                        console.error('Erro ao enviar resposta:', error);
+                        console.error('Erro na requisição:', error);
                         // Reabilitar cliques em caso de erro
-                        todasAlternativas.forEach(alt => {
-                            alt.style.pointerEvents = 'auto';
-                        });
+                        questaoCard.dataset.respondida = 'false';
                     });
                 });
             });

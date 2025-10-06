@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const respostaCorreta = respostaId === alternativaCorretaId;
 
                 // Envia a resposta para o servidor
-                fetch('http://localhost:8001/processar_resposta.php', {
+                fetch('processar_resposta.php', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

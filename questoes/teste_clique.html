@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste de Clique nas Alternativas</title>
+    <style>
+        .alternative {
+            background: linear-gradient(135deg, #ffffff 0%, #f7f8fc 100%);
+            border: 2px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 20px 25px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+        }
+
+        .alternative::before {
+            content: attr(data-letter);
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 35px;
+            height: 35px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        .alternative span {
+            flex: 1;
+            font-size: 1.05em;
+            line-height: 1.5;
+            color: #2d3748;
+            margin-left: 50px;
+            font-weight: 500;
+            pointer-events: none;
+        }
+
+        .alternative:hover {
+            border-color: #667eea;
+            transform: translateX(8px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
+            background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
+        }
+    </style>
+</head>
+<body>
+    <h1>Teste de Clique nas Alternativas</h1>
+    
+    <div class="alternative" data-alternativa="A" data-questao-id="1">
+        <span>Esta é a alternativa A</span>
+    </div>
+    
+    <div class="alternative" data-alternativa="B" data-questao-id="1">
+        <span>Esta é a alternativa B</span>
+    </div>
+    
+    <div class="alternative" data-alternativa="C" data-questao-id="1">
+        <span>Esta é a alternativa C</span>
+    </div>
+    
+    <div class="alternative" data-alternativa="D" data-questao-id="1">
+        <span>Esta é a alternativa D</span>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM carregado, configurando alternativas...');
+            const alternativas = document.querySelectorAll('.alternative');
+            console.log('Encontradas', alternativas.length, 'alternativas');
+            
+            alternativas.forEach((alternativa, index) => {
+                alternativa.addEventListener('click', function(e) {
+                    console.log('Clique detectado na alternativa', index, e);
+                    alert('Clique funcionou! Alternativa: ' + this.dataset.alternativa);
+                });
+            });
+        });
+    </script>
+</body>
+</html>
+

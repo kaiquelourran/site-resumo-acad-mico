@@ -1,0 +1,219 @@
+<?php
+session_start();
+require_once __DIR__ . '/conexao.php';
+
+echo "<h1>DEBUG GABARITO ERRADO</h1>";
+
+// Simular parâmetros do quiz_vertical_filtros.php
+$id_assunto = 8;
+$filtro_ativo = 'todas';
+$questao_inicial = 92;
+
+echo "<h2>Testando questão #$questao_inicial:</h2>";
+
+try {
+    // Buscar questão específica
+    $stmt = $pdo->prepare("SELECT * FROM questoes WHERE id_questao = ?");
+    $stmt->execute([$questao_inicial]);
+    $questao = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if (!$questao) {
+        echo "<p style='color: red;'>❌ Questão não encontrada</p>";
+        exit;
+    }
+    
+    echo "<h3>Questão encontrada: #" . $questao['id_questao'] . "</h3>";
+    echo "<p>" . htmlspecialchars($questao['enunciado']) . "</p>";
+    
+    // Buscar alternativas da tabela 'alternativas'
+    $stmt_alt = $pdo->prepare("SELECT * FROM alternativas WHERE id_questao = ? ORDER BY id_alternativa");
+    $stmt_alt->execute([$questao['id_questao']]);
+    $alternativas_questao = $stmt_alt->fetchAll(PDO::FETCH_ASSOC);
+    
+    echo "<h3>1. Alternativas ORIGINAIS (ordem do banco):</h3>";
+    $letras = ['A', 'B', 'C', 'D', 'E'];
+    foreach ($alternativas_questao as $index => $alternativa) {
+        $letra = $letras[$index] ?? ($index + 1);
+        $correta = $alternativa['eh_correta'] ? ' (CORRETA)' : '';
+        echo "<p>$letra) " . htmlspecialchars($alternativa['texto']) . $correta . " [ID: " . $alternativa['id_alternativa'] . "]</p>";
+    }
+    
+    // Encontrar alternativa correta original
+    $alternativa_correta_original = null;
+    foreach ($alternativas_questao as $alt) {
+        if ($alt['eh_correta'] == 1) {
+            $alternativa_correta_original = $alt;
+            break;
+        }
+    }
+    
+    echo "<h3>2. Alternativa correta ORIGINAL:</h3>";
+    echo "<p>ID: " . $alternativa_correta_original['id_alternativa'] . "</p>";
+    echo "<p>Texto: " . htmlspecialchars($alternativa_correta_original['texto']) . "</p>";
+    
+    // Testar embaralhamento da EXIBIÇÃO
+    echo "<h3>3. Embaralhamento da EXIBIÇÃO:</h3>";
+    $seed_exibicao = $questao['id_questao'] + time() + rand(1, 1000);
+    srand($seed_exibicao);
+    $alternativas_exibicao = $alternativas_questao;
+    shuffle($alternativas_exibicao);
+    
+    echo "<p>Seed usado: $seed_exibicao</p>";
+    foreach ($alternativas_exibicao as $index => $alternativa) {
+        $letra = $letras[$index] ?? ($index + 1);
+        $correta = $alternativa['eh_correta'] ? ' (CORRETA)' : '';
+        echo "<p>$letra) " . htmlspecialchars($alternativa['texto']) . $correta . " [ID: " . $alternativa['id_alternativa'] . "]</p>";
+    }
+    
+    // Encontrar letra correta na exibição
+    $letra_correta_exibicao = '';
+    $alternativa_correta_exibicao = null;
+    foreach ($alternativas_exibicao as $index => $alt) {
+        if ($alt['eh_correta'] == 1) {
+            $alternativa_correta_exibicao = $alt;
+            $letra_correta_exibicao = $letras[$index] ?? ($index + 1);
+            break;
+        }
+    }
+    
+    echo "<p><strong>Letra correta na exibição: $letra_correta_exibicao</strong></p>";
+    
+    // Testar embaralhamento do PROCESSAMENTO
+    echo "<h3>4. Embaralhamento do PROCESSAMENTO:</h3>";
+    $seed_processamento = $questao['id_questao'] + time() + rand(1, 1000);
+    srand($seed_processamento);
+    $alternativas_processamento = $alternativas_questao;
+    shuffle($alternativas_processamento);
+    
+    echo "<p>Seed usado: $seed_processamento</p>";
+    foreach ($alternativas_processamento as $index => $alternativa) {
+        $letra = $letras[$index] ?? ($index + 1);
+        $correta = $alternativa['eh_correta'] ? ' (CORRETA)' : '';
+        echo "<p>$letra) " . htmlspecialchars($alternativa['texto']) . $correta . " [ID: " . $alternativa['id_alternativa'] . "]</p>";
+    }
+    
+    // Encontrar letra correta no processamento
+    $letra_correta_processamento = '';
+    $alternativa_correta_processamento = null;
+    foreach ($alternativas_processamento as $index => $alt) {
+        if ($alt['eh_correta'] == 1) {
+            $alternativa_correta_processamento = $alt;
+            $letra_correta_processamento = $letras[$index] ?? ($index + 1);
+            break;
+        }
+    }
+    
+    echo "<p><strong>Letra correta no processamento: $letra_correta_processamento</strong></p>";
+    
+    // Verificar se os seeds são iguais
+    echo "<h3>5. Verificação dos seeds:</h3>";
+    echo "<p>Seed da exibição: $seed_exibicao</p>";
+    echo "<p>Seed do processamento: $seed_processamento</p>";
+    
+    if ($seed_exibicao === $seed_processamento) {
+        echo "<p style='color: green;'>✅ Seeds são iguais</p>";
+    } else {
+        echo "<p style='color: red;'>❌ Seeds são diferentes</p>";
+    }
+    
+    // Verificar se as letras corretas são iguais
+    echo "<h3>6. Verificação das letras corretas:</h3>";
+    echo "<p>Letra correta na exibição: $letra_correta_exibicao</p>";
+    echo "<p>Letra correta no processamento: $letra_correta_processamento</p>";
+    
+    if ($letra_correta_exibicao === $letra_correta_processamento) {
+        echo "<p style='color: green;'>✅ Letras corretas são iguais</p>";
+    } else {
+        echo "<p style='color: red;'>❌ Letras corretas são diferentes</p>";
+    }
+    
+    // Simular cliques em todas as alternativas
+    echo "<h3>7. Simulando cliques em todas as alternativas:</h3>";
+    
+    $cliques_teste = ['A', 'B', 'C', 'D'];
+    foreach ($cliques_teste as $letra_clicada) {
+        echo "<h4>Clique na letra $letra_clicada:</h4>";
+        
+        // Mapear a letra clicada para o ID no processamento
+        $id_alternativa_clicada = null;
+        foreach ($alternativas_processamento as $index => $alt) {
+            $letra = $letras[$index] ?? ($index + 1);
+            if ($letra === $letra_clicada) {
+                $id_alternativa_clicada = $alt['id_alternativa'];
+                break;
+            }
+        }
+        
+        // Verificar se acertou
+        $acertou = ($id_alternativa_clicada == $alternativa_correta_processamento['id_alternativa']) ? 1 : 0;
+        
+        echo "<p>Letra clicada: $letra_clicada</p>";
+        echo "<p>ID da alternativa clicada: $id_alternativa_clicada</p>";
+        echo "<p>ID da alternativa correta: " . $alternativa_correta_processamento['id_alternativa'] . "</p>";
+        echo "<p>Acertou: " . ($acertou ? 'SIM' : 'NÃO') . "</p>";
+        
+        // Simular resposta JSON
+        $resposta_json = [
+            'success' => true,
+            'acertou' => (bool)$acertou,
+            'alternativa_correta' => $letra_correta_processamento,
+            'explicacao' => '',
+            'message' => $acertou ? 'Parabéns! Você acertou!' : 'Não foi dessa vez, mas continue tentando!'
+        ];
+        
+        echo "<p>Resposta JSON: " . json_encode($resposta_json) . "</p>";
+        echo "<p style='color: " . ($acertou ? 'green' : 'red') . ";'>" . 
+             ($acertou ? '✅ CORRETO' : '❌ INCORRETO') . "</p>";
+        echo "<hr>";
+    }
+    
+    // Verificar se há problema na lógica de verificação
+    echo "<h3>8. Verificação da lógica de verificação:</h3>";
+    
+    // Simular clique na letra correta da exibição
+    $letra_clicada = $letra_correta_exibicao;
+    echo "<p>Simulando clique na letra correta da exibição: $letra_clicada</p>";
+    
+    // Mapear a letra clicada para o ID no processamento
+    $id_alternativa_clicada = null;
+    foreach ($alternativas_processamento as $index => $alt) {
+        $letra = $letras[$index] ?? ($index + 1);
+        if ($letra === $letra_clicada) {
+            $id_alternativa_clicada = $alt['id_alternativa'];
+            break;
+        }
+    }
+    
+    // Verificar se acertou
+    $acertou = ($id_alternativa_clicada == $alternativa_correta_processamento['id_alternativa']) ? 1 : 0;
+    
+    echo "<p>ID da alternativa clicada: $id_alternativa_clicada</p>";
+    echo "<p>ID da alternativa correta: " . $alternativa_correta_processamento['id_alternativa'] . "</p>";
+    echo "<p>Acertou: " . ($acertou ? 'SIM' : 'NÃO') . "</p>";
+    
+    if ($acertou) {
+        echo "<p style='color: green;'>✅ LÓGICA FUNCIONANDO! Alternativa correta é marcada como correta!</p>";
+    } else {
+        echo "<p style='color: red;'>❌ LÓGICA COM PROBLEMA! Alternativa correta está sendo marcada como incorreta!</p>";
+        
+        // Investigar mais
+        echo "<h4>Investigando o problema:</h4>";
+        echo "<p>Alternativa correta original (ID): " . $alternativa_correta_original['id_alternativa'] . "</p>";
+        echo "<p>Alternativa correta no processamento (ID): " . $alternativa_correta_processamento['id_alternativa'] . "</p>";
+        
+        if ($alternativa_correta_original['id_alternativa'] == $alternativa_correta_processamento['id_alternativa']) {
+            echo "<p style='color: green;'>✅ IDs das alternativas corretas são iguais</p>";
+        } else {
+            echo "<p style='color: red;'>❌ IDs das alternativas corretas são diferentes!</p>";
+        }
+    }
+    
+} catch (Exception $e) {
+    echo "<p style='color: red;'>❌ Erro: " . $e->getMessage() . "</p>";
+}
+
+echo "<h2>9. Próximos passos:</h2>";
+echo "<p>1. Se a lógica está funcionando, o problema pode estar no JavaScript</p>";
+echo "<p>2. Se a lógica não está funcionando, preciso corrigir o código</p>";
+echo "<p>3. Verificar se há problema na verificação das respostas</p>";
+?>

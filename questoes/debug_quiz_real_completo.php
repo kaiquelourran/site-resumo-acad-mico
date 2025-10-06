@@ -2,7 +2,7 @@
 session_start();
 require_once __DIR__ . '/conexao.php';
 
-echo "<h1>DEBUG DO QUIZ REAL</h1>";
+echo "<h1>DEBUG COMPLETO DO QUIZ REAL</h1>";
 
 // Simular parâmetros do quiz_vertical_filtros.php
 $id_assunto = 8;

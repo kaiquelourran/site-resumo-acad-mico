@@ -2,7 +2,7 @@
 session_start();
 require_once __DIR__ . '/conexao.php';
 
-echo "<h1>DEBUG DO QUIZ REAL</h1>";
+echo "<h1>SIMULAÇÃO COMPLETA DO QUIZ REAL</h1>";
 
 // Simular parâmetros do quiz_vertical_filtros.php
 $id_assunto = 8;
@@ -68,7 +68,7 @@ try {
     echo "<p>Texto: " . htmlspecialchars($alternativa_correta['texto']) . "</p>";
     
     // Simular HTML que seria gerado
-    echo "<h3>4. HTML que seria gerado (como no quiz real):</h3>";
+    echo "<h3>4. HTML que seria gerado:</h3>";
     echo "<div style='border: 1px solid #ccc; padding: 15px; margin: 10px 0; background: #f9f9f9;'>";
     echo "<div class='question-card' id='questao-" . $questao['id_questao'] . "'>";
     echo "<h4>Questão #" . $questao['id_questao'] . "</h4>";
@@ -77,11 +77,10 @@ try {
     
     foreach ($alternativas_questao as $index => $alternativa) {
         $letra = $letras[$index] ?? ($index + 1);
-        // NÃO aplicar classes visuais automaticamente - deixar para o JavaScript
-        $class = '';
-        echo "<div class='alternative $class' data-alternativa='$letra' data-alternativa-id='" . $alternativa['id_alternativa'] . "' data-questao-id='" . $questao['id_questao'] . "'>";
-        echo "<div class='alternative-letter'>$letra</div>";
-        echo "<div class='alternative-text'>" . htmlspecialchars($alternativa['texto']) . "</div>";
+        $correta_class = $alternativa['eh_correta'] ? 'alternative-correct' : '';
+        echo "<div class='alternative $correta_class' data-alternativa='$letra' data-alternativa-id='" . $alternativa['id_alternativa'] . "' data-questao-id='" . $questao['id_questao'] . "'>";
+        echo "<span class='alternative-letter'>$letra)</span>";
+        echo "<span class='alternative-text'>" . htmlspecialchars($alternativa['texto']) . "</span>";
         echo "</div>";
     }
     

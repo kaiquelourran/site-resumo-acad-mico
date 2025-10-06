@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste AJAX Simples</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .alternative {
+            background: #f0f0f0;
+            border: 2px solid #ddd;
+            padding: 15px;
+            margin: 10px 0;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        .alternative:hover {
+            background: #e0e0e0;
+            border-color: #007bff;
+        }
+        .alternative.selected {
+            background: #e3f2fd;
+            border-color: #2196f3;
+        }
+        .alternative.correct {
+            background: #d4edda;
+            border-color: #28a745;
+        }
+        .alternative.incorrect {
+            background: #f8d7da;
+            border-color: #dc3545;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        .result.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .result.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <h1>Teste AJAX Simples - Quiz Vertical Filtros</h1>
+    
+    <div id="questao-1" class="question-card">
+        <h3>Questão de Teste</h3>
+        <p>Qual é a capital do Brasil?</p>
+        
+        <div class="alternative" data-alternativa="A" data-questao-id="1">
+            A) São Paulo
+        </div>
+        <div class="alternative" data-alternativa="B" data-questao-id="1">
+            B) Rio de Janeiro
+        </div>
+        <div class="alternative" data-alternativa="C" data-questao-id="1">
+            C) Brasília
+        </div>
+        <div class="alternative" data-alternativa="D" data-questao-id="1">
+            D) Belo Horizonte
+        </div>
+    </div>
+    
+    <div id="resultado" class="result" style="display: none;"></div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM carregado, configurando alternativas...');
+            
+            const alternativas = document.querySelectorAll('.alternative');
+            console.log('Total de alternativas encontradas:', alternativas.length);
+            
+            alternativas.forEach((alternativa, index) => {
+                console.log('Configurando alternativa', index + 1);
+                
+                alternativa.addEventListener('click', function(e) {
+                    const questaoId = this.dataset.questaoId;
+                    const alternativaSelecionada = this.dataset.alternativa;
+                    const questaoCard = this.closest('.question-card');
+                    
+                    console.log('Alternativa clicada:', alternativaSelecionada, 'Questão:', questaoId);
+                    
+                    // Destacar a alternativa clicada
+                    alternativas.forEach(alt => {
+                        alt.classList.remove('selected', 'correct', 'incorrect');
+                    });
+                    
+                    this.classList.add('selected');
+                    
+                    // Enviar resposta via AJAX
+                    const formData = new FormData();
+                    formData.append('id_questao', questaoId);
+                    formData.append('alternativa_selecionada', alternativaSelecionada);
+                    formData.append('ajax_request', '1');
+                    
+                    console.log('Enviando requisição AJAX...');
+                    
+                    fetch('quiz_vertical_filtros.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => {
+                        console.log('Resposta recebida:', response);
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('Dados recebidos:', data);
+                        
+                        const resultadoDiv = document.getElementById('resultado');
+                        resultadoDiv.style.display = 'block';
+                        
+                        if (data.success) {
+                            resultadoDiv.className = 'result success';
+                            resultadoDiv.innerHTML = `
+                                <strong>${data.message}</strong><br>
+                                Alternativa correta: ${data.alternativa_correta}<br>
+                                Você selecionou: ${alternativaSelecionada}
+                            `;
+                            
+                            // Mostrar feedback visual
+                            alternativas.forEach(alt => {
+                                if (alt.dataset.alternativa === data.alternativa_correta) {
+                                    alt.classList.add('correct');
+                                } else if (alt.dataset.alternativa === alternativaSelecionada && !data.acertou) {
+                                    alt.classList.add('incorrect');
+                                }
+                            });
+                        } else {
+                            resultadoDiv.className = 'result error';
+                            resultadoDiv.innerHTML = `<strong>Erro:</strong> ${data.message}`;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro na requisição:', error);
+                        const resultadoDiv = document.getElementById('resultado');
+                        resultadoDiv.style.display = 'block';
+                        resultadoDiv.className = 'result error';
+                        resultadoDiv.innerHTML = `<strong>Erro na requisição:</strong> ${error.message}`;
+                    });
+                });
+            });
+        });
+    </script>
+</body>
+</html>
