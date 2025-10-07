@@ -59,19 +59,24 @@ try {
     $stmt_atividades->execute();
     $atividades_recentes = $stmt_atividades->fetchAll();
     
-    // Progresso semanal (últimos 7 dias) - sem filtro de user_id
-    $stmt_semanal = $pdo->prepare("
-        SELECT 
-            DATE(data_resposta) as dia,
-            COUNT(*) as questoes_respondidas,
-            SUM(acertou) as acertos
-        FROM respostas_usuario 
-        WHERE data_resposta >= DATE_SUB(NOW(), INTERVAL 7 DAY)
-        GROUP BY DATE(data_resposta)
-        ORDER BY dia ASC
-    ");
-    $stmt_semanal->execute();
-    $progresso_semanal = $stmt_semanal->fetchAll();
+    // Estatísticas por período - sem filtro de user_id
+    // 24 horas
+    $stmt_24h = $pdo->prepare("SELECT COUNT(*) as total FROM respostas_usuario WHERE data_resposta >= DATE_SUB(NOW(), INTERVAL 1 DAY)");
+    $stmt_24h->execute();
+    $questoes_24h = $stmt_24h->fetch()['total'];
+    
+    // 7 dias
+    $stmt_7d = $pdo->prepare("SELECT COUNT(*) as total FROM respostas_usuario WHERE data_resposta >= DATE_SUB(NOW(), INTERVAL 7 DAY)");
+    $stmt_7d->execute();
+    $questoes_7d = $stmt_7d->fetch()['total'];
+    
+    // 365 dias
+    $stmt_365d = $pdo->prepare("SELECT COUNT(*) as total FROM respostas_usuario WHERE data_resposta >= DATE_SUB(NOW(), INTERVAL 365 DAY)");
+    $stmt_365d->execute();
+    $questoes_365d = $stmt_365d->fetch()['total'];
+    
+    // Sempre (total geral)
+    $questoes_sempre = $total_respostas;
     
 } catch (Exception $e) {
     $total_respostas = 0;
@@ -79,7 +84,10 @@ try {
     $percentual_acerto = 0;
     $stats_assuntos = [];
     $atividades_recentes = [];
-    $progresso_semanal = [];
+    $questoes_24h = 0;
+    $questoes_7d = 0;
+    $questoes_365d = 0;
+    $questoes_sempre = 0;
 }
 ?>
 <!DOCTYPE html>
@@ -469,6 +477,32 @@ try {
         .chart-container {
             height: 300px;
             position: relative;
+        }
+        
+        /* Estilos para estatísticas de período */
+        .period-stat {
+            text-align: center;
+            padding: 20px 0;
+        }
+        
+        .period-number {
+            font-size: 3rem;
+            font-weight: 800;
+            color: #0072FF;
+            margin-bottom: 8px;
+            line-height: 1;
+        }
+        
+        .period-label {
+            font-size: 1rem;
+            color: #718096;
+            font-weight: 600;
+        }
+        
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
         }
         
         /* Cards de Assuntos */
@@ -870,26 +904,83 @@ $page_subtitle = 'Acompanhe sua evolução e estatísticas detalhadas';
             </div>
         </section>
 
-        <!-- Gráficos -->
+        <!-- Estatísticas por Período -->
         <section class="charts-section">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i class="fas fa-clock"></i>
+                    Questões por Período
+                </h2>
+            </div>
             <div class="charts-grid">
                 <div class="chart-card">
                     <div class="chart-header">
                         <h3 class="chart-title">
-                            <i class="fas fa-chart-bar"></i>
-                            Progresso dos Últimos 7 Dias
+                            <i class="fas fa-clock"></i>
+                            Últimas 24 Horas
                         </h3>
                     </div>
-                    <div class="chart-container">
-                        <canvas id="progressChart"></canvas>
+                    <div class="period-stat">
+                        <div class="period-number"><?php echo $questoes_24h; ?></div>
+                        <div class="period-label">Questões Respondidas</div>
                     </div>
                 </div>
 
                 <div class="chart-card">
                     <div class="chart-header">
                         <h3 class="chart-title">
+                            <i class="fas fa-calendar-week"></i>
+                            Últimos 7 Dias
+                        </h3>
+                    </div>
+                    <div class="period-stat">
+                        <div class="period-number"><?php echo $questoes_7d; ?></div>
+                        <div class="period-label">Questões Respondidas</div>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">
+                            <i class="fas fa-calendar-alt"></i>
+                            Últimos 365 Dias
+                        </h3>
+                    </div>
+                    <div class="period-stat">
+                        <div class="period-number"><?php echo $questoes_365d; ?></div>
+                        <div class="period-label">Questões Respondidas</div>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">
+                            <i class="fas fa-infinity"></i>
+                            Sempre
+                        </h3>
+                    </div>
+                    <div class="period-stat">
+                        <div class="period-number"><?php echo $questoes_sempre; ?></div>
+                        <div class="period-label">Questões Respondidas</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Gráfico de Performance por Assunto -->
+        <section class="charts-section">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i class="fas fa-chart-pie"></i>
+                    Performance por Assunto
+                </h2>
+            </div>
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">
                             <i class="fas fa-chart-pie"></i>
-                            Performance por Assunto
+                            Distribuição de Acertos
                         </h3>
                     </div>
                     <div class="chart-container">
@@ -995,49 +1086,7 @@ $page_subtitle = 'Acompanhe sua evolução e estatísticas detalhadas';
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         // Dados para os gráficos
-        const progressData = <?php echo json_encode($progresso_semanal); ?>;
         const subjectData = <?php echo json_encode($stats_assuntos); ?>;
-
-        // Gráfico de Progresso Semanal
-        const progressCtx = document.getElementById('progressChart').getContext('2d');
-        new Chart(progressCtx, {
-            type: 'line',
-            data: {
-                labels: progressData.map(item => {
-                    const date = new Date(item.dia);
-                    return date.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit' });
-                }),
-                datasets: [{
-                    label: 'Questões Respondidas',
-                    data: progressData.map(item => item.questoes_respondidas),
-                    borderColor: '#0072FF',
-                    backgroundColor: 'rgba(0, 114, 255, 0.1)',
-                    tension: 0.4,
-                    fill: true
-                }, {
-                    label: 'Acertos',
-                    data: progressData.map(item => item.acertos),
-                    borderColor: '#00C6FF',
-                    backgroundColor: 'rgba(0, 198, 255, 0.1)',
-                    tension: 0.4,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'top',
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
-                }
-            }
-        });
 
         // Gráfico de Performance por Assunto
         const subjectCtx = document.getElementById('subjectChart').getContext('2d');
