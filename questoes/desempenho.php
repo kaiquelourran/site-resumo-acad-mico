@@ -2,30 +2,32 @@
 session_start();
 require_once 'conexao.php';
 
-// Verificar se o usuário está logado
-if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
-    header('Location: login.php');
-    exit;
-}
+// Verificar se o usuário está logado (opcional para teste)
+// if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+//     header('Location: login.php');
+//     exit;
+// }
 
 // Buscar estatísticas do usuário
 try {
     $user_id = $_SESSION['id_usuario'] ?? $_SESSION['user_id'] ?? 1; // Usar 1 como padrão
     
-    // Total de respostas do usuário
-    $stmt_total = $pdo->prepare("SELECT COUNT(*) as total FROM respostas_usuario WHERE user_id = ?");
-    $stmt_total->execute([$user_id]);
+    // Buscar dados da tabela respostas_usuario
+    
+    // Total de respostas (sem filtro de user_id pois a coluna não existe)
+    $stmt_total = $pdo->prepare("SELECT COUNT(*) as total FROM respostas_usuario");
+    $stmt_total->execute();
     $total_respostas = $stmt_total->fetch()['total'];
     
-    // Respostas corretas
-    $stmt_corretas = $pdo->prepare("SELECT COUNT(*) as corretas FROM respostas_usuario WHERE user_id = ? AND acertou = 1");
-    $stmt_corretas->execute([$user_id]);
+    // Respostas corretas (sem filtro de user_id pois a coluna não existe)
+    $stmt_corretas = $pdo->prepare("SELECT COUNT(*) as corretas FROM respostas_usuario WHERE acertou = 1");
+    $stmt_corretas->execute();
     $respostas_corretas = $stmt_corretas->fetch()['corretas'];
     
     // Calcular percentual de acerto
     $percentual_acerto = $total_respostas > 0 ? round(($respostas_corretas / $total_respostas) * 100, 1) : 0;
     
-    // Estatísticas por assunto
+    // Estatísticas por assunto (sem filtro de user_id)
     $stmt_assuntos = $pdo->prepare("
         SELECT 
             a.nome as nome_assunto,
@@ -35,14 +37,13 @@ try {
         FROM respostas_usuario r
         JOIN questoes q ON r.id_questao = q.id_questao
         JOIN assuntos a ON q.id_assunto = a.id_assunto
-        WHERE r.user_id = ?
         GROUP BY a.id_assunto, a.nome
         ORDER BY percentual DESC
     ");
-    $stmt_assuntos->execute([$user_id]);
+    $stmt_assuntos->execute();
     $stats_assuntos = $stmt_assuntos->fetchAll();
     
-    // Últimas atividades
+    // Últimas atividades (sem filtro de user_id)
     $stmt_atividades = $pdo->prepare("
         SELECT 
             a.nome as nome_assunto,
@@ -52,25 +53,24 @@ try {
         FROM respostas_usuario r
         JOIN questoes q ON r.id_questao = q.id_questao
         JOIN assuntos a ON q.id_assunto = a.id_assunto
-        WHERE r.user_id = ?
         ORDER BY r.data_resposta DESC
         LIMIT 10
     ");
-    $stmt_atividades->execute([$user_id]);
+    $stmt_atividades->execute();
     $atividades_recentes = $stmt_atividades->fetchAll();
     
-    // Progresso semanal (últimos 7 dias)
+    // Progresso semanal (últimos 7 dias) - sem filtro de user_id
     $stmt_semanal = $pdo->prepare("
         SELECT 
             DATE(data_resposta) as dia,
             COUNT(*) as questoes_respondidas,
             SUM(acertou) as acertos
         FROM respostas_usuario 
-        WHERE user_id = ? AND data_resposta >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+        WHERE data_resposta >= DATE_SUB(NOW(), INTERVAL 7 DAY)
         GROUP BY DATE(data_resposta)
         ORDER BY dia ASC
     ");
-    $stmt_semanal->execute([$user_id]);
+    $stmt_semanal->execute();
     $progresso_semanal = $stmt_semanal->fetchAll();
     
 } catch (Exception $e) {

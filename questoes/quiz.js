@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const placarPontosSpan = document.querySelector('.placar-pontos');
     const questaoAtualSpan = document.querySelector('.questao-atual');
     const totalQuestoesSpan = document.querySelector('.total-questoes');
-    const alternativaCorretaId = document.querySelector('[data-correta="true"]')?.dataset.idAlternativa;
+
 
     if (questoesForm) {
         questoesForm.addEventListener('click', (event) => {
@@ -12,6 +12,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const alternativaSelecionada = event.target.closest('label');
                 const respostaId = alternativaSelecionada.dataset.idAlternativa;
                 const idQuestao = questoesForm.dataset.idQuestao;
+                const alternativaCorretaElement = questoesForm.querySelector('[data-correta="true"]');
+                const alternativaCorretaId = alternativaCorretaElement ? alternativaCorretaElement.dataset.alternativeId : null;
                 
                 // Verifica se a resposta está correta
                 const respostaCorreta = respostaId === alternativaCorretaId;

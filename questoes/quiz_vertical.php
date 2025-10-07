@@ -18,16 +18,20 @@ if ($id_assunto > 0) {
 // Processar resposta individual se enviada via POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id_questao = $_POST['id_questao'] ?? 0;
-    $alternativa_selecionada = $_POST['alternativa_selecionada'] ?? '';
+    $id_alternativa_selecionada = $_POST['id_alternativa_selecionada'] ?? '';
     
-    if ($id_questao && $alternativa_selecionada) {
+    if ($id_questao && $id_alternativa_selecionada) {
+        // Buscar a alternativa correta para a questão
+        $stmt_correct_alt = $pdo->prepare("SELECT id_alternativa FROM alternativas WHERE id_questao = ? AND eh_correta = 1");
+        $stmt_correct_alt->execute([$id_questao]);
+        $correct_alternative_id = $stmt_correct_alt->fetchColumn();
         // Buscar a questão e verificar se a resposta está correta
         $stmt = $pdo->prepare("SELECT * FROM questoes WHERE id_questao = ?");
         $stmt->execute([$id_questao]);
         $questao = $stmt->fetch(PDO::FETCH_ASSOC);
         
         if ($questao) {
-            $acertou = ($alternativa_selecionada === $questao['resposta_correta']) ? 1 : 0;
+            $acertou = ($id_alternativa_selecionada == $correct_alternative_id) ? 1 : 0;
             
             // Buscar o ID da alternativa baseado na letra e no texto
             $campo_alternativa = 'alternativa_' . strtolower($alternativa_selecionada);
@@ -40,33 +44,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($alternativa) {
                 $id_alternativa = $alternativa['id_alternativa'];
                 
-                // Inserir ou atualizar resposta do usuário
-                $user_id = $_SESSION['id_usuario'] ?? $_SESSION['user_id'] ?? null;
+                // Atualizar a resposta do usuário no banco de dados
+                $user_id = $_SESSION['id_usuario'] ?? $_SESSION['user_id'] ?? null; // Keep the robust user_id retrieval
                 if (!$user_id) {
                     error_log("ERRO: user_id não encontrado na sessão");
                     header('Content-Type: application/json');
                     echo json_encode(['success' => false, 'message' => 'Usuário não identificado']);
                     exit;
                 }
+                $stmt_update_resposta = $pdo->prepare("INSERT INTO respostas_usuario (user_id, id_questao, id_alternativa_selecionada, acertou, data_resposta) VALUES (?, ?, ?, ?, NOW()) ON DUPLICATE KEY UPDATE id_alternativa_selecionada = VALUES(id_alternativa_selecionada), acertou = VALUES(acertou), data_resposta = NOW()");
+                $stmt_update_resposta->execute([$user_id, $id_questao, $id_alternativa_selecionada, $acertou]);
                 
-                $stmt_resposta = $pdo->prepare("
-                    INSERT INTO respostas_usuario (user_id, id_questao, id_alternativa, acertou, data_resposta) 
-                    VALUES (?, ?, ?, ?, NOW())
-                    ON DUPLICATE KEY UPDATE 
-                    id_alternativa = VALUES(id_alternativa),
-                    acertou = VALUES(acertou),
-                    data_resposta = VALUES(data_resposta)
-                ");
-                $stmt_resposta->execute([$user_id, $id_questao, $id_alternativa, $acertou]);
-                
-                // Salvar feedback na sessão
-                $_SESSION['feedback_questao'] = [
-                    'id_questao' => $id_questao,
-                    'acertou' => $acertou,
-                    'resposta_correta' => $questao['resposta_correta'],
-                    'alternativa_selecionada' => $alternativa_selecionada,
-                    'explicacao' => $questao['explicacao'] ?? ''
-                ];
+                // Preparar feedback para o JavaScript
+                  $feedback = [
+                      'id_questao' => $id_questao,
+                      'acertou' => (bool)$acertou,
+                      'id_alternativa_selecionada' => $id_alternativa_selecionada,
+                      'id_alternativa_correta' => $correct_alternative_id
+                  ];
             }
         }
     }
@@ -690,7 +685,7 @@ unset($_SESSION['feedback_questao']); // Limpar da sessão após usar
                                     $clickable = 'clickable-alternative';
                                 }
                                 
-                                echo '<div class="alternative ' . $class . ' ' . $clickable . '" data-letter="' . $letra . '" data-question-id="' . $questao['id_questao'] . '" data-alternative-letter="' . $letra . '">';
+                                echo '<div class="alternative ' . $class . ' ' . $clickable . '" data-letter="' . $letra . '" data-question-id="' . $questao['id_questao'] . '" data-alternative-letter="' . $letra . '" data-alternative-id="' . $alternativa['id_alternativa'] . '" data-correta="' . ($is_correct ? 'true' : 'false') . '">';
                                 echo '<span>' . htmlspecialchars($alternativa['texto']) . '</span>';
                                 if ($is_selected) echo ' <span class="selected-mark">👈 Sua resposta</span>';
                                 if ($is_correct && $questao['status_questao'] != 'nao-respondida') echo ' <span class="correct-mark">✓ Correta</span>';
@@ -703,7 +698,7 @@ unset($_SESSION['feedback_questao']); // Limpar da sessão após usar
                             <?php if ($questao['status_questao'] == 'nao-respondida'): ?>
                                 <form method="POST" class="answer-form" id="form-<?php echo $questao['id_questao']; ?>" style="display: inline;">
                                     <input type="hidden" name="id_questao" value="<?php echo $questao['id_questao']; ?>">
-                                    <input type="hidden" name="alternativa_selecionada" id="selected-<?php echo $questao['id_questao']; ?>" value="">
+                                    <input type="hidden" name="id_alternativa_selecionada" id="selected-<?php echo $questao['id_questao']; ?>" value="">
                                     <button type="submit" class="btn-submit" id="btn-<?php echo $questao['id_questao']; ?>" disabled>
                                         🎯 Responder
                                     </button>
@@ -820,13 +815,13 @@ unset($_SESSION['feedback_questao']); // Limpar da sessão após usar
                 // Atualizar as alternativas para mostrar qual é a correta
                 const alternatives = alternativesDiv.querySelectorAll('.alternative');
                 alternatives.forEach(alt => {
-                    const letter = alt.getAttribute('data-letter');
+                    const alternativeId = parseInt(alt.getAttribute('data-alternative-id'));
                     alt.classList.remove('clickable-alternative', 'selected');
                     
-                    if (letter === data.resposta_correta) {
+                    if (alternativeId === data.id_alternativa_correta) {
                         alt.classList.add('alternative-correct');
                         alt.innerHTML += ' <span class="correct-mark">✓ Correta</span>';
-                    } else if (letter === data.alternativa_selecionada && !data.acertou) {
+                    } else if (alternativeId === data.id_alternativa_selecionada && !data.acertou) {
                         alt.classList.add('alternative-incorrect');
                         alt.innerHTML += ' <span class="selected-mark">👈 Sua resposta</span>';
                     }
@@ -867,7 +862,7 @@ unset($_SESSION['feedback_questao']); // Limpar da sessão após usar
             document.querySelectorAll('.clickable-alternative').forEach(function(alternative) {
                 alternative.addEventListener('click', function() {
                     const questionId = this.getAttribute('data-question-id');
-                    const alternativeLetter = this.getAttribute('data-alternative-letter');
+                    const alternativeId = this.getAttribute('data-alternative-id');
                     
                     // Remover seleção anterior da mesma questão
                     document.querySelectorAll(`[data-question-id="${questionId}"].clickable-alternative`).forEach(function(alt) {
@@ -880,7 +875,7 @@ unset($_SESSION['feedback_questao']); // Limpar da sessão após usar
                     // Atualizar campo hidden
                     const hiddenInput = document.getElementById(`selected-${questionId}`);
                     if (hiddenInput) {
-                        hiddenInput.value = alternativeLetter;
+                        hiddenInput.value = alternativeId;
                     }
                     
                     // Habilitar botão de responder

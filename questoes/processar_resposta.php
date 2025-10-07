@@ -42,82 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Verificar se é uma requisição AJAX do quiz_vertical.php
     $is_vertical_quiz = isset($_POST['alternativa_selecionada']) && isset($_POST['id_questao']);
     
-    if ($is_vertical_quiz) {
-        // Processar resposta do quiz vertical
-        $id_questao = (int)$_POST['id_questao'];
-        $alternativa_selecionada = $_POST['alternativa_selecionada'];
-        
-        if ($id_questao && $alternativa_selecionada) {
-            try {
-                // Buscar a questão
-                $stmt = $pdo->prepare("SELECT * FROM questoes WHERE id_questao = ?");
-                $stmt->execute([$id_questao]);
-                $questao = $stmt->fetch(PDO::FETCH_ASSOC);
-                
-                if ($questao) {
-                    // Verificar se a resposta está correta
-                    $acertou = ($alternativa_selecionada === $questao['resposta_correta']) ? 1 : 0;
-                    
-                    // Para a estrutura atual, vamos usar um ID fictício baseado na letra
-                    $letras_para_id = ['A' => 1, 'B' => 2, 'C' => 3, 'D' => 4];
-                    $id_alternativa = isset($letras_para_id[$alternativa_selecionada]) ? $letras_para_id[$alternativa_selecionada] : 1;
-                    
-                    // Inserir ou atualizar resposta do usuário
-                    $stmt_resposta = $pdo->prepare("
-                        INSERT INTO respostas_usuario (id_questao, id_alternativa, acertou, data_resposta) 
-                        VALUES (?, ?, ?, NOW())
-                        ON DUPLICATE KEY UPDATE 
-                        id_alternativa = VALUES(id_alternativa),
-                        acertou = VALUES(acertou),
-                        data_resposta = VALUES(data_resposta)
-                    ");
-                    $stmt_resposta->execute([$id_questao, $id_alternativa, $acertou]);
-                        // Determinar se deve mudar de filtro
-                        $filtro_atual = isset($_POST['filtro_atual']) ? $_POST['filtro_atual'] : '';
-                        $novo_filtro = $filtro_atual;
-                        $mudou_filtro = false;
-                        
-                        if ($acertou) {
-                            // Se acertou e estava em filtro de erradas, mover para acertadas
-                            if ($filtro_atual === 'erradas') {
-                                $novo_filtro = 'acertadas';
-                                $mudou_filtro = true;
-                            }
-                        } else {
-                            // Se errou e estava em filtro de acertadas, mover para erradas
-                            if ($filtro_atual === 'acertadas') {
-                                $novo_filtro = 'erradas';
-                                $mudou_filtro = true;
-                            }
-                        }
-                        
-                        // Retornar resposta JSON
-                        echo json_encode([
-                            'success' => true,
-                            'acertou' => (bool)$acertou,
-                            'resposta_correta' => $questao['resposta_correta'],
-                            'alternativa_selecionada' => $alternativa_selecionada,
-                            'explicacao' => $questao['explicacao'] ?? '',
-                            'message' => $acertou ? 'Parabéns! Você acertou!' : 'Não foi dessa vez, mas continue tentando!',
-                            'mudou_filtro' => $mudou_filtro,
-                            'novo_filtro' => $novo_filtro
-                        ]);
-                        exit;
-                } else {
-                    echo json_encode(['success' => false, 'message' => 'Questão não encontrada']);
-                    exit;
-                }
-            } catch (Exception $e) {
-                echo json_encode(['success' => false, 'message' => 'Erro ao processar resposta: ' . $e->getMessage()]);
-                exit;
-            }
-        } else {
-            echo json_encode(['success' => false, 'message' => 'Dados incompletos']);
-            exit;
-        }
-    }
-    
-    // 1. LER O CORPO BRUTO DA REQUISIÇÃO (JSON) - para o quiz original
+
     $json_data = file_get_contents('php://input');
     $data = json_decode($json_data, true);
 
@@ -169,7 +94,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Retorna a resposta para o JavaScript
             echo json_encode([
                 'sucesso' => true,
-                'correta' => $resposta_correta,
+                'acertou' => $resposta_correta,
+                'id_alternativa_selecionada' => $id_alternativa_selecionada,
+                'id_alternativa_correta' => $alternativa_correta['id_alternativa'],
                 'acertos' => $_SESSION['quiz_progress']['acertos']
             ]);
             exit;

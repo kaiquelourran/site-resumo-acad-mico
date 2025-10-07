@@ -2,16 +2,10 @@
 session_start();
 require_once __DIR__ . '/conexao.php';
 
-// Gerar seed de sessão para embaralhamento consistente
-if (!isset($_SESSION['quiz_seed'])) {
-    $_SESSION['quiz_seed'] = rand(1, 10000);
-}
-
-// Adicionar timestamp para garantir embaralhamento diferente a cada carregamento
-$timestamp = time();
-
 // Captura parâmetros
 $id_assunto = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+
+// Sem embaralhamento - usar ordem original do banco
 $filtro_ativo = isset($_GET['filtro']) ? $_GET['filtro'] : 'todas';
 $questao_inicial = isset($_GET['questao_inicial']) ? (int)$_GET['questao_inicial'] : 0;
 
@@ -34,33 +28,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_questao']) && isse
         $stmt_alt->execute([$id_questao]);
         $alternativas_questao = $stmt_alt->fetchAll(PDO::FETCH_ASSOC);
         
-        // Embaralhar da mesma forma que na exibição
-        // Usar seed baseado no timestamp para garantir embaralhamento diferente a cada carregamento
-        $seed = $id_questao * 1000 + $timestamp; // Seed baseado no ID + timestamp
-        srand($seed);
-        shuffle($alternativas_questao);
+        // NÃO EMBARALHAR - usar ordem original do banco
         
-        // Mapear a letra selecionada para o ID da alternativa
+        // Mapear a letra selecionada para o ID da alternativa (ordem original do banco)
         $letras = ['A', 'B', 'C', 'D', 'E'];
         $id_alternativa = null;
         foreach ($alternativas_questao as $index => $alternativa) {
             $letra = $letras[$index] ?? ($index + 1);
-            if ($letra === strtoupper($alternativa_selecionada)) {
+            if (strtoupper($letra) === strtoupper($alternativa_selecionada)) {
                 $id_alternativa = $alternativa['id_alternativa'];
                 break;
             }
         }
         
-        // Debug: verificar se encontrou a alternativa
-        if (!$id_alternativa) {
-            error_log("ERRO: Não encontrou alternativa para letra: " . $alternativa_selecionada);
-            error_log("Alternativas disponíveis: " . print_r($alternativas_questao, true));
-        }
-        
-        // Buscar a alternativa correta para esta questão
+        // Buscar a alternativa correta para esta questão (ordem original do banco)
         $alternativa_correta = null;
         foreach ($alternativas_questao as $alt) {
-            // Usar apenas o campo que sabemos que existe
             if ($alt['eh_correta'] == 1) {
                 $alternativa_correta = $alt;
                 break;
@@ -118,7 +101,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_questao']) && isse
             
             // Se for uma requisição AJAX, retornar JSON
             if (isset($_POST['ajax_request'])) {
-                // Encontrar a letra da alternativa correta após embaralhamento
+                // Encontrar a letra da alternativa correta (ordem original do banco)
                 $letra_correta = '';
                 $letras = ['A', 'B', 'C', 'D', 'E'];
                 foreach ($alternativas_questao as $index => $alt) {
@@ -999,7 +982,8 @@ include 'header.php';
                 </div>
             <?php else: ?>
                 <div class="questions-container">
-                    <?php foreach ($questoes as $index => $questao): ?>
+                    <?php 
+                     foreach ($questoes as $index => $questao): ?>
                         <div class="question-card" id="questao-<?php echo $questao['id_questao']; ?>">
                             <div class="question-header">
                                 <div class="question-number">
@@ -1038,13 +1022,9 @@ include 'header.php';
                                     $stmt_alt->execute([$questao['id_questao']]);
                                     $alternativas_questao = $stmt_alt->fetchAll(PDO::FETCH_ASSOC);
                                     
-                                    // Embaralhar as alternativas para que a resposta correta apareça em posições diferentes
-                                    // Usar seed baseado no timestamp para garantir embaralhamento diferente a cada carregamento
-                                    $seed = $questao['id_questao'] * 1000 + $timestamp; // Seed baseado no ID + timestamp
-                                    srand($seed);
-                                    shuffle($alternativas_questao);
+                                    // NÃO EMBARALHAR - usar ordem original do banco
                                     
-                                    // Mapear as letras corretas após o embaralhamento
+                                    // Mapear as letras corretas (ordem original do banco)
                                     $letras = ['A', 'B', 'C', 'D', 'E'];
                                     $letra_correta = '';
                                     foreach ($alternativas_questao as $index => $alternativa) {
@@ -1071,7 +1051,8 @@ include 'header.php';
                                         <div class="alternative <?php echo $class; ?>" 
                                              data-alternativa="<?php echo $letra; ?>"
                                              data-alternativa-id="<?php echo $alternativa['id_alternativa']; ?>"
-                                             data-questao-id="<?php echo $questao['id_questao']; ?>">
+                                             data-questao-id="<?php echo $questao['id_questao']; ?>"
+                                             data-correta="<?php echo $is_correct ? 'true' : 'false'; ?>">
                                             <div class="alternative-letter"><?php echo $letra; ?></div>
                                             <div class="alternative-text"><?php echo htmlspecialchars($alternativa['texto']); ?></div>
                                         </div>
@@ -1129,9 +1110,14 @@ include 'header.php';
             const alternativas = questaoCard.querySelectorAll('.alternative');
             console.log('Alternativas encontradas:', alternativas.length);
             
-            // NÃO desabilitar cliques aqui - será feito no JavaScript principal
+            // Limpar feedback anterior
+            alternativas.forEach(alt => {
+                alt.classList.remove('alternative-correct', 'alternative-incorrect-chosen');
+                alt.style.background = '';
+                alt.style.borderColor = '';
+            });
             
-            // Marcar alternativa correta como verde
+            // Marcar alternativa correta
             const alternativaCorretaEl = questaoCard.querySelector(`[data-alternativa="${alternativaCorreta}"]`);
             console.log('Alternativa correta encontrada:', alternativaCorretaEl);
             if (alternativaCorretaEl) {
@@ -1150,8 +1136,6 @@ include 'header.php';
                     console.log('Classe alternative-incorrect-chosen adicionada');
                 }
             }
-            
-            // Manter feedback visual permanente
             
             // Mostrar explicação após um delay se disponível
             if (explicacao && explicacao.trim() !== '') {
