@@ -450,11 +450,11 @@ include 'header.php';
             
             if (!empty($sources)) {
                 $union = implode(" UNION ALL ", $sources);
-                $sql_rank = "SELECT u.id_usuario, u.nome, COUNT(*) AS total
+                $sql_rank = "SELECT COALESCE(u.id_usuario, x.id_usuario) AS id_usuario, COALESCE(u.nome, 'Anônimo') AS nome, COUNT(*) AS total
                               FROM (" . $union . ") x
-                              INNER JOIN usuarios u ON u.id_usuario = x.id_usuario
-                              GROUP BY u.id_usuario, u.nome
-                              ORDER BY total DESC, u.nome ASC
+                              LEFT JOIN usuarios u ON u.id_usuario = x.id_usuario
+                              GROUP BY COALESCE(u.id_usuario, x.id_usuario), COALESCE(u.nome, 'Anônimo')
+                              ORDER BY total DESC, nome ASC
                               LIMIT 5";
                 $debug_info['sql'] = $sql_rank;
                 
