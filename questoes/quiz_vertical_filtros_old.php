@@ -1,20 +1,4 @@
 <?php
-// ini_set('display_errors', 1);
-// ini_set('display_startup_errors', 1);
-// error_reporting(E_ALL);
-
-// Função de log para diagnóstico - comentada para produção
-/*
-function debug_log($message, $data = null) {
-    echo "<div style='background:#f8f9fa;border:1px solid #ddd;margin:10px;padding:10px;'>";
-    echo "<strong>DEBUG:</strong> " . htmlspecialchars($message);
-    if ($data !== null) {
-        echo "<pre>" . htmlspecialchars(print_r($data, true)) . "</pre>";
-    }
-    echo "</div>";
-}
-*/
-
 session_start();
 require_once __DIR__ . '/conexao.php';
 
@@ -70,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_questao']) && isse
             $acertou = ($id_alternativa == $alternativa_correta['id_alternativa']) ? 1 : 0;
             
             // Inserir ou atualizar resposta
-            $user_id = isset($_SESSION['id_usuario']) ? (int)$_SESSION['id_usuario'] : (isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : 0); // Usar 0 para anônimo se não houver usuário
+            $user_id = $_SESSION['id_usuario'] ?? $_SESSION['user_id'] ?? 1; // Usar 1 como padrão se não houver usuário
             
             // Verificar se a tabela tem a coluna user_id
             try {
@@ -80,19 +64,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_questao']) && isse
                 
                 if ($tem_user_id) {
                     // Usar estrutura com user_id (permitir múltiplas respostas)
-                    $stmt_resposta = $pdo->prepare("\n                        INSERT INTO respostas_usuario (user_id, id_questao, id_alternativa, acertou, data_resposta) \n                        VALUES (?, ?, ?, ?, NOW())\n                        ON DUPLICATE KEY UPDATE\n                            id_alternativa = VALUES(id_alternativa),\n                            acertou = VALUES(acertou),\n                            data_resposta = NOW()\n                    ");
+                    $stmt_resposta = $pdo->prepare("
+                        INSERT INTO respostas_usuario (user_id, id_questao, id_alternativa, acertou, data_resposta) 
+                        VALUES (?, ?, ?, ?, NOW())
+                    ");
                     $stmt_resposta->execute([$user_id, $id_questao, $id_alternativa, $acertou]);
-                    
-                    // Log para diagnóstico - comentado para produção
-                    /*
-                    debug_log("Resposta inserida com user_id", [
-                        'user_id' => $user_id,
-                        'id_questao' => $id_questao,
-                        'id_alternativa' => $id_alternativa,
-                        'acertou' => $acertou,
-                        'filtro_atual' => $filtro_ativo
-                    ]);
-                    */
                 } else {
                     // Usar estrutura sem user_id (permitir múltiplas respostas)
                     $stmt_resposta = $pdo->prepare("
@@ -100,16 +76,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_questao']) && isse
                         VALUES (?, ?, ?, NOW())
                     ");
                     $stmt_resposta->execute([$id_questao, $id_alternativa, $acertou]);
-                    
-                    // Log para diagnóstico - comentado para produção
-                    /*
-                    debug_log("Resposta inserida sem user_id", [
-                        'id_questao' => $id_questao,
-                        'id_alternativa' => $id_alternativa,
-                        'acertou' => $acertou,
-                        'filtro_atual' => $filtro_ativo
-                    ]);
-                    */
                 }
             } catch (Exception $e) {
                 error_log("ERRO ao verificar estrutura da tabela: " . $e->getMessage());
@@ -140,12 +106,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_questao']) && isse
                     'alternativa_correta' => $letra_correta, // Retornar a LETRA, não o ID
                     'explicacao' => '', // Explicação não disponível na tabela alternativas
                     'message' => $acertou ? 'Parabéns! Você acertou!' : 'Não foi dessa vez, mas continue tentando!'
-                    // 'debug_info' => [
-                    //     'filtro_atual' => $filtro_ativo,
-                    //     'id_questao' => $id_questao,
-                    //     'acertou' => $acertou,
-                    //     'user_id' => $user_id
-                    // ]
                 ]);
                 exit;
             }
@@ -174,103 +134,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_questao']) && isse
 }
 
 // Construir query SQL baseada no filtro
-// Detectar suporte a user_id na tabela de respostas e obter user_id atual
-$tem_user_id = false;
-try {
-    $stmt_check = $pdo->query("DESCRIBE respostas_usuario");
-    $colunas = $stmt_check->fetchAll(PDO::FETCH_COLUMN);
-    $tem_user_id = in_array('user_id', $colunas);
-} catch (Exception $e) {
-    // Mantém $tem_user_id = false se não conseguir descrever a tabela
-}
-$user_id = isset($_SESSION['id_usuario']) ? (int)$_SESSION['id_usuario'] : (isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : 0);
-
 if ($filtro_ativo === 'nao-respondidas') {
-    // Para "não-respondidas", selecionar apenas questões sem resposta (por usuário quando houver)
-    if ($tem_user_id && $user_id !== null) {
-        $sql = "SELECT q.id_questao, q.enunciado, q.alternativa_a, q.alternativa_b, 
-                       q.alternativa_c, q.alternativa_d, q.alternativa_correta, q.explicacao,
-                       a.nome,
-                       'nao-respondida' as status_resposta,
-                       NULL as id_alternativa
-                FROM questoes q 
-                LEFT JOIN assuntos a ON q.id_assunto = a.id_assunto
-                WHERE NOT EXISTS (
-                    SELECT 1 FROM respostas_usuario ru
-                    WHERE ru.id_questao = q.id_questao AND ru.user_id = ?
-                )";
-        $params = [$user_id];
-    } else {
-        // Sem coluna user_id (ou sem usuário em sessão): considerar questões sem qualquer resposta
-        $sql = "SELECT q.id_questao, q.enunciado, q.alternativa_a, q.alternativa_b, 
-                       q.alternativa_c, q.alternativa_d, q.alternativa_correta, q.explicacao,
-                       a.nome,
-                       'nao-respondida' as status_resposta,
-                       NULL as id_alternativa
-                FROM questoes q 
-                LEFT JOIN assuntos a ON q.id_assunto = a.id_assunto
-                WHERE NOT EXISTS (
-                    SELECT 1 FROM respostas_usuario ru
-                    WHERE ru.id_questao = q.id_questao
-                )";
-        $params = [];
-    }
+    // Para "não-respondidas", NUNCA carregar dados de resposta
+    $sql = "SELECT q.id_questao, q.enunciado, q.alternativa_a, q.alternativa_b, 
+                   q.alternativa_c, q.alternativa_d, q.alternativa_correta, q.explicacao,
+                   a.nome,
+                   'nao-respondida' as status_resposta,
+                   NULL as id_alternativa
+            FROM questoes q 
+            LEFT JOIN assuntos a ON q.id_assunto = a.id_assunto
+            WHERE 1=1";
 } else {
-    // Para todos os outros filtros (incluindo "todas"), carregar dados de resposta considerando a última resposta por questão
-    if ($tem_user_id && $user_id !== null) {
-        // Com coluna user_id: considerar a última resposta do usuário atual por questão
-        $sql = "SELECT q.id_questao, q.enunciado, q.alternativa_a, q.alternativa_b, 
-                       q.alternativa_c, q.alternativa_d, q.alternativa_correta, q.explicacao,
-                       a.nome,
-                       CASE 
-                           WHEN r.id_questao IS NOT NULL AND r.acertou = 1 THEN 'certa'
-                           WHEN r.id_questao IS NOT NULL AND r.acertou = 0 THEN 'errada'
-                           WHEN r.id_questao IS NOT NULL THEN 'respondida'
-                           ELSE 'nao-respondida'
-                       END as status_resposta,
-                       r.id_alternativa
-                FROM questoes q 
-                LEFT JOIN assuntos a ON q.id_assunto = a.id_assunto
-                LEFT JOIN (
-                    SELECT ru1.id_questao, ru1.id_alternativa, ru1.acertou, ru1.data_resposta
-                    FROM respostas_usuario ru1
-                    INNER JOIN (
-                        SELECT id_questao, MAX(data_resposta) AS max_data
-                        FROM respostas_usuario
-                        WHERE user_id = ?
-                        GROUP BY id_questao
-                    ) ru2 ON ru1.id_questao = ru2.id_questao AND ru1.data_resposta = ru2.max_data
-                    WHERE ru1.user_id = ?
-                ) r ON q.id_questao = r.id_questao
-                WHERE 1=1";
-        $params = [$user_id, $user_id];
-    } else {
-        // Sem coluna user_id: considerar a última resposta geral por questão
-        $sql = "SELECT q.id_questao, q.enunciado, q.alternativa_a, q.alternativa_b, 
-                       q.alternativa_c, q.alternativa_d, q.alternativa_correta, q.explicacao,
-                       a.nome,
-                       CASE 
-                           WHEN r.id_questao IS NOT NULL AND r.acertou = 1 THEN 'certa'
-                           WHEN r.id_questao IS NOT NULL AND r.acertou = 0 THEN 'errada'
-                           WHEN r.id_questao IS NOT NULL THEN 'respondida'
-                           ELSE 'nao-respondida'
-                       END as status_resposta,
-                       r.id_alternativa
-                FROM questoes q 
-                LEFT JOIN assuntos a ON q.id_assunto = a.id_assunto
-                LEFT JOIN (
-                    SELECT ru1.id_questao, ru1.id_alternativa, ru1.acertou, ru1.data_resposta
-                    FROM respostas_usuario ru1
-                    INNER JOIN (
-                        SELECT id_questao, MAX(data_resposta) AS max_data
-                        FROM respostas_usuario
-                        GROUP BY id_questao
-                    ) ru2 ON ru1.id_questao = ru2.id_questao AND ru1.data_resposta = ru2.max_data
-                ) r ON q.id_questao = r.id_questao
-                WHERE 1=1";
-        $params = [];
-    }
+    // Para todos os outros filtros (incluindo "todas"), carregar dados de resposta normalmente
+    $sql = "SELECT q.id_questao, q.enunciado, q.alternativa_a, q.alternativa_b, 
+                   q.alternativa_c, q.alternativa_d, q.alternativa_correta, q.explicacao,
+                   a.nome,
+                   CASE 
+                       WHEN r.id_questao IS NOT NULL AND r.acertou = 1 THEN 'certa'
+                       WHEN r.id_questao IS NOT NULL AND r.acertou = 0 THEN 'errada'
+                       WHEN r.id_questao IS NOT NULL THEN 'respondida'
+                       ELSE 'nao-respondida'
+                   END as status_resposta,
+                   r.id_alternativa
+            FROM questoes q 
+            LEFT JOIN assuntos a ON q.id_assunto = a.id_assunto
+            LEFT JOIN respostas_usuario r ON q.id_questao = r.id_questao
+            WHERE 1=1";
 }
+$params = [];
 
 if ($id_assunto > 0) {
     $sql .= " AND q.id_assunto = ?";
@@ -301,17 +192,6 @@ $sql .= " ORDER BY q.id_questao";
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $questoes = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-// Log para diagnóstico - comentado para produção
-/*
-debug_log("Consulta SQL para filtro: " . $filtro_ativo, [
-    'tem_user_id' => $tem_user_id,
-    'user_id' => $user_id,
-    'total_questoes' => count($questoes),
-    'sql' => $sql,
-    'params' => $params
-]);
-*/
 
 // Se uma questão inicial foi especificada, reorganizar array
 if ($questao_inicial > 0) {
@@ -1421,10 +1301,9 @@ include 'header.php';
             }
         }
 
-        // Event listeners para as alternativas - VERSÃO FINAL CORRIGIDA
+        // Event listeners para as alternativas - VERSÃO CORRIGIDA
         document.addEventListener('DOMContentLoaded', function() {
             console.log('DOM carregado, configurando alternativas...');
-            const filtroAtual = '<?php echo addslashes($filtro_ativo); ?>';
             
             // Verificar se já foi configurado para evitar duplicação
             if (window.alternativasConfiguradas) {
@@ -1433,43 +1312,41 @@ include 'header.php';
             }
             window.alternativasConfiguradas = true;
             
-            // Verificar e remover duplicatas iniciais
-            function removerDuplicatasIniciais() {
-                const questoesExistentes = document.querySelectorAll('.question-card');
-                const idsVistos = new Set();
-                const duplicatas = [];
-                
-                questoesExistentes.forEach(questao => {
-                    const id = questao.id;
-                    if (idsVistos.has(id)) {
-                        duplicatas.push(questao);
-                    } else {
-                        idsVistos.add(id);
-                    }
-                });
-                
-                if (duplicatas.length > 0) {
-                    console.log('Removendo', duplicatas.length, 'duplicatas iniciais...');
-                    duplicatas.forEach(questao => questao.remove());
-                    return true; // Houve duplicatas
-                }
-                return false; // Não houve duplicatas
-            }
-            
-            // Executar remoção de duplicatas iniciais
-            removerDuplicatasIniciais();
-            
             // Limpar flag quando a página for recarregada
             window.addEventListener('beforeunload', function() {
                 window.alternativasConfiguradas = false;
             });
             
-            // Configurar TODAS as alternativas de uma vez (SEM clonagem para evitar duplicação)
+            // Limpar TODOS os event listeners existentes
+            const allAlternatives = document.querySelectorAll('.alternative');
+            allAlternatives.forEach(alt => {
+                // Remover todos os event listeners clonando o elemento
+                const newAlt = alt.cloneNode(true);
+                alt.parentNode.replaceChild(newAlt, alt);
+            });
+            
+            // Configurar TODAS as alternativas de uma vez
             const todasAlternativas = document.querySelectorAll('.alternative');
             console.log('Total de alternativas encontradas:', todasAlternativas.length);
             
             todasAlternativas.forEach((alternativa, index) => {
                 console.log('Configurando alternativa', index + 1);
+                
+                // Verificar se já tem event listener para evitar duplicação
+                if (alternativa.dataset.listenerAdded === 'true') {
+                    console.log('Event listener já adicionado, pulando...');
+                    return;
+                }
+                alternativa.dataset.listenerAdded = 'true';
+                
+                // Verificar se a questão já foi respondida
+                const questaoCard = alternativa.closest('.question-card');
+                if (questaoCard && questaoCard.dataset.respondida === 'true') {
+                    console.log('Questão já respondida, desabilitando alternativas...');
+                    alternativa.style.pointerEvents = 'none';
+                    alternativa.style.cursor = 'default';
+                    return;
+                }
                 
                 // Garantir que seja clicável
                 alternativa.style.pointerEvents = 'auto';
@@ -1479,13 +1356,6 @@ include 'header.php';
                 
                 // Remover classes de feedback
                 alternativa.classList.remove('alternative-correct', 'alternative-incorrect-chosen');
-                
-                // Verificar se já tem event listener para evitar duplicação
-                if (alternativa.dataset.listenerAdded === 'true') {
-                    console.log('Event listener já adicionado, pulando...');
-                    return;
-                }
-                alternativa.dataset.listenerAdded = 'true';
                 
                 // Adicionar event listener diretamente
                 alternativa.addEventListener('click', function(e) {
@@ -1506,31 +1376,6 @@ include 'header.php';
                         console.log('Questão já respondida, ignorando...');
                         return;
                     }
-                    
-                    // Verificar se esta alternativa já foi clicada
-                    if (this.dataset.clicked === 'true') {
-                        console.log('Alternativa já foi clicada, ignorando...');
-                        return;
-                    }
-                    
-                    // Verificar se já existe uma questão duplicada no DOM ANTES de processar
-                    const questoesExistentes = document.querySelectorAll('.question-card');
-                    const questoesIds = Array.from(questoesExistentes).map(q => q.id);
-                    const questaoAtualId = questaoCard.id;
-                    
-                    if (questoesIds.filter(id => id === questaoAtualId).length > 1) {
-                        console.log('Questão duplicada detectada, removendo e cancelando clique...');
-                        const questoesDuplicadas = document.querySelectorAll(`#${questaoAtualId}`);
-                        for (let i = 1; i < questoesDuplicadas.length; i++) {
-                            questoesDuplicadas[i].remove();
-                        }
-                        // Executar verificação geral de duplicatas
-                        verificarDuplicatas();
-                        return;
-                    }
-                    
-                    // Marcar como clicada ANTES de processar
-                    this.dataset.clicked = 'true';
                     
                     // Destacar a alternativa clicada imediatamente
                     const todasAlternativas = questaoCard.querySelectorAll('.alternative');
@@ -1574,34 +1419,6 @@ include 'header.php';
                             const jsonData = JSON.parse(data);
                             console.log('JSON parseado:', jsonData);
                             
-                            // Log de diagnóstico - comentado para produção
-                            /*
-                            if (jsonData.debug_info) {
-                                console.log('DEBUG INFO:', jsonData.debug_info);
-                                // Adicionar div de debug na página
-                                const debugDiv = document.createElement('div');
-                                debugDiv.className = 'debug-info';
-                                debugDiv.style.position = 'fixed';
-                                debugDiv.style.bottom = '10px';
-                                debugDiv.style.right = '10px';
-                                debugDiv.style.background = '#f8f9fa';
-                                debugDiv.style.border = '1px solid #ddd';
-                                debugDiv.style.padding = '10px';
-                                debugDiv.style.zIndex = '9999';
-                                debugDiv.style.maxWidth = '300px';
-                                debugDiv.style.fontSize = '12px';
-                                debugDiv.innerHTML = `
-                                    <strong>Debug Info:</strong>
-                                    <pre>${JSON.stringify(jsonData.debug_info, null, 2)}</pre>
-                                    <button id="close-debug">Fechar</button>
-                                `;
-                                document.body.appendChild(debugDiv);
-                                document.getElementById('close-debug').addEventListener('click', () => {
-                                    debugDiv.remove();
-                                });
-                            }
-                            */
-                            
                             if (jsonData.success) {
                                 console.log('Sucesso! Mostrando feedback...');
                                 
@@ -1628,23 +1445,6 @@ include 'header.php';
                                     acertou,
                                     message: jsonData.message 
                                 });
-                                
-                                // Verificar duplicatas após processar resposta
-                                setTimeout(() => {
-                                    const questoesExistentes = document.querySelectorAll('.question-card');
-                                    const questoesIds = Array.from(questoesExistentes).map(q => q.id);
-                                    const questaoAtualId = questaoCard.id;
-                                    
-                                    if (questoesIds.filter(id => id === questaoAtualId).length > 1) {
-                                        console.log('Duplicata detectada após processamento, removendo...');
-                                        const questoesDuplicadas = document.querySelectorAll(`#${questaoAtualId}`);
-                                        for (let i = 1; i < questoesDuplicadas.length; i++) {
-                                            questoesDuplicadas[i].remove();
-                                        }
-                                    }
-                                    
-                                    // Feedback visual de toast removido
-                                }, 100);
                                 
                             } else {
                                 console.log('Erro na resposta:', jsonData.message);
@@ -1707,39 +1507,11 @@ include 'header.php';
                 }, index * 200);
             });
 
-// Inicializar estatísticas apenas uma vez
-if (!window.statsInitialized) {
-    initStats();
-}
+            // Inicializar estatísticas
+            initStats();
             
             // Ajustar header
             ajustarHeader();
-            
-            // Função para verificar e remover duplicatas
-            function verificarDuplicatas() {
-                const questoesExistentes = document.querySelectorAll('.question-card');
-                const idsVistos = new Set();
-                const duplicatas = [];
-                
-                questoesExistentes.forEach(questao => {
-                    const id = questao.id;
-                    if (idsVistos.has(id)) {
-                        duplicatas.push(questao);
-                    } else {
-                        idsVistos.add(id);
-                    }
-                });
-                
-                if (duplicatas.length > 0) {
-                    console.log('Removendo', duplicatas.length, 'questões duplicadas...');
-                    duplicatas.forEach(questao => questao.remove());
-                    return true; // Houve duplicatas removidas
-                }
-                return false; // Não houve duplicatas
-            }
-            
-            // Verificar duplicatas a cada 2 segundos (menos frequente para melhor performance)
-            setInterval(verificarDuplicatas, 2000);
         });
 
         // Load Chart.js library
@@ -1749,38 +1521,26 @@ if (!window.statsInitialized) {
 
         // Statistics toggle functionality
         function initStats() {
-            // Verificar se já foi inicializada para evitar duplicação
-            if (window.statsInitialized) {
-                console.log('Estatísticas já inicializadas, pulando...');
-                return;
-            }
-            window.statsInitialized = true;
-            
             const statsButtons = document.querySelectorAll('.stats-toggle-btn');
             
             statsButtons.forEach(button => {
-                // Remover event listeners existentes
-                button.removeEventListener('click', handleStatsClick);
-                // Adicionar novo event listener
-                button.addEventListener('click', handleStatsClick);
+                button.addEventListener('click', function() {
+                    const questaoId = this.dataset.questaoId;
+                    const statsPanel = document.getElementById('stats-' + questaoId);
+                    const isOpen = statsPanel.style.display !== 'none';
+                    
+                    if (isOpen) {
+                        // Close panel
+                        statsPanel.style.display = 'none';
+                        this.classList.remove('active');
+                    } else {
+                        // Open panel and load stats
+                        statsPanel.style.display = 'block';
+                        this.classList.add('active');
+                        loadStatistics(questaoId);
+                    }
+                });
             });
-        }
-
-        function handleStatsClick() {
-            const questaoId = this.dataset.questaoId;
-            const statsPanel = document.getElementById('stats-' + questaoId);
-            const isOpen = statsPanel.style.display !== 'none';
-            
-            if (isOpen) {
-                // Close panel
-                statsPanel.style.display = 'none';
-                this.classList.remove('active');
-            } else {
-                // Open panel and load stats
-                statsPanel.style.display = 'block';
-                this.classList.add('active');
-                loadStatistics(questaoId);
-            }
         }
 
         function loadStatistics(questaoId) {

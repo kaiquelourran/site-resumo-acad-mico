@@ -368,6 +368,235 @@ include 'header.php';
             </div>
         </div>
 
+        <?php
+        // Ranking semanal: Top 5 usuários que mais responderam nos últimos 7 dias
+        $ranking_semanal = [];
+        $debug_info = []; // Para armazenar informações de debug
+        try {
+            $sources = [];
+            $debug_info['tabelas'] = [];
+            
+            // 1) respostas_usuarios (id_usuario)
+            $stmt_tbl1 = $pdo->query("SHOW TABLES LIKE 'respostas_usuarios'");
+            $tem_tbl1 = $stmt_tbl1 && $stmt_tbl1->rowCount() > 0;
+            $debug_info['tabelas']['respostas_usuarios_existe'] = $tem_tbl1 ? 'Sim' : 'Não';
+            
+            if ($tem_tbl1) {
+                // Verificar se há registros na tabela com id_usuario não nulo
+                $check_data1 = $pdo->query("SELECT COUNT(*) as total FROM respostas_usuarios WHERE id_usuario IS NOT NULL");
+                $count_data1 = $check_data1->fetch(PDO::FETCH_ASSOC)['total'] ?? 0;
+                $debug_info['tabelas']['respostas_usuarios_registros'] = $count_data1;
+                
+                // Verificar registros na semana atual
+                $check_week1 = $pdo->query("SELECT COUNT(*) as total FROM respostas_usuarios 
+                    WHERE id_usuario IS NOT NULL 
+                    AND data_resposta >= DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY) 
+                    AND data_resposta < DATE_ADD(DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY), INTERVAL 7 DAY)");
+                $count_week1 = $check_week1->fetch(PDO::FETCH_ASSOC)['total'] ?? 0;
+                $debug_info['tabelas']['respostas_usuarios_na_semana'] = $count_week1;
+                
+                $sources[] = "SELECT r.id_usuario AS id_usuario, r.data_resposta FROM respostas_usuarios r 
+                    WHERE r.data_resposta >= DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY) 
+                    AND r.data_resposta < DATE_ADD(DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY), INTERVAL 7 DAY) 
+                    AND r.id_usuario IS NOT NULL";
+            }
+            
+            // 2) respostas_usuario (user_id)
+            $stmt_tbl2 = $pdo->query("SHOW TABLES LIKE 'respostas_usuario'");
+            $tem_tbl2 = $stmt_tbl2 && $stmt_tbl2->rowCount() > 0;
+            $debug_info['tabelas']['respostas_usuario_existe'] = $tem_tbl2 ? 'Sim' : 'Não';
+            
+            $tem_user_id = false;
+            if ($tem_tbl2) {
+                try {
+                    $cols = $pdo->query("DESCRIBE respostas_usuario")->fetchAll(PDO::FETCH_COLUMN);
+                    $tem_user_id = in_array('user_id', $cols ?? []);
+                    $debug_info['tabelas']['respostas_usuario_tem_user_id'] = $tem_user_id ? 'Sim' : 'Não';
+                    
+                    // Listar todas as colunas
+                    $debug_info['tabelas']['respostas_usuario_colunas'] = implode(', ', $cols);
+                } catch (Exception $e2) { 
+                    $tem_user_id = false; 
+                    $debug_info['tabelas']['respostas_usuario_erro'] = $e2->getMessage();
+                }
+                
+                if ($tem_user_id) {
+                    // Verificar se há registros na tabela com user_id não nulo
+                    $check_data2 = $pdo->query("SELECT COUNT(*) as total FROM respostas_usuario WHERE user_id IS NOT NULL");
+                    $count_data2 = $check_data2->fetch(PDO::FETCH_ASSOC)['total'] ?? 0;
+                    $debug_info['tabelas']['respostas_usuario_registros'] = $count_data2;
+                    
+                    // Verificar registros na semana atual
+                    $check_week2 = $pdo->query("SELECT COUNT(*) as total FROM respostas_usuario 
+                        WHERE user_id IS NOT NULL 
+                        AND data_resposta >= DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY) 
+                        AND data_resposta < DATE_ADD(DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY), INTERVAL 7 DAY)");
+                    $count_week2 = $check_week2->fetch(PDO::FETCH_ASSOC)['total'] ?? 0;
+                    $debug_info['tabelas']['respostas_usuario_na_semana'] = $count_week2;
+                    
+                    $sources[] = "SELECT ru.user_id AS id_usuario, ru.data_resposta FROM respostas_usuario ru 
+                        WHERE ru.data_resposta >= DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY) 
+                        AND ru.data_resposta < DATE_ADD(DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY), INTERVAL 7 DAY) 
+                        AND ru.user_id IS NOT NULL";
+                }
+            }
+            
+            // Verificar informações do usuário atual
+            $debug_info['usuario_atual'] = [
+                'id_usuario' => $_SESSION['user_id'] ?? $_SESSION['id_usuario'] ?? 'Não definido',
+                'nome' => $_SESSION['nome'] ?? $_SESSION['user_name'] ?? 'Não definido',
+                'tipo' => $_SESSION['user_type'] ?? 'Não definido'
+            ];
+            
+            if (!empty($sources)) {
+                $union = implode(" UNION ALL ", $sources);
+                $sql_rank = "SELECT u.id_usuario, u.nome, COUNT(*) AS total
+                              FROM (" . $union . ") x
+                              INNER JOIN usuarios u ON u.id_usuario = x.id_usuario
+                              GROUP BY u.id_usuario, u.nome
+                              ORDER BY total DESC, u.nome ASC
+                              LIMIT 5";
+                $debug_info['sql'] = $sql_rank;
+                
+                $ranking_semanal = $pdo->query($sql_rank)->fetchAll(PDO::FETCH_ASSOC);
+                $debug_info['resultado'] = $ranking_semanal;
+            } else {
+                $debug_info['erro'] = 'Nenhuma fonte de dados disponível';
+            }
+        } catch (Exception $e) {
+            $ranking_semanal = [];
+            $debug_info['erro_exception'] = $e->getMessage();
+        }
+        $max_total = !empty($ranking_semanal) ? (int)($ranking_semanal[0]['total'] ?? 0) : 0;
+        ?>
+
+        <style>
+            /* Ranking semanal - estilos isolados */
+            .ranking-card { max-width: 1000px; margin: 32px auto; border-radius: 16px; overflow: hidden; border: 1px solid #e5e7eb; background: #fff; box-shadow: 0 10px 20px rgba(0,0,0,0.06); }
+            .ranking-header { display: flex; align-items: center; gap: 12px; padding: 16px; background: linear-gradient(90deg, #0072FF 0%, #00C6FF 100%); color: #fff; }
+            .ranking-header .logo { font-size: 22px; }
+            .ranking-title { margin: 0; font-size: 20px; font-weight: 800; color: #fff; }
+            .ranking-subtitle { margin: 2px 0 0; font-size: 14px; color: #eaf6ff; }
+            .ranking-list { list-style: none; margin: 0; padding: 8px 0; }
+            .ranking-item { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 16px; border-bottom: 1px solid #f3f4f6; transition: background 0.2s ease; }
+            .ranking-item:hover { background: #f9fafb; }
+            .ranking-left { display: flex; align-items: center; gap: 12px; min-width: 280px; }
+            .rank-medal { font-size: 18px; }
+            .avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(180deg, #eef2ff 0%, #e0e7ff 100%); color: #4b5563; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+            .name { color: #111827; font-weight: 600; }
+            .ranking-right { display: flex; align-items: center; gap: 12px; flex: 1; justify-content: flex-end; }
+            .count-badge { padding: 6px 10px; border-radius: 999px; background: #eef7ff; color: #0072FF; font-weight: 700; }
+            .bar { position: relative; height: 6px; border-radius: 999px; background: #f1f5f9; overflow: hidden; flex: 1; max-width: 420px; }
+            .bar > span { position: absolute; left: 0; top: 0; height: 100%; background: linear-gradient(90deg, #0072FF 0%, #00C6FF 100%); }
+            @media (max-width: 640px) {
+                .ranking-left { min-width: auto; }
+                .ranking-right { flex-wrap: wrap; justify-content: flex-start; }
+                .bar { max-width: 100%; width: 100%; }
+            }
+        </style>
+
+        <div class="ranking-card fade-in">
+            <div class="ranking-header">
+                <span class="logo">🏆</span>
+                <div class="titles">
+                    <h3 class="ranking-title">Ranking semanal</h3>
+                    <p class="ranking-subtitle">Top 5 que mais responderam questões na semana (segunda a domingo)</p>
+                </div>
+            </div>
+            <?php if (!empty($ranking_semanal)): ?>
+            <ol class="ranking-list">
+                <?php foreach ($ranking_semanal as $i => $row): ?>
+                <?php
+                    $pos = $i + 1;
+                    $medal = $pos === 1 ? '🥇' : ($pos === 2 ? '🥈' : ($pos === 3 ? '🥉' : '🏅'));
+                    $nome = $row['nome'] ?? ('Usuário #' . ($row['id_usuario'] ?? '?'));
+                    $parts = preg_split('/\s+/', trim($nome));
+                    $first = isset($parts[0]) ? $parts[0] : 'U';
+                    $last = isset($parts[count($parts)-1]) ? $parts[count($parts)-1] : $first;
+                    $initials = strtoupper(substr($first, 0, 1) . substr($last, 0, 1));
+                    $total = (int)($row['total'] ?? 0);
+                    $perc = $max_total ? max(6, min(100, round(($total / $max_total) * 100))) : 6; // barra mínima visível
+                ?>
+                <li class="ranking-item">
+                    <div class="ranking-left">
+                        <span class="rank-medal"><?php echo $medal; ?></span>
+                        <div class="avatar"><?php echo htmlspecialchars($initials); ?></div>
+                        <strong class="name"><?php echo htmlspecialchars($nome); ?></strong>
+                    </div>
+                    <div class="ranking-right">
+                        <div class="bar"><span style="width: <?php echo $perc; ?>%;"></span></div>
+                        <span class="count-badge"><?php echo $total; ?> respostas</span>
+                    </div>
+                </li>
+                <?php endforeach; ?>
+            </ol>
+            <?php else: ?>
+            <div style="padding: 16px;">
+                <p style="color: #666;">Nenhuma atividade suficiente nesta semana para exibir o ranking.</p>
+                
+                <?php if (isset($_SESSION['user_type']) && $_SESSION['user_type'] === 'admin'): ?>
+                <!-- Informações de debug para administradores -->
+                <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; font-size: 14px; color: #495057; text-align: left;">
+                    <h4 style="margin-top: 0; color: #0072FF;">Informações de Debug</h4>
+                    
+                    <h5 style="margin-bottom: 5px; color: #0072FF;">Usuário Atual</h5>
+                    <ul style="margin-top: 5px; padding-left: 20px;">
+                        <li>ID: <?php echo htmlspecialchars($debug_info['usuario_atual']['id_usuario'] ?? 'Não disponível'); ?></li>
+                        <li>Nome: <?php echo htmlspecialchars($debug_info['usuario_atual']['nome'] ?? 'Não disponível'); ?></li>
+                        <li>Tipo: <?php echo htmlspecialchars($debug_info['usuario_atual']['tipo'] ?? 'Não disponível'); ?></li>
+                    </ul>
+                    
+                    <h5 style="margin-bottom: 5px; color: #0072FF;">Tabelas</h5>
+                    <ul style="margin-top: 5px; padding-left: 20px;">
+                        <?php if (isset($debug_info['tabelas']['respostas_usuarios_existe'])): ?>
+                        <li>
+                            <strong>respostas_usuarios:</strong> <?php echo $debug_info['tabelas']['respostas_usuarios_existe']; ?>
+                            <?php if ($debug_info['tabelas']['respostas_usuarios_existe'] === 'Sim'): ?>
+                            <ul>
+                                <li>Registros com id_usuario: <?php echo $debug_info['tabelas']['respostas_usuarios_registros'] ?? '0'; ?></li>
+                                <li>Registros na semana atual: <?php echo $debug_info['tabelas']['respostas_usuarios_na_semana'] ?? '0'; ?></li>
+                            </ul>
+                            <?php endif; ?>
+                        </li>
+                        <?php endif; ?>
+                        
+                        <?php if (isset($debug_info['tabelas']['respostas_usuario_existe'])): ?>
+                        <li>
+                            <strong>respostas_usuario:</strong> <?php echo $debug_info['tabelas']['respostas_usuario_existe']; ?>
+                            <?php if ($debug_info['tabelas']['respostas_usuario_existe'] === 'Sim'): ?>
+                            <ul>
+                                <li>Tem coluna user_id: <?php echo $debug_info['tabelas']['respostas_usuario_tem_user_id'] ?? 'Não'; ?></li>
+                                <li>Colunas: <?php echo htmlspecialchars($debug_info['tabelas']['respostas_usuario_colunas'] ?? 'Não disponível'); ?></li>
+                                <?php if (isset($debug_info['tabelas']['respostas_usuario_tem_user_id']) && $debug_info['tabelas']['respostas_usuario_tem_user_id'] === 'Sim'): ?>
+                                <li>Registros com user_id: <?php echo $debug_info['tabelas']['respostas_usuario_registros'] ?? '0'; ?></li>
+                                <li>Registros na semana atual: <?php echo $debug_info['tabelas']['respostas_usuario_na_semana'] ?? '0'; ?></li>
+                                <?php endif; ?>
+                            </ul>
+                            <?php endif; ?>
+                        </li>
+                        <?php endif; ?>
+                    </ul>
+                    
+                    <?php if (isset($debug_info['sql'])): ?>
+                    <h5 style="margin-bottom: 5px; color: #0072FF;">SQL Executado</h5>
+                    <pre style="background: #f1f3f5; padding: 10px; border-radius: 4px; overflow-x: auto; font-size: 12px;"><?php echo htmlspecialchars($debug_info['sql']); ?></pre>
+                    <?php endif; ?>
+                    
+                    <?php if (isset($debug_info['erro'])): ?>
+                    <h5 style="margin-bottom: 5px; color: #dc3545;">Erro</h5>
+                    <p style="color: #dc3545;"><?php echo htmlspecialchars($debug_info['erro']); ?></p>
+                    <?php endif; ?>
+                    
+                    <?php if (isset($debug_info['erro_exception'])): ?>
+                    <h5 style="margin-bottom: 5px; color: #dc3545;">Exceção</h5>
+                    <p style="color: #dc3545;"><?php echo htmlspecialchars($debug_info['erro_exception']); ?></p>
+                    <?php endif; ?>
+                </div>
+                <?php endif; ?>
+            </div>
+            <?php endif; ?>
+        </div>
+
         <div class="cards-container">
             <!-- Card Questões -->
             <div class="card fade-in clickable-card" style="background: linear-gradient(to top, #00C6FF, #0072FF); color: white;">

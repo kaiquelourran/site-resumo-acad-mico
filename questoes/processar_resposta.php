@@ -30,11 +30,12 @@ if (!isset($_SESSION['quiz_progress'])) {
 // Criar tabela de respostas_usuario se não existir (para o sistema de tracking)
 $sql_create_table = "CREATE TABLE IF NOT EXISTS respostas_usuario (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NULL,
     id_questao INT NOT NULL,
     id_alternativa INT NOT NULL,
     acertou TINYINT(1) NOT NULL DEFAULT 0,
     data_resposta TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE KEY unique_questao (id_questao)
+    UNIQUE KEY unique_user_questao (user_id, id_questao)
 )";
 $pdo->query($sql_create_table);
 
@@ -74,13 +75,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         try {
             // Salvar resposta na tabela de tracking (sempre, mesmo sem login)
-            $stmt_tracking = $pdo->prepare("INSERT INTO respostas_usuario (id_questao, id_alternativa, acertou) 
-                                           VALUES (?, ?, ?) 
+            $stmt_tracking = $pdo->prepare("INSERT INTO respostas_usuario (user_id, id_questao, id_alternativa, acertou) 
+                                           VALUES (?, ?, ?, ?) 
                                            ON DUPLICATE KEY UPDATE 
                                            id_alternativa = VALUES(id_alternativa), 
                                            acertou = VALUES(acertou), 
                                            data_resposta = CURRENT_TIMESTAMP");
-            $stmt_tracking->execute([$id_questao, $id_alternativa_selecionada, $resposta_correta ? 1 : 0]);
+            $stmt_tracking->execute([$id_usuario, $id_questao, $id_alternativa_selecionada, $resposta_correta ? 1 : 0]);
             
             if ($usuario_logado) {
                 // Insere a resposta apenas para usuários logados (tabela original)

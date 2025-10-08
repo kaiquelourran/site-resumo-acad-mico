@@ -14,19 +14,65 @@ if ($id_assunto > 0) {
     $assunto_nome = $stmt_assunto->fetchColumn() ?: 'Assunto não encontrado';
 }
 
-// Query base com LEFT JOIN para respostas
-$sql = "SELECT q.*, a.nome as assunto_nome, 
-               CASE 
-                   WHEN r.id_questao IS NOT NULL AND r.acertou = 1 THEN 'certa'
-                   WHEN r.id_questao IS NOT NULL AND r.acertou = 0 THEN 'errada'
-                   WHEN r.id_questao IS NOT NULL THEN 'respondida'
-                   ELSE 'nao-respondida'
-               END as status_resposta
-        FROM questoes q 
-        LEFT JOIN assuntos a ON q.id_assunto = a.id_assunto
-        LEFT JOIN respostas_usuario r ON q.id_questao = r.id_questao
-        WHERE 1=1";
-$params = [];
+// Detectar suporte a user_id na tabela de respostas e obter user_id atual
+$tem_user_id = false;
+try {
+    $stmt_check = $pdo->query("DESCRIBE respostas_usuario");
+    $colunas = $stmt_check->fetchAll(PDO::FETCH_COLUMN);
+    $tem_user_id = in_array('user_id', $colunas);
+} catch (Exception $e) {
+    // Mantém $tem_user_id = false se não conseguir descrever a tabela
+}
+$user_id = $_SESSION['id_usuario'] ?? $_SESSION['user_id'] ?? null;
+
+// Query base com LEFT JOIN para respostas (considerando apenas a última resposta por questão)
+if ($tem_user_id && $user_id !== null) {
+    // Com coluna user_id: considerar a última resposta do usuário atual por questão
+    $sql = "SELECT q.*, a.nome as assunto_nome, 
+                   CASE 
+                       WHEN r.id_questao IS NOT NULL AND r.acertou = 1 THEN 'certa'
+                       WHEN r.id_questao IS NOT NULL AND r.acertou = 0 THEN 'errada'
+                       WHEN r.id_questao IS NOT NULL THEN 'respondida'
+                       ELSE 'nao-respondida'
+                   END as status_resposta
+            FROM questoes q 
+            LEFT JOIN assuntos a ON q.id_assunto = a.id_assunto
+            LEFT JOIN (
+                SELECT ru1.id_questao, ru1.id_alternativa, ru1.acertou, ru1.data_resposta
+                FROM respostas_usuario ru1
+                INNER JOIN (
+                    SELECT id_questao, MAX(data_resposta) AS max_data
+                    FROM respostas_usuario
+                    WHERE user_id = ?
+                    GROUP BY id_questao
+                ) ru2 ON ru1.id_questao = ru2.id_questao AND ru1.data_resposta = ru2.max_data
+                WHERE ru1.user_id = ?
+            ) r ON q.id_questao = r.id_questao
+            WHERE 1=1";
+    $params = [$user_id, $user_id];
+} else {
+    // Sem coluna user_id: considerar a última resposta geral por questão
+    $sql = "SELECT q.*, a.nome as assunto_nome, 
+                   CASE 
+                       WHEN r.id_questao IS NOT NULL AND r.acertou = 1 THEN 'certa'
+                       WHEN r.id_questao IS NOT NULL AND r.acertou = 0 THEN 'errada'
+                       WHEN r.id_questao IS NOT NULL THEN 'respondida'
+                       ELSE 'nao-respondida'
+                   END as status_resposta
+            FROM questoes q 
+            LEFT JOIN assuntos a ON q.id_assunto = a.id_assunto
+            LEFT JOIN (
+                SELECT ru1.id_questao, ru1.id_alternativa, ru1.acertou, ru1.data_resposta
+                FROM respostas_usuario ru1
+                INNER JOIN (
+                    SELECT id_questao, MAX(data_resposta) AS max_data
+                    FROM respostas_usuario
+                    GROUP BY id_questao
+                ) ru2 ON ru1.id_questao = ru2.id_questao AND ru1.data_resposta = ru2.max_data
+            ) r ON q.id_questao = r.id_questao
+            WHERE 1=1";
+    $params = [];
+}
 
 if ($id_assunto > 0) {
     $sql .= " AND q.id_assunto = ?";
@@ -39,7 +85,27 @@ switch($filtro_ativo) {
         $sql .= " AND r.id_questao IS NOT NULL";
         break;
     case 'nao-respondidas':
-        $sql .= " AND r.id_questao IS NULL";
+        if ($tem_user_id && $user_id !== null) {
+            // Modificar a consulta para usar NOT EXISTS para questões não respondidas pelo usuário
+            $sql = "SELECT q.*, a.nome as assunto_nome, 'nao-respondida' as status_resposta
+                    FROM questoes q 
+                    LEFT JOIN assuntos a ON q.id_assunto = a.id_assunto
+                    WHERE NOT EXISTS (
+                        SELECT 1 FROM respostas_usuario ru
+                        WHERE ru.id_questao = q.id_questao AND ru.user_id = ?
+                    )";
+            $params = [$user_id];
+        } else {
+            // Sem coluna user_id: considerar questões sem qualquer resposta
+            $sql = "SELECT q.*, a.nome as assunto_nome, 'nao-respondida' as status_resposta
+                    FROM questoes q 
+                    LEFT JOIN assuntos a ON q.id_assunto = a.id_assunto
+                    WHERE NOT EXISTS (
+                        SELECT 1 FROM respostas_usuario ru
+                        WHERE ru.id_questao = q.id_questao
+                    )";
+            $params = [];
+        }
         break;
     case 'certas':
         $sql .= " AND r.acertou = 1";
@@ -71,31 +137,102 @@ $stmt_count_all = $pdo->prepare($sql_count_all);
 $stmt_count_all->execute([$id_assunto]);
 $contadores['todas'] = $stmt_count_all->fetchColumn();
 
-// Contar questões respondidas
-$sql_count_respondidas = "SELECT COUNT(DISTINCT q.id_questao) FROM questoes q 
-                          INNER JOIN respostas_usuario r ON q.id_questao = r.id_questao 
-                          WHERE q.id_assunto = ?";
-$stmt_count_respondidas = $pdo->prepare($sql_count_respondidas);
-$stmt_count_respondidas->execute([$id_assunto]);
+// Contar questões respondidas (considerando apenas uma resposta por questão)
+if ($tem_user_id && $user_id !== null) {
+    $sql_count_respondidas = "SELECT COUNT(*) FROM questoes q 
+                              WHERE q.id_assunto = ? 
+                              AND EXISTS (
+                                  SELECT 1 FROM respostas_usuario ru 
+                                  WHERE ru.id_questao = q.id_questao 
+                                  AND ru.user_id = ?
+                              )";
+    $stmt_count_respondidas = $pdo->prepare($sql_count_respondidas);
+    $stmt_count_respondidas->execute([$id_assunto, $user_id]);
+} else {
+    $sql_count_respondidas = "SELECT COUNT(*) FROM questoes q 
+                              WHERE q.id_assunto = ? 
+                              AND EXISTS (
+                                  SELECT 1 FROM respostas_usuario ru 
+                                  WHERE ru.id_questao = q.id_questao
+                              )";
+    $stmt_count_respondidas = $pdo->prepare($sql_count_respondidas);
+    $stmt_count_respondidas->execute([$id_assunto]);
+}
 $contadores['respondidas'] = $stmt_count_respondidas->fetchColumn();
 
 // Contar questões não respondidas
 $contadores['nao-respondidas'] = $contadores['todas'] - $contadores['respondidas'];
 
-// Contar questões certas
-$sql_count_certas = "SELECT COUNT(DISTINCT q.id_questao) FROM questoes q 
-                        INNER JOIN respostas_usuario r ON q.id_questao = r.id_questao 
-                        WHERE q.id_assunto = ? AND r.acertou = 1";
-$stmt_count_certas = $pdo->prepare($sql_count_certas);
-$stmt_count_certas->execute([$id_assunto]);
+// Contar questões certas (considerando apenas a última resposta por questão)
+if ($tem_user_id && $user_id !== null) {
+    $sql_count_certas = "SELECT COUNT(*) FROM questoes q 
+                          WHERE q.id_assunto = ? 
+                          AND EXISTS (
+                              SELECT 1 FROM respostas_usuario ru1
+                              INNER JOIN (
+                                  SELECT id_questao, MAX(data_resposta) AS max_data
+                                  FROM respostas_usuario
+                                  WHERE user_id = ?
+                                  GROUP BY id_questao
+                              ) ru2 ON ru1.id_questao = ru2.id_questao AND ru1.data_resposta = ru2.max_data
+                              WHERE ru1.id_questao = q.id_questao 
+                              AND ru1.user_id = ? 
+                              AND ru1.acertou = 1
+                          )";
+    $stmt_count_certas = $pdo->prepare($sql_count_certas);
+    $stmt_count_certas->execute([$id_assunto, $user_id, $user_id]);
+} else {
+    $sql_count_certas = "SELECT COUNT(*) FROM questoes q 
+                          WHERE q.id_assunto = ? 
+                          AND EXISTS (
+                              SELECT 1 FROM respostas_usuario ru1
+                              INNER JOIN (
+                                  SELECT id_questao, MAX(data_resposta) AS max_data
+                                  FROM respostas_usuario
+                                  GROUP BY id_questao
+                              ) ru2 ON ru1.id_questao = ru2.id_questao AND ru1.data_resposta = ru2.max_data
+                              WHERE ru1.id_questao = q.id_questao 
+                              AND ru1.acertou = 1
+                          )";
+    $stmt_count_certas = $pdo->prepare($sql_count_certas);
+    $stmt_count_certas->execute([$id_assunto]);
+}
 $contadores['certas'] = $stmt_count_certas->fetchColumn();
 
-// Contar questões erradas
-$sql_count_erradas = "SELECT COUNT(DISTINCT q.id_questao) FROM questoes q 
-                      INNER JOIN respostas_usuario r ON q.id_questao = r.id_questao 
-                      WHERE q.id_assunto = ? AND r.acertou = 0";
-$stmt_count_erradas = $pdo->prepare($sql_count_erradas);
-$stmt_count_erradas->execute([$id_assunto]);
+// Contar questões erradas (considerando apenas a última resposta por questão)
+if ($tem_user_id && $user_id !== null) {
+    $sql_count_erradas = "SELECT COUNT(*) FROM questoes q 
+                           WHERE q.id_assunto = ? 
+                           AND EXISTS (
+                               SELECT 1 FROM respostas_usuario ru1
+                               INNER JOIN (
+                                   SELECT id_questao, MAX(data_resposta) AS max_data
+                                   FROM respostas_usuario
+                                   WHERE user_id = ?
+                                   GROUP BY id_questao
+                               ) ru2 ON ru1.id_questao = ru2.id_questao AND ru1.data_resposta = ru2.max_data
+                               WHERE ru1.id_questao = q.id_questao 
+                               AND ru1.user_id = ? 
+                               AND ru1.acertou = 0
+                           )";
+    $stmt_count_erradas = $pdo->prepare($sql_count_erradas);
+    $stmt_count_erradas->execute([$id_assunto, $user_id, $user_id]);
+} else {
+    $sql_count_erradas = "SELECT COUNT(*) FROM questoes q 
+                           WHERE q.id_assunto = ? 
+                           AND EXISTS (
+                               SELECT 1 FROM respostas_usuario ru1
+                               INNER JOIN (
+                                   SELECT id_questao, MAX(data_resposta) AS max_data
+                                   FROM respostas_usuario
+                                   GROUP BY id_questao
+                               ) ru2 ON ru1.id_questao = ru2.id_questao AND ru1.data_resposta = ru2.max_data
+                               WHERE ru1.id_questao = q.id_questao 
+                               AND ru1.acertou = 0
+                           )";
+    $stmt_count_erradas = $pdo->prepare($sql_count_erradas);
+    $stmt_count_erradas->execute([$id_assunto]);
+}
 $contadores['erradas'] = $stmt_count_erradas->fetchColumn();
 
 ?>
