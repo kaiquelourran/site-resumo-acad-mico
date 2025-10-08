@@ -54,6 +54,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 $stmt_update_resposta = $pdo->prepare("INSERT INTO respostas_usuario (user_id, id_questao, id_alternativa_selecionada, acertou, data_resposta) VALUES (?, ?, ?, ?, NOW()) ON DUPLICATE KEY UPDATE id_alternativa_selecionada = VALUES(id_alternativa_selecionada), acertou = VALUES(acertou), data_resposta = NOW()");
                 $stmt_update_resposta->execute([$user_id, $id_questao, $id_alternativa_selecionada, $acertou]);
+
+                // Registrar tentativa individual para ranking semanal (contabiliza repetidas)
+                try {
+                    $stmt_salvar = $pdo->prepare("INSERT INTO respostas_usuarios (id_usuario, id_questao, acertou, data_resposta) VALUES (?, ?, ?, NOW())");
+                    $stmt_salvar->execute([$user_id, $id_questao, $acertou]);
+                } catch (Exception $e) {
+                    error_log("ERRO inserindo em respostas_usuarios (quiz_vertical): " . $e->getMessage());
+                }
                 
                 // Preparar feedback para o JavaScript
                   $feedback = [

@@ -82,6 +82,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_questao']) && isse
                     // Usar estrutura com user_id (permitir múltiplas respostas)
                     $stmt_resposta = $pdo->prepare("\n                        INSERT INTO respostas_usuario (user_id, id_questao, id_alternativa, acertou, data_resposta) \n                        VALUES (?, ?, ?, ?, NOW())\n                        ON DUPLICATE KEY UPDATE\n                            id_alternativa = VALUES(id_alternativa),\n                            acertou = VALUES(acertou),\n                            data_resposta = NOW()\n                    ");
                     $stmt_resposta->execute([$user_id, $id_questao, $id_alternativa, $acertou]);
+
+                    // Registrar tentativa individual em respostas_usuarios para ranking semanal (somente usuários logados)
+                    if ($user_id > 0) {
+                        try {
+                            $stmt_salvar = $pdo->prepare("INSERT INTO respostas_usuarios (id_usuario, id_questao, acertou, data_resposta) VALUES (?, ?, ?, NOW())");
+                            $stmt_salvar->execute([$user_id, $id_questao, $acertou]);
+                        } catch (Exception $e) {
+                            error_log("ERRO inserindo em respostas_usuarios (quiz_vertical_filtros): " . $e->getMessage());
+                        }
+                    }
                     
                     // Log para diagnóstico - comentado para produção
                     /*

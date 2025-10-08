@@ -395,7 +395,7 @@ include 'header.php';
                 $count_week1 = $check_week1->fetch(PDO::FETCH_ASSOC)['total'] ?? 0;
                 $debug_info['tabelas']['respostas_usuarios_na_semana'] = $count_week1;
                 
-                $sources[] = "SELECT r.id_usuario AS id_usuario, r.data_resposta FROM respostas_usuarios r 
+                $sources[] = "SELECT r.id_usuario AS id_usuario, r.data_resposta, r.acertou FROM respostas_usuarios r 
                     WHERE r.data_resposta >= DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY) 
                     AND r.data_resposta < DATE_ADD(DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY), INTERVAL 7 DAY) 
                     AND r.id_usuario IS NOT NULL";
@@ -434,7 +434,7 @@ include 'header.php';
                     $count_week2 = $check_week2->fetch(PDO::FETCH_ASSOC)['total'] ?? 0;
                     $debug_info['tabelas']['respostas_usuario_na_semana'] = $count_week2;
                     
-                    $sources[] = "SELECT ru.user_id AS id_usuario, ru.data_resposta FROM respostas_usuario ru 
+                    $sources[] = "SELECT ru.user_id AS id_usuario, ru.data_resposta, ru.acertou FROM respostas_usuario ru 
                         WHERE ru.data_resposta >= DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY) 
                         AND ru.data_resposta < DATE_ADD(DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY), INTERVAL 7 DAY) 
                         AND ru.user_id IS NOT NULL";
@@ -449,12 +449,29 @@ include 'header.php';
             ];
             
             if (!empty($sources)) {
-                $union = implode(" UNION ALL ", $sources);
-                $sql_rank = "SELECT COALESCE(u.id_usuario, x.id_usuario) AS id_usuario, COALESCE(u.nome, 'Anônimo') AS nome, COUNT(*) AS total
+                // Priorizar respostas_usuarios (conta todas as tentativas, inclusive repetir mesma questão)
+                // Se não houver dados na semana atual nessa tabela, usar respostas_usuario como fallback
+                if ((int)($debug_info['tabelas']['respostas_usuarios_na_semana'] ?? 0) > 0) {
+                    $union = $sources[0]; // respostas_usuarios foi adicionada primeiro
+                    $debug_info['fonte_usada'] = 'respostas_usuarios';
+                } elseif ((int)($debug_info['tabelas']['respostas_usuario_na_semana'] ?? 0) > 0) {
+                    $union = end($sources); // usar respostas_usuario
+                    $debug_info['fonte_usada'] = 'respostas_usuario';
+                } else {
+                    // Caso extremo: sem dados em nenhuma tabela na semana, manter UNION para registro de debug
+                    $union = implode(" UNION ALL ", $sources);
+                    $debug_info['fonte_usada'] = 'ambas (sem dados na semana)';
+                }
+
+                $sql_rank = "SELECT 
+                                COALESCE(u.id_usuario, x.id_usuario) AS id_usuario, 
+                                COALESCE(u.nome, 'Anônimo') AS nome, 
+                                COUNT(*) AS total,
+                                SUM(CASE WHEN x.acertou = 1 THEN 1 ELSE 0 END) AS acertos
                               FROM (" . $union . ") x
                               LEFT JOIN usuarios u ON u.id_usuario = x.id_usuario
                               GROUP BY COALESCE(u.id_usuario, x.id_usuario), COALESCE(u.nome, 'Anônimo')
-                              ORDER BY total DESC, nome ASC
+                              ORDER BY total DESC, acertos DESC, nome ASC
                               LIMIT 5";
                 $debug_info['sql'] = $sql_rank;
                 
@@ -515,6 +532,7 @@ include 'header.php';
                     $last = isset($parts[count($parts)-1]) ? $parts[count($parts)-1] : $first;
                     $initials = strtoupper(substr($first, 0, 1) . substr($last, 0, 1));
                     $total = (int)($row['total'] ?? 0);
+                    $acertos = (int)($row['acertos'] ?? 0);
                     $perc = $max_total ? max(6, min(100, round(($total / $max_total) * 100))) : 6; // barra mínima visível
                 ?>
                 <li class="ranking-item">
@@ -526,6 +544,7 @@ include 'header.php';
                     <div class="ranking-right">
                         <div class="bar"><span style="width: <?php echo $perc; ?>%;"></span></div>
                         <span class="count-badge"><?php echo $total; ?> respostas</span>
+                        <span class="count-badge" style="background:#eafaea; color:#2e7d32;"><?php echo $acertos; ?> acertos</span>
                     </div>
                 </li>
                 <?php endforeach; ?>

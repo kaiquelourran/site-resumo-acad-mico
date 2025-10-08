@@ -219,12 +219,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             id_questao INT NOT NULL,
             id_alternativa INT NOT NULL,
             acertou TINYINT(1) NOT NULL DEFAULT 0,
-            data_resposta TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            UNIQUE KEY unique_questao (id_questao)
+            data_resposta TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )";
         
         try {
             $pdo->query($sql_create_table);
+            // Garantir que não exista constraint única que impeça múltiplas respostas da mesma questão
+            try { $pdo->exec("ALTER TABLE respostas_usuario DROP INDEX unique_questao"); } catch (Exception $e2) { /* índice pode não existir */ }
         } catch (Exception $e) {
             // Ignora erros de criação de tabela
         }
