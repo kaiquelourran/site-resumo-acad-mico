@@ -477,6 +477,39 @@ include 'header.php';
                 
                 $ranking_semanal = $pdo->query($sql_rank)->fetchAll(PDO::FETCH_ASSOC);
                 $debug_info['resultado'] = $ranking_semanal;
+
+                // Calcular posição do usuário atual no ranking completo (sem LIMIT)
+                $current_user_id = $_SESSION['id_usuario'] ?? $_SESSION['user_id'] ?? null;
+                $current_user_name = $_SESSION['nome'] ?? $_SESSION['user_name'] ?? null;
+                $current_user_rank = null;
+                $current_user_total = 0;
+                $current_user_acertos = 0;
+                if (isset($union) && $union) {
+                    $sql_rank_all = "SELECT 
+                        COALESCE(u.id_usuario, x.id_usuario) AS id_usuario,
+                        COALESCE(u.nome, 'Anônimo') AS nome,
+                        COUNT(*) AS total,
+                        SUM(CASE WHEN x.acertou = 1 THEN 1 ELSE 0 END) AS acertos
+                      FROM (" . $union . ") x
+                      LEFT JOIN usuarios u ON u.id_usuario = x.id_usuario
+                      GROUP BY COALESCE(u.id_usuario, x.id_usuario), COALESCE(u.nome, 'Anônimo')
+                      ORDER BY total DESC, acertos DESC, nome ASC";
+                    try {
+                        $ranking_todos = $pdo->query($sql_rank_all)->fetchAll(PDO::FETCH_ASSOC);
+                        foreach ($ranking_todos as $idx => $usr) {
+                            $uid = $usr['id_usuario'] ?? null;
+                            if ($uid !== null && $current_user_id !== null && (string)$uid === (string)$current_user_id) {
+                                $current_user_rank = $idx + 1;
+                                $current_user_total = (int)($usr['total'] ?? 0);
+                                $current_user_acertos = (int)($usr['acertos'] ?? 0);
+                                break;
+                            }
+                        }
+                        $debug_info['usuario_posicao'] = $current_user_rank;
+                    } catch (Exception $ePos) {
+                        $debug_info['erro_posicao'] = $ePos->getMessage();
+                    }
+                }
             } else {
                 $debug_info['erro'] = 'Nenhuma fonte de dados disponível';
             }
@@ -501,6 +534,8 @@ include 'header.php';
             .rank-medal { font-size: 18px; }
             .avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(180deg, #eef2ff 0%, #e0e7ff 100%); color: #4b5563; display: flex; align-items: center; justify-content: center; font-weight: 700; }
             .name { color: #111827; font-weight: 600; }
+            .you-badge { margin-left: 8px; padding: 4px 8px; border-radius: 999px; background: #eaf2ff; color: #0056d6; font-weight: 700; font-size: 12px; }
+            .ranking-item.is-current-user { background: #f0f7ff; border-left: 3px solid #0072FF; }
             .ranking-right { display: flex; align-items: center; gap: 12px; flex: 1; justify-content: flex-end; }
             .count-badge { padding: 6px 10px; border-radius: 999px; background: #eef7ff; color: #0072FF; font-weight: 700; }
             .bar { position: relative; height: 6px; border-radius: 999px; background: #f1f5f9; overflow: hidden; flex: 1; max-width: 420px; }
@@ -535,20 +570,40 @@ include 'header.php';
                     $acertos = (int)($row['acertos'] ?? 0);
                     $perc = $max_total ? max(6, min(100, round(($total / $max_total) * 100))) : 6; // barra mínima visível
                 ?>
-                <li class="ranking-item">
+                <?php $isCurrentUser = (($current_user_id ?? null) !== null && (string)($row['id_usuario'] ?? '') === (string)$current_user_id); ?>
+                <?php $taxa = $total > 0 ? round(($acertos / $total) * 100) : 0; ?>
+                <li class="ranking-item<?php echo $isCurrentUser ? ' is-current-user' : ''; ?>">
                     <div class="ranking-left">
                         <span class="rank-medal"><?php echo $medal; ?></span>
                         <div class="avatar"><?php echo htmlspecialchars($initials); ?></div>
                         <strong class="name"><?php echo htmlspecialchars($nome); ?></strong>
+                        <?php if ($isCurrentUser): ?><span class="you-badge">Você</span><?php endif; ?>
                     </div>
                     <div class="ranking-right">
                         <div class="bar"><span style="width: <?php echo $perc; ?>%;"></span></div>
                         <span class="count-badge"><?php echo $total; ?> respostas</span>
                         <span class="count-badge" style="background:#eafaea; color:#2e7d32;"><?php echo $acertos; ?> acertos</span>
+                        <span class="count-badge" style="background:#f0fff4; color:#065f46;"><?php echo $taxa; ?>%</span>
                     </div>
                 </li>
                 <?php endforeach; ?>
             </ol>
+            <?php if (($current_user_id ?? null) && ($current_user_rank === null || $current_user_rank > 5)): ?>
+            <div class="your-rank-card" style="margin: 12px 16px 16px; padding: 12px 16px; border-radius: 12px; background: #f8fbff; border: 1px solid #e6efff; display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+                <div class="your-rank-left" style="display:flex; align-items:center; gap:12px;">
+                    <div class="avatar"><?php echo htmlspecialchars(strtoupper(substr(($current_user_name ?? 'Você'), 0, 1))); ?></div>
+                    <div>
+                        <p class="your-rank-title" style="margin:0; font-weight:700; color:#0b2568;">Sua posição</p>
+                        <p style="margin: 0; color: #1f2937;">#<?php echo (int)($current_user_rank ?? 0); ?> • <?php echo (int)$current_user_total; ?> respostas • <?php echo (int)$current_user_acertos; ?> acertos • <?php echo ($current_user_total > 0 ? round(($current_user_acertos / $current_user_total) * 100) : 0); ?>%</p>
+                    </div>
+                </div>
+                <div class="ranking-right" style="gap:8px;">
+                    <?php $yourPerc = ($max_total ? max(6, min(100, round(($current_user_total / $max_total) * 100))) : 6); ?>
+                    <div class="bar" style="max-width:260px;"><span style="width: <?php echo $yourPerc; ?>%;"></span></div>
+                    <span class="count-badge">#<?php echo (int)($current_user_rank ?? 0); ?></span>
+                </div>
+            </div>
+            <?php endif; ?>
             <?php else: ?>
             <div style="padding: 16px;">
                 <p style="color: #666;">Nenhuma atividade suficiente nesta semana para exibir o ranking.</p>
@@ -672,6 +727,66 @@ include 'header.php';
         </div>
         <?php endif; ?>
 
+        <?php if (!empty($ranking_semanal)): ?>
+        <div class="ranking-card fade-in moved">
+            <div class="ranking-header">
+                <span class="logo">🏆</span>
+                <div class="titles">
+                    <h3 class="ranking-title">Ranking semanal</h3>
+                    <p class="ranking-subtitle">Top 5 que mais responderam questões na semana (segunda a domingo)</p>
+                </div>
+            </div>
+            <ol class="ranking-list">
+                <?php foreach ($ranking_semanal as $i => $row): ?>
+                <?php
+                    $pos = $i + 1;
+                    $medal = $pos === 1 ? '🥇' : ($pos === 2 ? '🥈' : ($pos === 3 ? '🥉' : '🏅'));
+                    $nome = $row['nome'] ?? ('Usuário #' . ($row['id_usuario'] ?? '?'));
+                    $parts = preg_split('/\s+/', trim($nome));
+                    $first = isset($parts[0]) ? $parts[0] : 'U';
+                    $last = isset($parts[count($parts)-1]) ? $parts[count($parts)-1] : $first;
+                    $initials = strtoupper(substr($first, 0, 1) . substr($last, 0, 1));
+                    $total = (int)($row['total'] ?? 0);
+                    $acertos = (int)($row['acertos'] ?? 0);
+                    $perc = $max_total ? max(6, min(100, round(($total / $max_total) * 100))) : 6;
+                ?>
+                <?php $isCurrentUser = (($current_user_id ?? null) !== null && (string)($row['id_usuario'] ?? '') === (string)$current_user_id); ?>
+                <?php $taxa = $total > 0 ? round(($acertos / $total) * 100) : 0; ?>
+                <li class="ranking-item<?php echo $isCurrentUser ? ' is-current-user' : ''; ?>">
+                    <div class="ranking-left">
+                        <span class="rank-medal"><?php echo $medal; ?></span>
+                        <div class="avatar"><?php echo htmlspecialchars($initials); ?></div>
+                        <strong class="name"><?php echo htmlspecialchars($nome); ?></strong>
+                        <?php if ($isCurrentUser): ?><span class="you-badge">Você</span><?php endif; ?>
+                    </div>
+                    <div class="ranking-right">
+                        <div class="bar"><span style="width: <?php echo $perc; ?>%;"></span></div>
+                        <span class="count-badge"><?php echo $total; ?> respostas</span>
+                        <span class="count-badge" style="background:#eafaea; color:#2e7d32;"><?php echo $acertos; ?> acertos</span>
+                        <span class="count-badge" style="background:#f0fff4; color:#065f46;"><?php echo $taxa; ?>%</span>
+                    </div>
+                </li>
+                <?php endforeach; ?>
+            </ol>
+            <?php if (($current_user_id ?? null) && ($current_user_rank === null || $current_user_rank > 5)): ?>
+            <div class="your-rank-card" style="margin: 12px 16px 16px; padding: 12px 16px; border-radius: 12px; background: #f8fbff; border: 1px solid #e6efff; display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+                <div class="your-rank-left" style="display:flex; align-items:center; gap:12px;">
+                    <div class="avatar"><?php echo htmlspecialchars(strtoupper(substr(($current_user_name ?? 'Você'), 0, 1))); ?></div>
+                    <div>
+                        <p class="your-rank-title" style="margin:0; font-weight:700; color:#0b2568;">Sua posição</p>
+                        <p style="margin: 0; color: #1f2937;">#<?php echo (int)($current_user_rank ?? 0); ?> • <?php echo (int)$current_user_total; ?> respostas • <?php echo (int)$current_user_acertos; ?> acertos • <?php echo ($current_user_total > 0 ? round(($current_user_acertos / $current_user_total) * 100) : 0); ?>%</p>
+                    </div>
+                </div>
+                <div class="ranking-right" style="gap:8px;">
+                    <?php $yourPerc = ($max_total ? max(6, min(100, round(($current_user_total / $max_total) * 100))) : 6); ?>
+                    <div class="bar" style="max-width:260px;"><span style="width: <?php echo $yourPerc; ?>%;"></span></div>
+                    <span class="count-badge">#<?php echo (int)($current_user_rank ?? 0); ?></span>
+                </div>
+            </div>
+            <?php endif; ?>
+        </div>
+        <?php endif; ?>
+
 <?php include 'footer.php'; ?>
     <script>
     // Garante que o botão "Sair" apareça no header da index, sem alterar a lógica de sessão
@@ -778,6 +893,24 @@ include 'header.php';
                 }
             });
         });
+    });
+    </script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        try {
+            const footerEl = document.querySelector('.footer-modern');
+            const movedRanking = document.querySelector('.ranking-card.moved');
+            const originalRanking = document.querySelector('.ranking-card.fade-in:not(.moved)');
+            if (!footerEl) return;
+            // If there is no moved copy, move the original above the footer
+            if (originalRanking && !movedRanking) {
+                footerEl.parentNode.insertBefore(originalRanking, footerEl);
+            }
+            // If both exist, remove the original to avoid duplication
+            if (originalRanking && movedRanking) {
+                originalRanking.parentNode && originalRanking.parentNode.removeChild(originalRanking);
+            }
+        } catch (e) { /* noop */ }
     });
     </script>
 </body>

@@ -1161,8 +1161,15 @@ $page_subtitle = 'Acompanhe sua evolução e estatísticas detalhadas';
             // Contador animado para os números das estatísticas
             const statNumbers = document.querySelectorAll('.stat-number');
             statNumbers.forEach(numberEl => {
-                const finalNumber = parseInt(numberEl.textContent.replace(/[^\d]/g, ''));
-                if (finalNumber > 0) {
+                const text = numberEl.textContent.trim();
+                const isPercentageInit = text.includes('%');
+                let finalNumber = isPercentageInit
+                    ? parseFloat(text.replace('%', '').replace(',', '.'))
+                    : parseFloat(text.replace(/\./g, '').replace(',', '.').replace(/[^\d.]/g, ''));
+                
+                if (!isNaN(finalNumber) && finalNumber > 0) {
+                    // Garantir que percentuais não passem de 100
+                    if (isPercentageInit) finalNumber = Math.min(finalNumber, 100);
                     animateNumber(numberEl, 0, finalNumber, 1500);
                 }
             });
@@ -1178,12 +1185,12 @@ $page_subtitle = 'Acompanhe sua evolução e estatísticas detalhadas';
                     
                     // Easing function para suavizar a animação
                     const easeOutQuart = 1 - Math.pow(1 - progress, 4);
-                    const currentNumber = Math.floor(start + (end - start) * easeOutQuart);
+                    const currentNumberRaw = start + (end - start) * easeOutQuart;
                     
                     if (isPercentage) {
-                        element.textContent = currentNumber + '%';
+                        element.textContent = currentNumberRaw.toFixed(1).replace('.', ',') + '%';
                     } else {
-                        element.textContent = currentNumber.toLocaleString('pt-BR');
+                        element.textContent = Math.floor(currentNumberRaw).toLocaleString('pt-BR');
                     }
                     
                     if (progress < 1) {
