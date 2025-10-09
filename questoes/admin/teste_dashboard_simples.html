@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Dashboard - Links</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ccc; border-radius: 8px; }
+        .btn { 
+            display: inline-block; 
+            padding: 10px 20px; 
+            margin: 5px; 
+            background: #007bff; 
+            color: white; 
+            text-decoration: none; 
+            border-radius: 5px; 
+            cursor: pointer;
+        }
+        .btn:hover { background: #0056b3; }
+        .btn-success { background: #28a745; }
+        .btn-secondary { background: #6c757d; }
+        .btn-danger { background: #dc3545; }
+        .btn-outline { background: transparent; border: 2px solid #007bff; color: #007bff; }
+        .btn-outline:hover { background: #007bff; color: white; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Teste de Links do Dashboard</h1>
+    
+    <div class="test-section">
+        <h2>Links de Gerenciamento</h2>
+        <a href="../gerenciar_questoes_sem_auth.php" class="btn">📋 Gerenciar Questões</a>
+        <a href="gerenciar_assuntos.php" class="btn">📚 Gerenciar Assuntos</a>
+        <a href="add_questao.php" class="btn btn-success">➕ Adicionar Questão</a>
+        <a href="add_assunto.php" class="btn btn-secondary">📝 Adicionar Assunto</a>
+        <a href="../index.php" class="btn btn-outline">🏠 Voltar ao Site</a>
+    </div>
+    
+    <div class="test-section">
+        <h2>Links de Navegação</h2>
+        <a href="../perfil_usuario.php" class="btn btn-secondary">📊 Meu Desempenho</a>
+        <a href="../logout.php" class="btn btn-danger">🚪 Sair</a>
+    </div>
+    
+    <div class="test-section">
+        <h2>Teste de JavaScript</h2>
+        <button onclick="testarClique()" class="btn">Testar Clique</button>
+        <button onclick="goBack()" class="btn">Voltar</button>
+        <p id="resultado"></p>
+    </div>
+    
+    <div class="test-section">
+        <h2>Informações de Debug</h2>
+        <p>Abra o console do navegador (F12) para ver os logs de debug.</p>
+        <p>Teste cada link para verificar se está funcionando corretamente.</p>
+    </div>
+
+    <script>
+        function testarClique() {
+            document.getElementById('resultado').innerHTML = '✅ JavaScript funcionando!';
+            console.log('Teste de clique executado com sucesso!');
+        }
+        
+        function goBack() {
+            console.log('Botão Voltar clicado');
+            if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                window.location.href = '../index.php';
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Página de teste carregada');
+            
+            const links = document.querySelectorAll('a');
+            console.log(`Total de links: ${links.length}`);
+            
+            links.forEach((link, index) => {
+                link.addEventListener('click', function(e) {
+                    console.log(`Link clicado: ${this.href}`);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

@@ -3,7 +3,7 @@
 // ini_set('display_startup_errors', 1);
 // error_reporting(E_ALL);
 
-// Função de log para diagnóstico - comentada para produção
+// Funo de log para diagnstico - comentada para produo
 /*
 function debug_log($message, $data = null) {
     echo "<div style='background:#f8f9fa;border:1px solid #ddd;margin:10px;padding:10px;'>";
@@ -18,19 +18,19 @@ function debug_log($message, $data = null) {
 session_start();
 require_once __DIR__ . '/conexao.php';
 
-// Captura parâmetros
+// Captura parmetros
 $id_assunto = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
 // Sem embaralhamento - usar ordem original do banco
 $filtro_ativo = isset($_GET['filtro']) ? $_GET['filtro'] : 'todas';
 $questao_inicial = isset($_GET['questao_inicial']) ? (int)$_GET['questao_inicial'] : 0;
 
-// Busca informações do assunto
-$assunto_nome = 'Todas as Questões';
+// Busca informaes do assunto
+$assunto_nome = 'Todas as Questes';
 if ($id_assunto > 0) {
     $stmt_assunto = $pdo->prepare("SELECT nome FROM assuntos WHERE id_assunto = ?");
     $stmt_assunto->execute([$id_assunto]);
-    $assunto_nome = $stmt_assunto->fetchColumn() ?: 'Assunto não encontrado';
+    $assunto_nome = $stmt_assunto->fetchColumn() ?: 'Assunto nao encontrado';
 }
 
 // Processar resposta se enviada via POST
@@ -39,12 +39,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_questao']) && isse
     $id_questao = (int)$_POST['id_questao'];
     $alternativa_selecionada = $_POST['alternativa_selecionada'];
     
-        // Buscar as alternativas da questão para mapear a letra correta
+        // Buscar as alternativas da questao para mapear a letra correta
         $stmt_alt = $pdo->prepare("SELECT * FROM alternativas WHERE id_questao = ? ORDER BY id_alternativa");
         $stmt_alt->execute([$id_questao]);
         $alternativas_questao = $stmt_alt->fetchAll(PDO::FETCH_ASSOC);
         
-        // NÃO EMBARALHAR - usar ordem original do banco
+        // NO EMBARALHAR - usar ordem original do banco
         
         // Mapear a letra selecionada para o ID da alternativa (ordem original do banco)
         $letras = ['A', 'B', 'C', 'D', 'E'];
@@ -57,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_questao']) && isse
             }
         }
         
-        // Buscar a alternativa correta para esta questão (ordem original do banco)
+        // Buscar a alternativa correta para esta questao (ordem original do banco)
         $alternativa_correta = null;
         foreach ($alternativas_questao as $alt) {
             if ($alt['eh_correta'] == 1) {
@@ -68,9 +68,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_questao']) && isse
         
         if ($alternativa_correta && $id_alternativa) {
             $acertou = ($id_alternativa == $alternativa_correta['id_alternativa']) ? 1 : 0;
-            
-            // Inserir ou atualizar resposta
-            $user_id = isset($_SESSION['id_usuario']) ? (int)$_SESSION['id_usuario'] : (isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : 0); // Usar 0 para anônimo se não houver usuário
+        
+        // Inserir ou atualizar resposta
+            $user_id = isset($_SESSION['id_usuario']) ? (int)$_SESSION['id_usuario'] : (isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : 0); // Usar 0 para anonimo se nao houver usuario
             
             // Verificar se a tabela tem a coluna user_id
             try {
@@ -79,11 +79,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_questao']) && isse
                 $tem_user_id = in_array('user_id', $colunas);
                 
                 if ($tem_user_id) {
-                    // Usar estrutura com user_id (permitir múltiplas respostas)
+                    // Usar estrutura com user_id (permitir mltiplas respostas)
                     $stmt_resposta = $pdo->prepare("\n                        INSERT INTO respostas_usuario (user_id, id_questao, id_alternativa, acertou, data_resposta) \n                        VALUES (?, ?, ?, ?, NOW())\n                        ON DUPLICATE KEY UPDATE\n                            id_alternativa = VALUES(id_alternativa),\n                            acertou = VALUES(acertou),\n                            data_resposta = NOW()\n                    ");
                     $stmt_resposta->execute([$user_id, $id_questao, $id_alternativa, $acertou]);
 
-                    // Registrar tentativa individual em respostas_usuarios para ranking semanal (somente usuários logados)
+                    // Registrar tentativa individual em respostas_usuarios para ranking semanal (somente usurios logados)
                     if ($user_id > 0) {
                         try {
                             $stmt_salvar = $pdo->prepare("INSERT INTO respostas_usuarios (id_usuario, id_questao, acertou, data_resposta) VALUES (?, ?, ?, NOW())");
@@ -93,7 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_questao']) && isse
                         }
                     }
                     
-                    // Log para diagnóstico - comentado para produção
+                    // Log para diagnstico - comentado para produo
                     /*
                     debug_log("Resposta inserida com user_id", [
                         'user_id' => $user_id,
@@ -104,14 +104,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_questao']) && isse
                     ]);
                     */
                 } else {
-                    // Usar estrutura sem user_id (permitir múltiplas respostas)
-                    $stmt_resposta = $pdo->prepare("
+                    // Usar estrutura sem user_id (permitir mltiplas respostas)
+        $stmt_resposta = $pdo->prepare("
                         INSERT INTO respostas_usuario (id_questao, id_alternativa, acertou, data_resposta) 
                         VALUES (?, ?, ?, NOW())
                     ");
                     $stmt_resposta->execute([$id_questao, $id_alternativa, $acertou]);
                     
-                    // Log para diagnóstico - comentado para produção
+                    // Log para diagnstico - comentado para produo
                     /*
                     debug_log("Resposta inserida sem user_id", [
                         'id_questao' => $id_questao,
@@ -123,55 +123,55 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_questao']) && isse
                 }
             } catch (Exception $e) {
                 error_log("ERRO ao verificar estrutura da tabela: " . $e->getMessage());
-                // Fallback: tentar estrutura simples (permitir múltiplas respostas)
+                // Fallback: tentar estrutura simples (permitir mltiplas respostas)
                 $stmt_resposta = $pdo->prepare("
                     INSERT INTO respostas_usuario (id_questao, id_alternativa, acertou, data_resposta) 
                     VALUES (?, ?, ?, NOW())
                 ");
                 $stmt_resposta->execute([$id_questao, $id_alternativa, $acertou]);
             }
-            
-            // Se for uma requisição AJAX, retornar JSON
-            if (isset($_POST['ajax_request'])) {
+        
+        // Se for uma requisio AJAX, retornar JSON
+        if (isset($_POST['ajax_request'])) {
                 // Encontrar a letra da alternativa correta (ordem original do banco)
-                $letra_correta = '';
-                $letras = ['A', 'B', 'C', 'D', 'E'];
-                foreach ($alternativas_questao as $index => $alt) {
-                    if ($alt['id_alternativa'] == $alternativa_correta['id_alternativa']) {
-                        $letra_correta = $letras[$index] ?? ($index + 1);
-                        break;
-                    }
+            $letra_correta = '';
+            $letras = ['A', 'B', 'C', 'D', 'E'];
+            foreach ($alternativas_questao as $index => $alt) {
+                if ($alt['id_alternativa'] == $alternativa_correta['id_alternativa']) {
+                    $letra_correta = $letras[$index] ?? ($index + 1);
+                    break;
                 }
-                
-                header('Content-Type: application/json');
-                echo json_encode([
-                    'success' => true,
-                    'acertou' => (bool)$acertou,
-                    'alternativa_correta' => $letra_correta, // Retornar a LETRA, não o ID
-                    'explicacao' => '', // Explicação não disponível na tabela alternativas
-                    'message' => $acertou ? 'Parabéns! Você acertou!' : 'Não foi dessa vez, mas continue tentando!'
+            }
+            
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => true,
+                'acertou' => (bool)$acertou,
+                'alternativa_correta' => $letra_correta, // Retornar a LETRA, no o ID
+                'explicacao' => '', // Explicacao no disponvel na tabela alternativas
+                'message' => $acertou ? 'Parabns! Voc acertou!' : 'No foi dessa vez, mas continue tentando!'
                     // 'debug_info' => [
                     //     'filtro_atual' => $filtro_ativo,
                     //     'id_questao' => $id_questao,
                     //     'acertou' => $acertou,
                     //     'user_id' => $user_id
                     // ]
-                ]);
-                exit;
-            }
-        } else {
-            // Se for uma requisição AJAX, retornar erro
-            if (isset($_POST['ajax_request'])) {
-                header('Content-Type: application/json');
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Erro ao processar resposta: alternativa não encontrada'
-                ]);
-                exit;
-            }
+            ]);
+            exit;
+        }
+    } else {
+        // Se for uma requisio AJAX, retornar erro
+        if (isset($_POST['ajax_request'])) {
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => false,
+                'message' => 'Erro ao processar resposta: alternativa no encontrada'
+            ]);
+            exit;
+        }
         }
     } catch (Exception $e) {
-        // Se for uma requisição AJAX, retornar erro
+        // Se for uma requisio AJAX, retornar erro
         if (isset($_POST['ajax_request'])) {
             header('Content-Type: application/json');
             echo json_encode([
@@ -191,27 +191,27 @@ try {
     $colunas = $stmt_check->fetchAll(PDO::FETCH_COLUMN);
     $tem_user_id = in_array('user_id', $colunas);
 } catch (Exception $e) {
-    // Mantém $tem_user_id = false se não conseguir descrever a tabela
+    // Mantm $tem_user_id = false se no conseguir descrever a tabela
 }
 $user_id = isset($_SESSION['id_usuario']) ? (int)$_SESSION['id_usuario'] : (isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : 0);
 
 if ($filtro_ativo === 'nao-respondidas') {
-    // Para "não-respondidas", selecionar apenas questões sem resposta (por usuário quando houver)
+    // Para "no-respondidas", selecionar apenas questes sem resposta (por usurio quando houver)
     if ($tem_user_id && $user_id !== null) {
-        $sql = "SELECT q.id_questao, q.enunciado, q.alternativa_a, q.alternativa_b, 
-                       q.alternativa_c, q.alternativa_d, q.alternativa_correta, q.explicacao,
-                       a.nome,
-                       'nao-respondida' as status_resposta,
-                       NULL as id_alternativa
-                FROM questoes q 
-                LEFT JOIN assuntos a ON q.id_assunto = a.id_assunto
+    $sql = "SELECT q.id_questao, q.enunciado, q.alternativa_a, q.alternativa_b, 
+                   q.alternativa_c, q.alternativa_d, q.alternativa_correta, q.explicacao,
+                   a.nome,
+                   'nao-respondida' as status_resposta,
+                   NULL as id_alternativa
+            FROM questoes q 
+            LEFT JOIN assuntos a ON q.id_assunto = a.id_assunto
                 WHERE NOT EXISTS (
                     SELECT 1 FROM respostas_usuario ru
                     WHERE ru.id_questao = q.id_questao AND ru.user_id = ?
                 )";
         $params = [$user_id];
     } else {
-        // Sem coluna user_id (ou sem usuário em sessão): considerar questões sem qualquer resposta
+        // Sem coluna user_id (ou sem usurio em sesso): considerar questes sem qualquer resposta
         $sql = "SELECT q.id_questao, q.enunciado, q.alternativa_a, q.alternativa_b, 
                        q.alternativa_c, q.alternativa_d, q.alternativa_correta, q.explicacao,
                        a.nome,
@@ -226,9 +226,9 @@ if ($filtro_ativo === 'nao-respondidas') {
         $params = [];
     }
 } else {
-    // Para todos os outros filtros (incluindo "todas"), carregar dados de resposta considerando a última resposta por questão
+    // Para todos os outros filtros (incluindo "todas"), carregar dados de resposta considerando a ltima resposta por questo
     if ($tem_user_id && $user_id !== null) {
-        // Com coluna user_id: considerar a última resposta do usuário atual por questão
+        // Com coluna user_id: considerar a ltima resposta do usurio atual por questo
         $sql = "SELECT q.id_questao, q.enunciado, q.alternativa_a, q.alternativa_b, 
                        q.alternativa_c, q.alternativa_d, q.alternativa_correta, q.explicacao,
                        a.nome,
@@ -252,22 +252,22 @@ if ($filtro_ativo === 'nao-respondidas') {
                     ) ru2 ON ru1.id_questao = ru2.id_questao AND ru1.data_resposta = ru2.max_data
                     WHERE ru1.user_id = ?
                 ) r ON q.id_questao = r.id_questao
-                WHERE 1=1";
+            WHERE 1=1";
         $params = [$user_id, $user_id];
-    } else {
-        // Sem coluna user_id: considerar a última resposta geral por questão
-        $sql = "SELECT q.id_questao, q.enunciado, q.alternativa_a, q.alternativa_b, 
-                       q.alternativa_c, q.alternativa_d, q.alternativa_correta, q.explicacao,
-                       a.nome,
-                       CASE 
-                           WHEN r.id_questao IS NOT NULL AND r.acertou = 1 THEN 'certa'
-                           WHEN r.id_questao IS NOT NULL AND r.acertou = 0 THEN 'errada'
-                           WHEN r.id_questao IS NOT NULL THEN 'respondida'
-                           ELSE 'nao-respondida'
-                       END as status_resposta,
-                       r.id_alternativa
-                FROM questoes q 
-                LEFT JOIN assuntos a ON q.id_assunto = a.id_assunto
+} else {
+        // Sem coluna user_id: considerar a ltima resposta geral por questo
+    $sql = "SELECT q.id_questao, q.enunciado, q.alternativa_a, q.alternativa_b, 
+                   q.alternativa_c, q.alternativa_d, q.alternativa_correta, q.explicacao,
+                   a.nome,
+                   CASE 
+                       WHEN r.id_questao IS NOT NULL AND r.acertou = 1 THEN 'certa'
+                       WHEN r.id_questao IS NOT NULL AND r.acertou = 0 THEN 'errada'
+                       WHEN r.id_questao IS NOT NULL THEN 'respondida'
+                       ELSE 'nao-respondida'
+                   END as status_resposta,
+                   r.id_alternativa
+            FROM questoes q 
+            LEFT JOIN assuntos a ON q.id_assunto = a.id_assunto
                 LEFT JOIN (
                     SELECT ru1.id_questao, ru1.id_alternativa, ru1.acertou, ru1.data_resposta
                     FROM respostas_usuario ru1
@@ -277,8 +277,8 @@ if ($filtro_ativo === 'nao-respondidas') {
                         GROUP BY id_questao
                     ) ru2 ON ru1.id_questao = ru2.id_questao AND ru1.data_resposta = ru2.max_data
                 ) r ON q.id_questao = r.id_questao
-                WHERE 1=1";
-        $params = [];
+            WHERE 1=1";
+$params = [];
     }
 }
 
@@ -287,13 +287,13 @@ if ($id_assunto > 0) {
     $params[] = $id_assunto;
 }
 
-// Aplicar filtro específico
+// Aplicar filtro especfico
 switch($filtro_ativo) {
     case 'respondidas':
         $sql .= " AND r.id_questao IS NOT NULL";
         break;
     case 'nao-respondidas':
-        // Para não-respondidas, não aplicar filtro adicional pois já não carregamos respostas
+        // Para no-respondidas, no aplicar filtro adicional pois ja no carregamos respostas
         break;
     case 'certas':
         $sql .= " AND r.acertou = 1";
@@ -302,7 +302,7 @@ switch($filtro_ativo) {
         $sql .= " AND r.id_questao IS NOT NULL AND r.acertou = 0";
         break;
     case 'todas':
-        // Para todas, não aplicar filtro adicional
+        // Para todas, no aplicar filtro adicional
         break;
 }
 
@@ -312,7 +312,7 @@ $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $questoes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Log para diagnóstico - comentado para produção
+// Log para diagnstico - comentado para produo
 /*
 debug_log("Consulta SQL para filtro: " . $filtro_ativo, [
     'tem_user_id' => $tem_user_id,
@@ -323,7 +323,7 @@ debug_log("Consulta SQL para filtro: " . $filtro_ativo, [
 ]);
 */
 
-// Se uma questão inicial foi especificada, reorganizar array
+// Se uma questo inicial foi especificada, reorganizar array
 if ($questao_inicial > 0) {
     $questao_inicial_index = -1;
     foreach ($questoes as $index => $questao) {
@@ -340,15 +340,15 @@ if ($questao_inicial > 0) {
     }
 }
 
-// Função para obter nome do filtro
+// Funo para obter nome do filtro
 function getNomeFiltro($filtro) {
     switch($filtro) {
-        case 'todas': return 'Todas as Questões';
-        case 'respondidas': return 'Questões Respondidas';
-        case 'nao-respondidas': return 'Questões Não Respondidas';
-        case 'certas': return 'Questões Certas';
-        case 'erradas': return 'Questões Erradas';
-        default: return 'Questões';
+        case 'todas': return 'Todas as Questes';
+        case 'respondidas': return 'Questes Respondidas';
+        case 'nao-respondidas': return 'Questes No Respondidas';
+        case 'certas': return 'Questes Certas';
+        case 'erradas': return 'Questes Erradas';
+        default: return 'Questes';
     }
 }
 ?>
@@ -357,7 +357,7 @@ function getNomeFiltro($filtro) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Questões - <?php echo htmlspecialchars($assunto_nome); ?> - Resumo Acadêmico</title>
+    <title>Questes - <?php echo htmlspecialchars($assunto_nome); ?> - Resumo Acadmico</title>
     <link rel="stylesheet" href="modern-style.css">
     <link rel="stylesheet" href="alternative-fix.css">
     <style>
@@ -367,7 +367,7 @@ function getNomeFiltro($filtro) {
             min-height: 100vh;
         }
 
-        /* Header da subjects-page idêntico ao da listar_questoes.php */
+        /* Header da subjects-page idntico ao da listar_questoes.php */
         .subjects-page .header .breadcrumb .header-container {
             max-width: 1100px;
             margin: 0 auto;
@@ -461,10 +461,10 @@ function getNomeFiltro($filtro) {
             .subjects-page .header .user-avatar { width: 26px; height: 26px; font-size: 0.85rem; }
         }
 
-        /* Ocultar o botão Entrar na subjects-page */
+        /* Ocultar o boto Entrar na subjects-page */
         .subjects-page .header .header-btn.primary { display: none !important; }
 
-        /* Estilo destacado para o botão Sair */
+        /* Estilo destacado para o boto Sair */
         .subjects-page .header a.header-btn[href="logout.php"] {
             display: inline-flex;
             align-items: center;
@@ -492,7 +492,7 @@ function getNomeFiltro($filtro) {
         }
         .subjects-page .header a.header-btn[href="logout.php"]::before { content: none; }
 
-        /* Botão 'Ir para o Site' */
+        /* Boto 'Ir para o Site' */
         .subjects-page .header a.header-btn.site-link {
             display: inline-flex;
             align-items: center;
@@ -518,7 +518,7 @@ function getNomeFiltro($filtro) {
             outline-offset: 2px;
         }
         
-        /* Garantir que as alternativas sejam clicáveis */
+        /* Garantir que as alternativas sejam clicveis */
         .alternative {
             pointer-events: auto !important;
             cursor: pointer !important;
@@ -526,7 +526,7 @@ function getNomeFiltro($filtro) {
             z-index: 1;
         }
         
-        /* Garantir que as alternativas sejam clicáveis */
+        /* Garantir que as alternativas sejam clicveis */
         .alternative {
             pointer-events: auto !important;
             cursor: pointer !important;
@@ -543,7 +543,7 @@ function getNomeFiltro($filtro) {
             pointer-events: none;
         }
 
-        /* Destaque para o título e subtítulo */
+        /* Destaque para o ttulo e subttulo */
         .subjects-page .page-header .header-container {
             max-width: 1100px;
             margin: 16px auto 24px;
@@ -654,7 +654,7 @@ function getNomeFiltro($filtro) {
         }
 
         .question-number::before {
-            content: '🎯';
+            content: '';
             font-size: 1em;
         }
 
@@ -793,7 +793,7 @@ function getNomeFiltro($filtro) {
             box-shadow: 0 4px 15px rgba(220, 53, 69, 0.4) !important;
         }
 
-        /* Estilos para painel de estatísticas */
+        /* Estilos para painel de estatsticas */
         .stats-toggle-container {
             padding: 15px 18px;
             background: #f8f9fa;
@@ -980,7 +980,7 @@ function getNomeFiltro($filtro) {
         }
 
         .explicacao-title::before {
-            content: '💡';
+            content: '';
             font-size: 1em;
         }
 
@@ -1136,39 +1136,469 @@ function getNomeFiltro($filtro) {
                 transform: translateX(5px);
             }
         }
+
+        /* Estilos para Comentrios - Baseado nas imagens */
+        .comments-section {
+            margin-top: 15px;
+        }
+
+        .comments-toggle-btn {
+            width: 100%;
+            padding: 10px 15px;
+            background: white;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.95em;
+            font-weight: 600;
+            color: #28a745;
+        }
+
+        .comments-toggle-btn:hover {
+            background: #f0fff4;
+            border-color: #28a745;
+        }
+
+        .comments-toggle-btn.active .fa-chevron-down {
+            transform: rotate(180deg);
+        }
+
+        .comments-panel {
+            background: white;
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            position: relative;
+            z-index: 1;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .comments-loading {
+            text-align: center;
+            padding: 30px;
+            color: #6c757d;
+            font-size: 1em;
+        }
+
+        .comments-content {
+            padding: 20px;
+        }
+
+        /* Cabealho com abas */
+        .comments-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .comments-tabs {
+            display: flex;
+            gap: 0;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #666;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active {
+            color: #007bff;
+            border-bottom-color: #007bff;
+            font-weight: 600;
+        }
+
+        .tab-btn:hover {
+            color: #007bff;
+        }
+
+        .follow-comments {
+            color: #007bff;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .follow-comments:hover {
+            text-decoration: underline;
+        }
+
+        /* Lista de comentrios */
+        .comments-list {
+            margin-bottom: 20px;
+        }
+
+        .comment-item {
+            background: white;
+            border: 1px solid #f0f0f0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .comment-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .comment-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            position: relative;
+        }
+
+        .comment-avatar i {
+            color: #666;
+            font-size: 18px;
+        }
+
+        .user-status {
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            width: 16px;
+            height: 16px;
+            background: #ffc107;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-status i {
+            color: white;
+            font-size: 8px;
+        }
+
+        .comment-author {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .comment-date {
+            color: #666;
+            font-size: 12px;
+            margin-left: auto;
+        }
+
+        .comment-text {
+            color: #333;
+            line-height: 1.5;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+
+        .comment-actions {
+            display: flex;
+            gap: 20px;
+            margin-top: 10px;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            color: #007bff;
+            cursor: pointer;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 0;
+        }
+
+        .action-btn:hover {
+            text-decoration: underline;
+        }
+
+        .action-btn i {
+            font-size: 12px;
+        }
+
+        .report-abuse {
+            color: #dc3545;
+            text-decoration: none;
+            font-size: 13px;
+        }
+
+        .report-abuse:hover {
+            text-decoration: underline;
+        }
+
+        /* Boto carregar mais */
+        .load-more-section {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .load-more-btn {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            color: #495057;
+            padding: 10px 30px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .load-more-btn:hover {
+            background: #e9ecef;
+            border-color: #adb5bd;
+        }
+
+        /* Formulrio de comentrio */
+        .add-comment-form {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .comment-user-info {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            position: relative;
+        }
+
+        .user-avatar i {
+            color: #666;
+            font-size: 18px;
+        }
+
+        .user-status {
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            width: 16px;
+            height: 16px;
+            background: #007bff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-status i {
+            color: white;
+            font-size: 8px;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .comment-input-section {
+            margin-left: 52px;
+        }
+
+        .comment-toolbar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            padding: 8px 0;
+        }
+
+        .toolbar-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 5px 8px;
+            border-radius: 4px;
+            color: #666;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .toolbar-btn:hover {
+            background: #e9ecef;
+            color: #333;
+        }
+
+        .toolbar-btn.active {
+            background: #007bff;
+            color: white;
+        }
+
+        .color-underline {
+            display: inline-block;
+            width: 100%;
+            height: 2px;
+            background: #007bff;
+            margin-top: 2px;
+        }
+
+        .comment-textarea-container {
+            position: relative;
+            margin-bottom: 15px;
+        }
+
+        .comment-textarea {
+            width: 100%;
+            min-height: 80px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+            box-sizing: border-box;
+        }
+
+        .comment-textarea:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0,123,255,0.1);
+        }
+
+        .textarea-resize-handle {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            width: 8px;
+            height: 8px;
+            background: #ccc;
+            border-radius: 50%;
+            cursor: se-resize;
+        }
+
+        .btn-responder {
+            background: #ff6b35;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-responder:hover {
+            background: #e55a2b;
+            transform: translateY(-1px);
+        }
+
+        .btn-responder:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Boto fechar */
+        .close-comments {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 5px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .no-comments {
+            text-align: center;
+            color: #6c757d;
+            font-style: italic;
+            padding: 40px 20px;
+        }
+
+        /* Respostas de comentrios */
+        .comment-replies {
+            margin-left: 52px;
+            margin-top: 15px;
+            padding-left: 15px;
+            border-left: 2px solid #f0f0f0;
+        }
+
+        .reply-item {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body class="subjects-page">
 <?php
 $breadcrumb_items = [
-    ['icon' => '🏠', 'text' => 'Início', 'link' => 'index.php', 'current' => false],
-    ['icon' => '📚', 'text' => 'Assuntos', 'link' => 'escolher_assunto.php', 'current' => false],
-    ['icon' => '📋', 'text' => 'Lista de Questões', 'link' => 'listar_questoes.php?id=' . $id_assunto . '&filtro=' . $filtro_ativo, 'current' => false],
-    ['icon' => '🎯', 'text' => 'Questões', 'link' => '', 'current' => true]
+    ['icon' => '', 'text' => 'Incio', 'link' => 'index.php', 'current' => false],
+    ['icon' => '', 'text' => 'Assuntos', 'link' => 'escolher_assunto.php', 'current' => false],
+    ['icon' => '', 'text' => 'Lista de Questes', 'link' => 'listar_questoes.php?id=' . $id_assunto . '&filtro=' . $filtro_ativo, 'current' => false],
+    ['icon' => '', 'text' => 'Questes', 'link' => '', 'current' => true]
 ];
-$page_title = '🎯 Questões';
+$page_title = ' Questes';
 $page_subtitle = htmlspecialchars($assunto_nome) . ' - ' . getNomeFiltro($filtro_ativo);
 include 'header.php';
 ?>
     <script>
-    // Função para ajustes de header
+    // Funo para ajustes de header
     function ajustarHeader() {
         if (!document.body.classList.contains('subjects-page')) return;
         const header = document.querySelector('.header');
         if (!header) return;
         const userInfo = header.querySelector('.user-info');
         if (!userInfo) return;
-        // garantir botão Sair
+        // garantir boto Sair
         let logoutBtn = header.querySelector('a.header-btn[href="logout.php"]');
         if (!logoutBtn) {
             const a = document.createElement('a');
             a.href = 'logout.php';
             a.className = 'header-btn';
-            a.setAttribute('aria-label', 'Sair da sessão');
+            a.setAttribute('aria-label', 'Sair da sesso');
             a.innerHTML = '<i class="fas fa-sign-out-alt"></i><span>Sair</span>';
             userInfo.appendChild(a);
         }
-        // perfil do usuário
+        // perfil do usurio
         let profile = userInfo.querySelector('.user-profile');
         <?php
         $displayNameSubjects = '';
@@ -1209,20 +1639,20 @@ include 'header.php';
     }
     </script>
 
-            <!-- Informações das Questões -->
+            <!-- Informaes das Questes -->
             <div class="questoes-info">
-                <h3>📊 <?php echo getNomeFiltro($filtro_ativo); ?></h3>
-                <p><?php echo count($questoes); ?> questão(ões) disponível(eis)</p>
+                <h3> <?php echo getNomeFiltro($filtro_ativo); ?></h3>
+                <p><?php echo count($questoes); ?> questo(es) disponvel(eis)</p>
             </div>
 
-            <!-- Container das Questões -->
+            <!-- Container das Questes -->
             <?php if (empty($questoes)): ?>
                 <div class="empty-state">
-                    <div class="empty-state-icon">📭</div>
-                    <h3 class="empty-state-title">Nenhuma questão encontrada</h3>
+                    <div class="empty-state-icon"></div>
+                    <h3 class="empty-state-title">Nenhuma questo encontrada</h3>
                     <p class="empty-state-text">
-                        Não há questões disponíveis para o filtro selecionado.<br>
-                        Volte à lista de questões para selecionar outro filtro.
+                        No h questes disponiveis para o filtro selecionado.<br>
+                        Volte  lista de questes para selecionar outro filtro.
                     </p>
                 </div>
             <?php else: ?>
@@ -1232,22 +1662,22 @@ include 'header.php';
                         <div class="question-card" id="questao-<?php echo $questao['id_questao']; ?>">
                             <div class="question-header">
                                 <div class="question-number">
-                                    Questão #<?php echo $questao['id_questao']; ?>
+                                    Questo #<?php echo $questao['id_questao']; ?>
                                 </div>
                                 <div class="question-status status-<?php echo $questao['status_resposta']; ?>">
                                     <?php
                                     switch($questao['status_resposta']) {
                                         case 'nao-respondida':
-                                            echo '❓ Não Respondida';
+                                            echo ' No Respondida';
                                             break;
                                             case 'certa':
-                                                echo '✅ Acertou';
+                                                echo ' Acertou';
                                             break;
                                         case 'errada':
-                                                echo '❌ Errou';
+                                                echo ' Errou';
                                             break;
                                         default:
-                                            echo '✅ Respondida';
+                                            echo ' Respondida';
                                     }
                                     ?>
                                 </div>
@@ -1267,7 +1697,7 @@ include 'header.php';
                                     $stmt_alt->execute([$questao['id_questao']]);
                                     $alternativas_questao = $stmt_alt->fetchAll(PDO::FETCH_ASSOC);
                                     
-                                    // NÃO EMBARALHAR - usar ordem original do banco
+                                    // NO EMBARALHAR - usar ordem original do banco
                                     
                                     // Mapear as letras corretas (ordem original do banco)
                                     $letras = ['A', 'B', 'C', 'D', 'E'];
@@ -1275,7 +1705,7 @@ include 'header.php';
                                     foreach ($alternativas_questao as $index => $alternativa) {
                                         $letra = $letras[$index] ?? ($index + 1);
                                         
-                                        // Identificar qual letra corresponde à resposta correta após embaralhamento
+                                        // Identificar qual letra corresponde  resposta correta aps embaralhamento
                                         if ($alternativa['eh_correta'] == 1) {
                                             $letra_correta = $letra;
                                         }
@@ -1283,15 +1713,15 @@ include 'header.php';
                                         // Identificar alternativa correta
                                         $is_correct = ($alternativa['eh_correta'] == 1);
                                         
-                                        // Verificar se esta alternativa foi selecionada pelo usuário
+                                        // Verificar se esta alternativa foi selecionada pelo usurio
                                         $is_selected = (!empty($questao['id_alternativa']) && $questao['id_alternativa'] == $alternativa['id_alternativa']);
                                         
-                                        // Verificar se a questão foi respondida (apenas para filtros que mostram respostas)
+                                        // Verificar se a questo foi respondida (apenas para filtros que mostram respostas)
                                         $is_answered = ($filtro_ativo !== 'todas' && $filtro_ativo !== 'nao-respondidas') && !empty($questao['id_alternativa']);
                                         
                                         $class = '';
-                                        // NÃO aplicar classes visuais automaticamente - deixar para o JavaScript
-                                        // Isso permite que o usuário clique e responda novamente
+                                        // NO aplicar classes visuais automaticamente - deixar para o JavaScript
+                                        // Isso permite que o usurio clique e responda novamente
                                         ?>
                                         <div class="alternative <?php echo $class; ?>" 
                                              data-alternativa="<?php echo $letra; ?>"
@@ -1309,24 +1739,24 @@ include 'header.php';
                             
                             <?php if (!empty($questao['explicacao']) && !empty($questao['id_alternativa'])): ?>
                                 <div class="explicacao-container">
-                                    <div class="explicacao-title">💡 Explicação:</div>
+                                    <div class="explicacao-title"> Explicacao:</div>
                                     <div class="explicacao-text"><?php echo htmlspecialchars($questao['explicacao']); ?></div>
                                 </div>
                             <?php endif; ?>
                             
-                            <!-- Botão de Estatísticas -->
+                            <!-- Boto de Estatsticas -->
                             <div class="stats-toggle-container">
                                 <button class="stats-toggle-btn" data-questao-id="<?php echo $questao['id_questao']; ?>">
                                     <i class="fas fa-chart-bar"></i>
-                                    <span>Ver Estatísticas</span>
+                                    <span>Ver Estatsticas</span>
                                     <i class="fas fa-chevron-down"></i>
                                 </button>
                             </div>
 
-                            <!-- Painel de Estatísticas -->
+                            <!-- Painel de Estatsticas -->
                             <div class="stats-panel" id="stats-<?php echo $questao['id_questao']; ?>" style="display: none;">
                                 <div class="stats-loading">
-                                    <i class="fas fa-spinner fa-spin"></i> Carregando estatísticas...
+                                    <i class="fas fa-spinner fa-spin"></i> Carregando estatsticas...
                                 </div>
                                 <div class="stats-content" style="display: none;">
                                     <div class="stats-charts">
@@ -1340,8 +1770,101 @@ include 'header.php';
                                         </div>
                                     </div>
                                     <div class="stats-history">
-                                        <h4>Histórico de Respostas</h4>
+                                        <h4>Histrico de Respostas</h4>
                                         <div class="stats-history-list"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Seo de Comentrios -->
+                            <div class="comments-section">
+                                <button class="comments-toggle-btn" data-questao-id="<?php echo $questao['id_questao']; ?>">
+                                    <i class="fas fa-comments"></i>
+                                    <span>Comentrios</span>
+                                    <i class="fas fa-chevron-down"></i>
+                                </button>
+                            </div>
+
+                            <!-- Painel de Comentrios -->
+                            <div class="comments-panel" id="comments-<?php echo $questao['id_questao']; ?>" style="display: none;">
+                                <div class="comments-loading">
+                                    <i class="fas fa-spinner fa-spin"></i> Carregando comentrios...
+                                </div>
+                                <div class="comments-content" style="display: none;">
+                                    <!-- Cabealho com abas de ordenao -->
+                                    <div class="comments-header">
+                                        <div class="comments-tabs">
+                                            <button class="tab-btn active" data-ordenacao="data">Ordenando por Data</button>
+                                            <button class="tab-btn" data-ordenacao="curtidas">Mais curtidos</button>
+                                        </div>
+                                        <a href="#" class="follow-comments">Acompanhar comentrios</a>
+                                    </div>
+                                    
+                                    <!-- Lista de comentrios -->
+                                    <div class="comments-list"></div>
+                                    
+                                    <!-- Boto carregar mais -->
+                                    <div class="load-more-section">
+                                        <button class="load-more-btn">Carregar mais</button>
+                                    </div>
+                                    
+                                    <!-- Formulrio para adicionar comentrio -->
+                                    <div class="add-comment-form">
+                                        <div class="comment-user-info">
+                                            <div class="user-avatar">
+                                                <i class="fas fa-user"></i>
+                                                <div class="user-status">
+                                                    <i class="fas fa-bolt"></i>
+                                                </div>
+                                            </div>
+                                            <div class="user-name">Usurio Annimo</div>
+                                        </div>
+                                        
+                                        <div class="comment-input-section">
+                                            <div class="comment-toolbar">
+                                                <button type="button" class="toolbar-btn" data-format="bold" title="Negrito">
+                                                    <strong>B</strong>
+                                                </button>
+                                                <button type="button" class="toolbar-btn" data-format="italic" title="Itlico">
+                                                    <em>I</em>
+                                                </button>
+                                                <button type="button" class="toolbar-btn" data-format="underline" title="Sublinhado">
+                                                    <u>U</u>
+                                                </button>
+                                                <button type="button" class="toolbar-btn" data-format="color" title="Cor do texto">
+                                                    A<span class="color-underline"></span>
+                                                </button>
+                                                <button type="button" class="toolbar-btn" data-format="ul" title="Lista com marcadores">
+                                                    <i class="fas fa-list-ul"></i>
+                                                </button>
+                                                <button type="button" class="toolbar-btn" data-format="ol" title="Lista numerada">
+                                                    <i class="fas fa-list-ol"></i>
+                                                </button>
+                                            </div>
+                                            
+                                            <form id="comment-form-<?php echo $questao['id_questao']; ?>" class="comment-form">
+                                                <div class="form-group" style="display: none;">
+                                                    <input type="text" name="nome_usuario" placeholder="Seu nome" maxlength="100" value="Usurio Annimo">
+                                                </div>
+                                                <div class="form-group" style="display: none;">
+                                                    <input type="email" name="email_usuario" placeholder="Seu email (opcional)" maxlength="100">
+                                                </div>
+                                                <div class="comment-textarea-container">
+                                                    <textarea name="comentario" placeholder="Escreva o seu comentrio" required minlength="10" maxlength="500" class="comment-textarea"></textarea>
+                                                    <div class="textarea-resize-handle"></div>
+                                                </div>
+                                                <button type="submit" class="btn-responder">
+                                                    Responder
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Boto fechar -->
+                                    <div class="close-comments">
+                                        <button class="close-btn">
+                                            <i class="fas fa-times"></i>
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -1350,18 +1873,18 @@ include 'header.php';
                 </div>
             <?php endif; ?>
 
-            <!-- Navegação -->
+            <!-- Navegao -->
             <div class="navigation-section">
                 <div class="nav-buttons">
                     <a href="listar_questoes.php?id=<?php echo $id_assunto; ?>&filtro=<?php echo $filtro_ativo; ?>" 
                        class="nav-btn nav-btn-primary">
-                        📋 Voltar à Lista
+                         Voltar  Lista
                     </a>
                     <a href="index.php" class="nav-btn nav-btn-outline">
-                        🏠 Início
+                         Incio
                     </a>
                     <a href="escolher_assunto.php" class="nav-btn nav-btn-outline">
-                        📚 Escolher Assunto
+                         Escolher Assunto
                     </a>
                 </div>
             </div>
@@ -1369,7 +1892,7 @@ include 'header.php';
     </div>
 
     <script>
-        // Função para mostrar feedback visual
+        // Funcao para mostrar feedback visual
         function mostrarFeedbackVisual(questaoId, alternativaSelecionada, alternativaCorreta, explicacao) {
             console.log('mostrarFeedbackVisual chamada com:', {
                 questaoId, alternativaSelecionada, alternativaCorreta, explicacao
@@ -1378,14 +1901,16 @@ include 'header.php';
             const questaoCard = document.querySelector(`#questao-${questaoId}`);
             
             if (!questaoCard) {
-                console.error('Questão não encontrada:', questaoId);
+                console.error('Questao nao encontrada:', questaoId);
+                console.log('Tentando buscar por:', `#questao-${questaoId}`);
+                console.log('Elementos disponiveis:', document.querySelectorAll('[id^="questao-"]'));
                 return;
             }
             
-            console.log('Questão encontrada:', questaoCard);
+            console.log(' Questao encontrada:', questaoCard);
             
             const alternativas = questaoCard.querySelectorAll('.alternative');
-            console.log('Alternativas encontradas:', alternativas.length);
+            console.log(' Alternativas encontradas:', alternativas.length);
             
             // Limpar feedback anterior
             alternativas.forEach(alt => {
@@ -1396,25 +1921,29 @@ include 'header.php';
             
             // Marcar alternativa correta
             const alternativaCorretaEl = questaoCard.querySelector(`[data-alternativa="${alternativaCorreta}"]`);
-            console.log('Alternativa correta encontrada:', alternativaCorretaEl);
+            console.log(' Buscando alternativa correta:', alternativaCorreta);
+            console.log(' Alternativa correta encontrada:', alternativaCorretaEl);
             if (alternativaCorretaEl) {
                 alternativaCorretaEl.classList.add('alternative-correct');
-                console.log('Classe alternative-correct adicionada');
+            } else {
+                console.error(' Alternativa correta nao encontrada!');
             }
             
             // Marcar alternativa selecionada
             const alternativaSelecionadaEl = questaoCard.querySelector(`[data-alternativa="${alternativaSelecionada}"]`);
-            console.log('Alternativa selecionada encontrada:', alternativaSelecionadaEl);
             if (alternativaSelecionadaEl) {
-                // Se a alternativa selecionada for a correta, ela já foi marcada como verde acima
+                // Se a alternativa selecionada for a correta, ela ja foi marcada como verde acima
                 // Se for incorreta, marcar como vermelha
                 if (alternativaSelecionada !== alternativaCorreta) {
                     alternativaSelecionadaEl.classList.add('alternative-incorrect-chosen');
-                    console.log('Classe alternative-incorrect-chosen adicionada');
+                } else {
+                    console.log(' Alternativa selecionada e a correta, ja marcada em verde');
                 }
+            } else {
+                console.error(' Alternativa selecionada nao encontrada!');
             }
             
-            // Mostrar explicação após um delay se disponível
+            // Mostrar explicacao aps um delay se disponvel
             if (explicacao && explicacao.trim() !== '') {
                 setTimeout(() => {
                     let explicacaoContainer = questaoCard.querySelector('.explicacao-container');
@@ -1422,7 +1951,7 @@ include 'header.php';
                         explicacaoContainer = document.createElement('div');
                         explicacaoContainer.className = 'explicacao-container';
                         explicacaoContainer.innerHTML = `
-                            <div class="explicacao-title">💡 Explicação:</div>
+                            <div class="explicacao-title"> Explicacao:</div>
                             <div class="explicacao-text">${explicacao}</div>
                         `;
                         questaoCard.appendChild(explicacaoContainer);
@@ -1431,14 +1960,14 @@ include 'header.php';
             }
         }
 
-        // Event listeners para as alternativas - VERSÃO FINAL CORRIGIDA
+        // Event listeners para as alternativas - VERSO FINAL CORRIGIDA
         document.addEventListener('DOMContentLoaded', function() {
             console.log('DOM carregado, configurando alternativas...');
             const filtroAtual = '<?php echo addslashes($filtro_ativo); ?>';
             
-            // Verificar se já foi configurado para evitar duplicação
+            // Verificar se ja foi configurado para evitar duplicao
             if (window.alternativasConfiguradas) {
-                console.log('Alternativas já configuradas, pulando...');
+                console.log('Alternativas ja configuradas, pulando...');
                 return;
             }
             window.alternativasConfiguradas = true;
@@ -1463,25 +1992,25 @@ include 'header.php';
                     duplicatas.forEach(questao => questao.remove());
                     return true; // Houve duplicatas
                 }
-                return false; // Não houve duplicatas
+                return false; // No houve duplicatas
             }
             
-            // Executar remoção de duplicatas iniciais
+            // Executar remoo de duplicatas iniciais
             removerDuplicatasIniciais();
             
-            // Limpar flag quando a página for recarregada
+            // Limpar flag quando a pgina for recarregada
             window.addEventListener('beforeunload', function() {
                 window.alternativasConfiguradas = false;
             });
             
-            // Configurar TODAS as alternativas de uma vez (SEM clonagem para evitar duplicação)
+            // Configurar TODAS as alternativas de uma vez (SEM clonagem para evitar duplicao)
             const todasAlternativas = document.querySelectorAll('.alternative');
             console.log('Total de alternativas encontradas:', todasAlternativas.length);
             
             todasAlternativas.forEach((alternativa, index) => {
                 console.log('Configurando alternativa', index + 1);
                 
-                // Garantir que seja clicável
+                // Garantir que seja clicvel
                 alternativa.style.pointerEvents = 'auto';
                 alternativa.style.cursor = 'pointer';
                 alternativa.style.position = 'relative';
@@ -1490,16 +2019,16 @@ include 'header.php';
                 // Remover classes de feedback
                 alternativa.classList.remove('alternative-correct', 'alternative-incorrect-chosen');
                 
-                // Verificar se já tem event listener para evitar duplicação
+                // Verificar se ja tem event listener para evitar duplicao
                 if (alternativa.dataset.listenerAdded === 'true') {
-                    console.log('Event listener já adicionado, pulando...');
+                    console.log('Event listener ja adicionado, pulando...');
                     return;
                 }
                 alternativa.dataset.listenerAdded = 'true';
                 
                 // Adicionar event listener diretamente
                 alternativa.addEventListener('click', function(e) {
-                    console.log('🔥 CLIQUE DETECTADO!', this);
+                    console.log(' CLIQUE DETECTADO!', this);
                     e.preventDefault();
                     e.stopPropagation();
                     
@@ -1507,34 +2036,34 @@ include 'header.php';
                     const alternativaSelecionada = this.dataset.alternativa;
                     const questaoCard = this.closest('.question-card');
                     
-                    console.log('Questão ID:', questaoId);
+                    console.log('Questao ID:', questaoId);
                     console.log('Alternativa selecionada:', alternativaSelecionada);
-                    console.log('Questão card:', questaoCard);
+                    console.log('Questao card:', questaoCard);
                     
-                    // Verificar se já foi respondida
+                    // Verificar se ja foi respondida
                     if (questaoCard.dataset.respondida === 'true') {
-                        console.log('Questão já respondida, ignorando...');
+                        console.log('Questao ja respondida, ignorando...');
                         return;
                     }
                     
-                    // Verificar se esta alternativa já foi clicada
+                    // Verificar se esta alternativa ja foi clicada
                     if (this.dataset.clicked === 'true') {
-                        console.log('Alternativa já foi clicada, ignorando...');
+                        console.log('Alternativa ja foi clicada, ignorando...');
                         return;
                     }
                     
-                    // Verificar se já existe uma questão duplicada no DOM ANTES de processar
+                    // Verificar se ja existe uma questo duplicada no DOM ANTES de processar
                     const questoesExistentes = document.querySelectorAll('.question-card');
                     const questoesIds = Array.from(questoesExistentes).map(q => q.id);
                     const questaoAtualId = questaoCard.id;
                     
                     if (questoesIds.filter(id => id === questaoAtualId).length > 1) {
-                        console.log('Questão duplicada detectada, removendo e cancelando clique...');
+                        console.log('Questao duplicada detectada, removendo e cancelando clique...');
                         const questoesDuplicadas = document.querySelectorAll(`#${questaoAtualId}`);
                         for (let i = 1; i < questoesDuplicadas.length; i++) {
                             questoesDuplicadas[i].remove();
                         }
-                        // Executar verificação geral de duplicatas
+                        // Executar verificao geral de duplicatas
                         verificarDuplicatas();
                         return;
                     }
@@ -1554,10 +2083,10 @@ include 'header.php';
                     this.style.background = '#e3f2fd';
                     this.style.borderColor = '#2196f3';
                     
-                    // Marcar questão como respondida
+                    // Marcar questo como respondida
                     questaoCard.dataset.respondida = 'true';
                     
-                    // Desabilitar todas as alternativas desta questão para evitar cliques duplos
+                    // Desabilitar todas as alternativas desta questo para evitar cliques duplos
                     todasAlternativas.forEach(alt => {
                         alt.style.pointerEvents = 'none';
                         alt.style.cursor = 'default';
@@ -1584,11 +2113,11 @@ include 'header.php';
                             const jsonData = JSON.parse(data);
                             console.log('JSON parseado:', jsonData);
                             
-                            // Log de diagnóstico - comentado para produção
+                            // Log de diagnstico - comentado para produo
                             /*
                             if (jsonData.debug_info) {
                                 console.log('DEBUG INFO:', jsonData.debug_info);
-                                // Adicionar div de debug na página
+                                // Adicionar div de debug na pgina
                                 const debugDiv = document.createElement('div');
                                 debugDiv.className = 'debug-info';
                                 debugDiv.style.position = 'fixed';
@@ -1614,39 +2143,31 @@ include 'header.php';
                             
                             if (jsonData.success) {
                                 console.log('Sucesso! Mostrando feedback...');
+                                console.log('Dados para feedback:', {
+                                    questaoId: questaoId,
+                                    alternativaSelecionada: alternativaSelecionada,
+                                    alternativaCorreta: jsonData.alternativa_correta,
+                                    explicacao: jsonData.explicacao
+                                });
                                 
-                                // Feedback visual baseado na resposta real
-                                const alternativaCorreta = jsonData.alternativa_correta;
-                                const acertou = alternativaSelecionada === alternativaCorreta;
-                                
-                                // Marcar alternativa correta em verde
-                                const altCorreta = questaoCard.querySelector(`[data-alternativa="${alternativaCorreta}"]`);
-                                if (altCorreta) {
-                                    altCorreta.classList.add('alternative-correct');
-                                }
-                                
-                                // Marcar alternativa selecionada
-                                if (acertou) {
-                                    this.classList.add('alternative-correct');
-                                } else {
-                                    this.classList.add('alternative-incorrect-chosen');
-                                }
+                                // Usar a funo de feedback visual
+                                mostrarFeedbackVisual(questaoId, alternativaSelecionada, jsonData.alternativa_correta, jsonData.explicacao);
                                 
                                 console.log('Feedback aplicado:', { 
                                     alternativaSelecionada, 
-                                    alternativaCorreta, 
-                                    acertou,
+                                    alternativaCorreta: jsonData.alternativa_correta,
+                                    acertou: alternativaSelecionada === jsonData.alternativa_correta,
                                     message: jsonData.message 
                                 });
                                 
-                                // Verificar duplicatas após processar resposta
+                                // Verificar duplicatas aps processar resposta
                                 setTimeout(() => {
                                     const questoesExistentes = document.querySelectorAll('.question-card');
                                     const questoesIds = Array.from(questoesExistentes).map(q => q.id);
                                     const questaoAtualId = questaoCard.id;
                                     
                                     if (questoesIds.filter(id => id === questaoAtualId).length > 1) {
-                                        console.log('Duplicata detectada após processamento, removendo...');
+                                        console.log('Duplicata detectada aps processamento, removendo...');
                                         const questoesDuplicadas = document.querySelectorAll(`#${questaoAtualId}`);
                                         for (let i = 1; i < questoesDuplicadas.length; i++) {
                                             questoesDuplicadas[i].remove();
@@ -1655,11 +2176,11 @@ include 'header.php';
                                     
                                     // Feedback visual de toast removido
                                 }, 100);
-                                
-                            } else {
+                            
+                        } else {
                                 console.log('Erro na resposta:', jsonData.message);
-                                // Reabilitar cliques em caso de erro
-                                questaoCard.dataset.respondida = 'false';
+                            // Reabilitar cliques em caso de erro
+                            questaoCard.dataset.respondida = 'false';
                                 todasAlternativas.forEach(alt => {
                                     alt.style.pointerEvents = 'auto';
                                     alt.style.cursor = 'pointer';
@@ -1677,7 +2198,7 @@ include 'header.php';
                         }
                     })
                     .catch(error => {
-                        console.error('Erro na requisição:', error);
+                        console.error('Erro na requisio:', error);
                         // Reabilitar cliques em caso de erro
                         questaoCard.dataset.respondida = 'false';
                         todasAlternativas.forEach(alt => {
@@ -1688,24 +2209,24 @@ include 'header.php';
                 });
             });
 
-            // Função para mostrar mensagem quando filtro fica vazio
+            // Funo para mostrar mensagem quando filtro fica vazio
             function mostrarMensagemFiltroVazio() {
                 const container = document.querySelector('.questions-container');
                 container.innerHTML = `
                     <div class="empty-state">
-                        <div class="empty-state-icon">🎉</div>
-                        <div class="empty-state-title">Parabéns!</div>
+                        <div class="empty-state-icon"></div>
+                        <div class="empty-state-title">Parabns!</div>
                         <div class="empty-state-text">
-                            Você respondeu todas as questões deste filtro!<br>
+                            Voc respondeu todas as questes deste filtro!<br>
                             <a href="?id=<?php echo $id_assunto; ?>&filtro=todas" class="nav-btn" style="margin-top: 20px; display: inline-block;">
-                                📚 Ver Todas as Questões
+                                 Ver Todas as Questes
                             </a>
                         </div>
                     </div>
                 `;
             }
 
-            // Animações de entrada
+            // Animaes de entrada
             const cards = document.querySelectorAll('.question-card');
             cards.forEach((card, index) => {
                 card.style.opacity = '0';
@@ -1717,7 +2238,7 @@ include 'header.php';
                 }, index * 200);
             });
 
-// Inicializar estatísticas apenas uma vez
+// Inicializar estatsticas apenas uma vez
 if (!window.statsInitialized) {
     initStats();
 }
@@ -1725,7 +2246,7 @@ if (!window.statsInitialized) {
             // Ajustar header
             ajustarHeader();
             
-            // Função para verificar e remover duplicatas
+            // Funo para verificar e remover duplicatas
             function verificarDuplicatas() {
                 const questoesExistentes = document.querySelectorAll('.question-card');
                 const idsVistos = new Set();
@@ -1741,11 +2262,11 @@ if (!window.statsInitialized) {
                 });
                 
                 if (duplicatas.length > 0) {
-                    console.log('Removendo', duplicatas.length, 'questões duplicadas...');
+                    console.log('Removendo', duplicatas.length, 'questes duplicadas...');
                     duplicatas.forEach(questao => questao.remove());
                     return true; // Houve duplicatas removidas
                 }
-                return false; // Não houve duplicatas
+                return false; // No houve duplicatas
             }
             
             // Verificar duplicatas a cada 2 segundos (menos frequente para melhor performance)
@@ -1759,9 +2280,9 @@ if (!window.statsInitialized) {
 
         // Statistics toggle functionality
         function initStats() {
-            // Verificar se já foi inicializada para evitar duplicação
+            // Verificar se ja foi inicializada para evitar duplicao
             if (window.statsInitialized) {
-                console.log('Estatísticas já inicializadas, pulando...');
+                console.log('Estatsticas ja inicializadas, pulando...');
                 return;
             }
             window.statsInitialized = true;
@@ -1816,7 +2337,7 @@ if (!window.statsInitialized) {
                     }
                 })
                 .catch(error => {
-                    loadingDiv.innerHTML = '<p style="color: #dc3545;">Erro ao carregar estatísticas</p>';
+                    loadingDiv.innerHTML = '<p style="color: #dc3545;">Erro ao carregar estatsticas</p>';
                 });
         }
 
@@ -1883,18 +2404,584 @@ if (!window.statsInitialized) {
             if (data.historico && data.historico.length > 0) {
                 historyList.innerHTML = data.historico.map(item => `
                     <div class="stats-history-item ${item.acertou ? 'correct' : 'incorrect'}">
-                        <span class="stats-history-date">Em ${item.data}, você respondeu a opção ${item.alternativa}.</span>
+                        <span class="stats-history-date">Em ${item.data}, voc respondeu a opo ${item.alternativa}.</span>
                         <span class="stats-history-result">
                             ${item.acertou ? 
-                                '<i class="fas fa-check-circle"></i> Você acertou!' : 
-                                '<i class="fas fa-times-circle"></i> Você errou!'}
+                                '<i class="fas fa-check-circle"></i> Voc acertou!' : 
+                                '<i class="fas fa-times-circle"></i> Voc errou!'}
                         </span>
                     </div>
                 `).join('');
             } else {
-                historyList.innerHTML = '<p style="text-align: center; color: #6c757d;">Você ainda não respondeu esta questão.</p>';
+                historyList.innerHTML = '<p style="text-align: center; color: #6c757d;">Voc ainda no respondeu esta questo.</p>';
             }
         }
+
+        // Funo auxiliar para verificar elementos
+        function safeGetElement(container, selector, errorMsg) {
+            const element = container.querySelector(selector);
+            if (!element) {
+                console.error(errorMsg, 'Seletor:', selector, 'Container:', container);
+                return null;
+            }
+            return element;
+        }
+
+        
+        // Funo auxiliar robusta para elementos
+        function safeSetTextContent(element, text, fallback = "") {
+            if (!element) {
+                console.error("Elemento nao encontrado para textContent");
+                return false;
+             }
+         }
+        // Funes para gerenciar comentrios
+        function initComments() {
+            const commentsButtons = document.querySelectorAll('.comments-toggle-btn');
+            
+            commentsButtons.forEach(button => {
+                button.addEventListener('click', handleCommentsClick);
+            });
+
+            // Inicializar contadores de caracteres
+            const textareas = document.querySelectorAll('textarea[name="comentario"]');
+            textareas.forEach(textarea => {
+                const charCount = textarea.parentNode.querySelector('.char-count');
+                textarea.addEventListener('input', function() {
+                    const count = this.value.length;
+                    charCount.textContent = `${count}/500 caracteres`;
+                    
+                    if (count > 450) {
+                        charCount.style.color = '#dc3545';
+                    } else if (count > 400) {
+                        charCount.style.color = '#ffc107';
+                    } else {
+                        charCount.style.color = '#6c757d';
+                    }
+                });
+            });
+
+            // Inicializar formulrios de comentrios
+            const commentForms = document.querySelectorAll('[id^="comment-form-"]');
+            commentForms.forEach(form => {
+                form.addEventListener('submit', handleCommentSubmit);
+            });
+        }
+
+        function handleCommentsClick() {
+            const questaoId = this.dataset.questaoId;
+            const commentsPanel = document.getElementById('comments-' + questaoId);
+            const isOpen = commentsPanel.style.display !== 'none';
+            
+            if (isOpen) {
+                // Fechar painel
+                commentsPanel.style.display = 'none';
+                this.classList.remove('active');
+            } else {
+                // Abrir painel e carregar comentrios
+                commentsPanel.style.display = 'block';
+                this.classList.add('active');
+                loadComments(questaoId);
+            }
+        }
+
+        function loadComments(questaoId) {
+            const commentsPanel = document.getElementById('comments-' + questaoId);
+            const loadingDiv = commentsPanel.querySelector('.comments-loading');
+            const contentDiv = commentsPanel.querySelector('.comments-content');
+            
+            loadingDiv.style.display = 'block';
+            contentDiv.style.display = 'none';
+            
+            // Buscar comentrios da API
+            fetch('api_comentarios.php?id_questao=' + questaoId)
+                .then(response => response.json())
+                .then(data => {
+                    loadingDiv.style.display = 'none';
+                    contentDiv.style.display = 'block';
+                    
+                    if (data.success) {
+                        renderComments(questaoId, data.data);
+                    } else {
+                        showCommentsError(questaoId, data.message);
+                    }
+                })
+                .catch(error => {
+                    loadingDiv.innerHTML = '<p style="color: #dc3545;">Erro ao carregar comentrios</p>';
+                    console.error('Erro ao carregar comentrios:', error);
+                });
+        }
+
+        function renderComments(questaoId, comentarios) {
+            const commentsList = document.querySelector(`#comments-${questaoId} .comments-list`);
+            
+            if (comentarios.length === 0) {
+                commentsList.innerHTML = '<div class="no-comments">Nenhum comentrio ainda. Seja o primeiro a comentar!</div>';
+                return;
+            }
+            
+            commentsList.innerHTML = comentarios.map(comentario => `
+                <div class="comment-item" data-comentario-id="${comentario.id_comentario}">
+                    <div class="comment-header">
+                        <div class="comment-avatar">
+                            <i class="fas fa-user"></i>
+                            <div class="user-status">
+                                <i class="fas fa-bolt"></i>
+                            </div>
+                        </div>
+                        <div class="comment-author">${escapeHtml(comentario.nome_usuario)}</div>
+                        <div class="comment-date">${comentario.data_formatada}</div>
+                    </div>
+                    <div class="comment-text">${escapeHtml(comentario.comentario)}</div>
+                    <div class="comment-actions">
+                        <button class="action-btn curtir-btn" data-comentario-id="${comentario.id_comentario}">
+                            <i class="fas fa-thumbs-up"></i>
+                            Gostei (${comentario.total_curtidas || 0})
+                        </button>
+                        <button class="action-btn responder-btn" data-comentario-id="${comentario.id_comentario}">
+                            <i class="fas fa-reply"></i>
+                            Respostas (${comentario.total_respostas || 0})
+                        </button>
+                        <a href="#" class="report-abuse" data-comentario-id="${comentario.id_comentario}">Reportar abuso</a>
+                    </div>
+                    ${comentario.respostas && comentario.respostas.length > 0 ? `
+                        <div class="comment-replies">
+                            ${comentario.respostas.map(resposta => `
+                                <div class="reply-item">
+                                    <div class="comment-header">
+                                        <div class="comment-avatar">
+                                            <i class="fas fa-user"></i>
+                                        </div>
+                                        <div class="comment-author">${escapeHtml(resposta.nome_usuario)}</div>
+                                        <div class="comment-date">${resposta.data_formatada}</div>
+                                    </div>
+                                    <div class="comment-text">${escapeHtml(resposta.comentario)}</div>
+                                    <div class="comment-actions">
+                                        <button class="action-btn curtir-btn" data-comentario-id="${resposta.id_comentario}">
+                                            <i class="fas fa-thumbs-up"></i>
+                                            Gostei (${resposta.total_curtidas || 0})
+                                        </button>
+                                        <a href="#" class="report-abuse" data-comentario-id="${resposta.id_comentario}">Reportar abuso</a>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                </div>
+            `).join('');
+            
+            // Adicionar event listeners para os botes
+            addCommentEventListeners(questaoId);
+        }
+
+        function showCommentsError(questaoId, message) {
+            const commentsList = document.querySelector(`#comments-${questaoId} .comments-list`);
+            commentsList.innerHTML = `<div class="no-comments" style="color: #dc3545;">Erro: ${escapeHtml(message)}</div>`;
+        }
+
+        function handleCommentSubmit(e) {
+            e.preventDefault();
+            
+            const form = e.target;
+            
+            // Verificao adicional de segurana
+            if (!form || !form.id) {
+                console.error('Formulrio invlido', form);
+                showMessage('Erro: Formulrio invlido', 'error');
+                return;
+            }
+            const questaoId = form.id.replace('comment-form-', '');
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+            data.id_questao = questaoId;
+            
+            // Debug: log dos dados
+            console.log('Enviando comentrio:', data);
+            
+            const submitBtn = form.querySelector('.btn-responder');
+            if (!submitBtn) {
+                console.error('Botao de envio nao encontrado');
+                showMessage('Erro: Botao de envio nao encontrado', 'error');
+                return;
+            }
+            const originalText = submitBtn.textContent;
+            
+            // Desabilitar boto e mostrar loading
+            submitBtn.disabled = true;
+            safeSetTextContent(submitBtn, "Enviando...");
+            
+            // Enviar comentrio
+            fetch('api_comentarios.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    // Limpar formulrio
+                    form.reset();
+                    form.querySelector('.char-count').textContent = '0/500 caracteres';
+                    form.querySelector('.char-count').style.color = '#6c757d';
+                    
+                    // Recarregar comentrios
+                    loadComments(questaoId);
+                    
+                    // Mostrar mensagem de sucesso
+                    showMessage('Comentrio enviado com sucesso!', 'success');
+                } else {
+                    showMessage('Erro: ' + result.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao enviar comentrio:', error);
+                showMessage('Erro ao enviar comentrio. Tente novamente.', 'error');
+            })
+                .finally(() => {
+                    // Reabilitar boto
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        safeSetTextContent(submitBtn, originalText);
+                    }
+                });
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showMessage(message, type) {
+            // Criar elemento de mensagem
+            const messageDiv = document.createElement('div');
+            messageDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                border-radius: 6px;
+                color: white;
+                font-weight: 600;
+                z-index: 10000;
+                max-width: 300px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            `;
+            
+            if (type === 'success') {
+                messageDiv.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
+            } else {
+                messageDiv.style.background = 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)';
+            }
+            
+            messageDiv.textContent = message;
+            document.body.appendChild(messageDiv);
+            
+            // Remover aps 3 segundos
+            setTimeout(() => {
+                if (messageDiv.parentNode) {
+                    messageDiv.parentNode.removeChild(messageDiv);
+                }
+            }, 3000);
+        }
+
+        // Funo para adicionar event listeners aos comentrios
+        function addCommentEventListeners(questaoId) {
+            // Botes de curtir
+            document.querySelectorAll(`#comments-${questaoId} .curtir-btn`).forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const comentarioId = this.dataset.comentarioId;
+                    curtirComentario(comentarioId, this);
+                });
+            });
+
+            // Botes de responder
+            document.querySelectorAll(`#comments-${questaoId} .responder-btn`).forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const comentarioId = this.dataset.comentarioId;
+                    mostrarFormularioResposta(questaoId, comentarioId);
+                });
+            });
+
+            // Links de reportar abuso
+            document.querySelectorAll(`#comments-${questaoId} .report-abuse`).forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const comentarioId = this.dataset.comentarioId;
+                    reportarAbuso(comentarioId);
+                });
+            });
+        }
+
+        // Funo para curtir/descurtir comentrio
+        function curtirComentario(comentarioId, botao) {
+            const acao = botao.classList.contains('curtido') ? 'descurtir' : 'curtir';
+            
+            fetch('api_comentarios.php', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    id_comentario: comentarioId,
+                    acao: acao
+                })
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    // Atualizar contador visual
+                    const texto = botao.textContent;
+                    const match = texto.match(/Gostei \((\d+)\)/);
+                    if (match) {
+                        const count = parseInt(match[1]);
+                        const newCount = acao === 'curtir' ? count + 1 : count - 1;
+                        botao.textContent = texto.replace(/\(\d+\)/, `(${newCount})`);
+                        
+                        if (acao === 'curtir') {
+                            botao.classList.add('curtido');
+                            botao.style.color = '#28a745';
+                        } else {
+                            botao.classList.remove('curtido');
+                            botao.style.color = '#007bff';
+                        }
+                    }
+                } else {
+                    showMessage('Erro: ' + result.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao curtir comentrio:', error);
+                showMessage('Erro ao curtir comentrio', 'error');
+            });
+        }
+
+        // Funo para mostrar formulrio de resposta
+        function mostrarFormularioResposta(questaoId, comentarioPaiId) {
+            // Implementar formulrio de resposta inline
+            const comentarioItem = document.querySelector(`[data-comentario-id="${comentarioPaiId}"]`);
+            let formResposta = comentarioItem.querySelector('.form-resposta');
+            
+            if (!formResposta) {
+                formResposta = document.createElement('div');
+                formResposta.className = 'form-resposta';
+                formResposta.innerHTML = `
+                    <div class="comment-user-info">
+                        <div class="user-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="user-name">Usurio Annimo</div>
+                    </div>
+                    <div class="comment-input-section">
+                        <form class="reply-form" data-comentario-pai="${comentarioPaiId}">
+                            <div class="comment-textarea-container">
+                                <textarea name="comentario" placeholder="Escreva sua resposta..." required minlength="10" maxlength="500" class="comment-textarea"></textarea>
+                            </div>
+                            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                                <button type="submit" class="btn-responder">Responder</button>
+                                <button type="button" class="btn-cancelar" onclick="this.closest('.form-resposta').remove()">Cancelar</button>
+                            </div>
+                        </form>
+                    </div>
+                `;
+                
+                const repliesSection = comentarioItem.querySelector('.comment-replies') || 
+                    comentarioItem.querySelector('.comment-actions').parentNode;
+                repliesSection.appendChild(formResposta);
+                
+                // Adicionar event listener ao formulario
+                formResposta.querySelector('.reply-form').addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    enviarResposta(questaoId, comentarioPaiId, this);
+                });
+            }
+        }
+
+        // Funcao para enviar resposta
+        function enviarResposta(questaoId, comentarioPaiId, form) {
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+            data.id_questao = questaoId;
+            data.id_comentario_pai = comentarioPaiId;
+            data.nome_usuario = 'Usuario Anonimo'; // Pode ser obtido de um campo oculto
+            
+            const submitBtn = form.querySelector('.btn-responder');
+            if (!submitBtn) {
+                console.error('Botao de envio nao encontrado');
+                showMessage('Erro: Botao de envio nao encontrado', 'error');
+                return;
+            }
+            const originalText = submitBtn.textContent;
+            
+            submitBtn.disabled = true;
+            safeSetTextContent(submitBtn, "Enviando...");
+            
+            fetch('api_comentarios.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    form.remove();
+                    loadComments(questaoId); // Recarregar comentarios
+                    showMessage('Resposta enviada com sucesso!', 'success');
+                } else {
+                    showMessage('Erro: ' + result.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao enviar resposta:', error);
+                showMessage('Erro ao enviar resposta', 'error');
+            })
+            .finally(() => {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    safeSetTextContent(submitBtn, originalText);
+                }
+            });
+        }
+
+        // Funo para reportar abuso
+        function reportarAbuso(comentarioId) {
+            if (confirm('Tem certeza que deseja reportar este comentrio por abuso?')) {
+                fetch('api_comentarios.php', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        id_comentario: comentarioId
+                    })
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        showMessage('Comentrio reportado com sucesso!', 'success');
+                        // Remover comentrio da interface
+                        document.querySelector(`[data-comentario-id="${comentarioId}"]`).remove();
+                    } else {
+                        showMessage('Erro: ' + result.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro ao reportar abuso:', error);
+                    showMessage('Erro ao reportar abuso', 'error');
+                });
+            }
+        }
+
+        // Funo para gerenciar abas de ordenao
+        function initTabs(questaoId) {
+            const tabs = document.querySelectorAll(`#comments-${questaoId} .tab-btn`);
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    // Remover classe active de todas as abas
+                    tabs.forEach(t => t.classList.remove('active'));
+                    // Adicionar classe active na aba clicada
+                    this.classList.add('active');
+                    
+                    // Recarregar comentrios com nova ordenao
+                    const ordenacao = this.dataset.ordenacao;
+                    loadComments(questaoId, ordenacao);
+                });
+            });
+        }
+
+        // Funo para carregar mais comentrios
+        function initLoadMore(questaoId) {
+            const loadMoreBtn = document.querySelector(`#comments-${questaoId} .load-more-btn`);
+            if (loadMoreBtn) {
+                loadMoreBtn.addEventListener('click', function() {
+                    // Implementar paginao se necessrio
+                    showMessage('Funcionalidade de carregar mais em desenvolvimento', 'info');
+                });
+            }
+        }
+
+        // Funo para inicializar toolbar de formatao
+        function initToolbar(questaoId) {
+            const toolbar = document.querySelector(`#comments-${questaoId} .comment-toolbar`);
+            if (toolbar) {
+                toolbar.addEventListener('click', function(e) {
+                    if (e.target.classList.contains('toolbar-btn')) {
+                        e.preventDefault();
+                        const format = e.target.dataset.format;
+                        applyFormat(format, questaoId);
+                    }
+                });
+            }
+        }
+
+        // Funo para aplicar formatao
+        function applyFormat(format, questaoId) {
+            const textarea = document.querySelector(`#comments-${questaoId} .comment-textarea`);
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const selectedText = textarea.value.substring(start, end);
+            
+            let formattedText = '';
+            switch (format) {
+                case 'bold':
+                    formattedText = `**${selectedText}**`;
+                    break;
+                case 'italic':
+                    formattedText = `*${selectedText}*`;
+                    break;
+                case 'underline':
+                    formattedText = `_${selectedText}_`;
+                    break;
+                case 'ul':
+                    formattedText = ` ${selectedText}`;
+                    break;
+                case 'ol':
+                    formattedText = `1. ${selectedText}`;
+                    break;
+            }
+            
+            textarea.value = textarea.value.substring(0, start) + formattedText + textarea.value.substring(end);
+            textarea.focus();
+        }
+
+        // Atualizar funo loadComments para suportar ordenao
+        function loadComments(questaoId, ordenacao = 'data') {
+            const commentsPanel = document.getElementById('comments-' + questaoId);
+            const loadingDiv = commentsPanel.querySelector('.comments-loading');
+            const contentDiv = commentsPanel.querySelector('.comments-content');
+            
+            loadingDiv.style.display = 'block';
+            contentDiv.style.display = 'none';
+            
+            fetch(`api_comentarios.php?id_questao=${questaoId}&ordenacao=${ordenacao}`)
+                .then(response => response.json())
+                .then(data => {
+                    loadingDiv.style.display = 'none';
+                    contentDiv.style.display = 'block';
+                    
+                    if (data.success) {
+                        renderComments(questaoId, data.data);
+                        initTabs(questaoId);
+                        initLoadMore(questaoId);
+                        initToolbar(questaoId);
+                    } else {
+                        showCommentsError(questaoId, data.message);
+                    }
+                })
+                .catch(error => {
+                    loadingDiv.innerHTML = '<p style="color: #dc3545;">Erro ao carregar comentrios</p>';
+                    console.error('Erro ao carregar comentrios:', error);
+                });
+        }
+
+        // Inicializar comentrios quando a pgina carregar
+        document.addEventListener('DOMContentLoaded', function() {
+            initComments();
+        });
     </script>
 
 </main>

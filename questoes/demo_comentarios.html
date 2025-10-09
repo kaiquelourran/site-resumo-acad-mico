@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo - Sistema de Comentários</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .demo-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .demo-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .demo-content {
+            padding: 30px;
+        }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .feature-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+        }
+        .feature-card h3 {
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+        .feature-card p {
+            margin: 0;
+            color: #666;
+            font-size: 14px;
+        }
+        .demo-buttons {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            margin: 0 10px;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+        }
+        .btn-success {
+            background: #28a745;
+        }
+        .btn-success:hover {
+            background: #1e7e34;
+        }
+        .screenshot {
+            max-width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background: #28a745;
+            color: white;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <div class="demo-header">
+            <h1><i class="fas fa-comments"></i> Sistema de Comentários</h1>
+            <p>Implementação completa baseada nas imagens de referência</p>
+            <span class="status-badge">✅ CONCLUÍDO</span>
+        </div>
+        
+        <div class="demo-content">
+            <h2>🎯 Funcionalidades Implementadas</h2>
+            
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h3><i class="fas fa-sort"></i> Ordenação</h3>
+                    <p>Abas para ordenar por data ou curtidas, exatamente como nas imagens</p>
+                </div>
+                
+                <div class="feature-card">
+                    <h3><i class="fas fa-thumbs-up"></i> Sistema de Curtidas</h3>
+                    <p>Botões de curtir com contador em tempo real e persistência no banco</p>
+                </div>
+                
+                <div class="feature-card">
+                    <h3><i class="fas fa-reply"></i> Respostas</h3>
+                    <p>Formulário inline para responder comentários com hierarquia visual</p>
+                </div>
+                
+                <div class="feature-card">
+                    <h3><i class="fas fa-user-circle"></i> Avatares</h3>
+                    <p>Avatares dos usuários com indicadores de status (raio azul)</p>
+                </div>
+                
+                <div class="feature-card">
+                    <h3><i class="fas fa-edit"></i> Editor de Texto</h3>
+                    <p>Barra de ferramentas com formatação (negrito, itálico, listas)</p>
+                </div>
+                
+                <div class="feature-card">
+                    <h3><i class="fas fa-flag"></i> Moderação</h3>
+                    <p>Sistema de reportar abuso com confirmação e remoção automática</p>
+                </div>
+            </div>
+            
+            <h2>🎨 Design Implementado</h2>
+            <ul>
+                <li>✅ Interface idêntica às imagens de referência</li>
+                <li>✅ Cores e tipografia consistentes</li>
+                <li>✅ Layout responsivo e moderno</li>
+                <li>✅ Animações e transições suaves</li>
+                <li>✅ Ícones Font Awesome</li>
+                <li>✅ Sistema de abas funcional</li>
+            </ul>
+            
+            <h2>🔧 Tecnologias Utilizadas</h2>
+            <ul>
+                <li><strong>Backend:</strong> PHP 7.4+ com PDO</li>
+                <li><strong>Banco de Dados:</strong> MySQL com tabelas relacionais</li>
+                <li><strong>Frontend:</strong> HTML5, CSS3, JavaScript ES6</li>
+                <li><strong>API:</strong> RESTful com métodos GET, POST, PUT, DELETE</li>
+                <li><strong>Segurança:</strong> Validação de dados e prevenção XSS</li>
+            </ul>
+            
+            <div class="demo-buttons">
+                <a href="teste_sistema_comentarios.php" class="btn btn-success">
+                    <i class="fas fa-play"></i> Ver Comentários de Teste
+                </a>
+                <a href="quiz_vertical_filtros.php?id=8&filtro=todas&questao_inicial=92" class="btn">
+                    <i class="fas fa-external-link-alt"></i> Testar no Quiz
+                </a>
+            </div>
+            
+            <h2>📊 Estrutura do Banco de Dados</h2>
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; font-family: monospace; font-size: 14px;">
+                <strong>comentarios_questoes:</strong><br>
+                ├── id_comentario (PK)<br>
+                ├── id_questao (FK)<br>
+                ├── nome_usuario<br>
+                ├── email_usuario<br>
+                ├── comentario<br>
+                ├── data_comentario<br>
+                ├── aprovado<br>
+                ├── curtidas<br>
+                ├── id_comentario_pai (FK)<br>
+                └── ativo<br><br>
+                
+                <strong>curtidas_comentarios:</strong><br>
+                ├── id_curtida (PK)<br>
+                ├── id_comentario (FK)<br>
+                ├── ip_usuario<br>
+                └── data_curtida
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug API Comentários</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .form-group { margin: 15px 0; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, textarea { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        button { background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .result { margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 4px; }
+        .success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .error { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Debug API de Comentários</h1>
+        
+        <form id="testForm">
+            <div class="form-group">
+                <label for="id_questao">ID da Questão:</label>
+                <input type="number" id="id_questao" value="92" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="nome_usuario">Nome do Usuário:</label>
+                <input type="text" id="nome_usuario" value="Usuário Debug" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="email_usuario">Email (opcional):</label>
+                <input type="email" id="email_usuario" value="debug@teste.com">
+            </div>
+            
+            <div class="form-group">
+                <label for="comentario">Comentário:</label>
+                <textarea id="comentario" rows="4" required>Este é um comentário de debug para testar a API.</textarea>
+            </div>
+            
+            <button type="submit">🚀 Testar Envio</button>
+        </form>
+        
+        <div id="result" class="result" style="display: none;"></div>
+    </div>
+
+    <script>
+        document.getElementById('testForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                id_questao: parseInt(document.getElementById('id_questao').value),
+                nome_usuario: document.getElementById('nome_usuario').value,
+                email_usuario: document.getElementById('email_usuario').value,
+                comentario: document.getElementById('comentario').value
+            };
+            
+            console.log('Enviando dados:', formData);
+            
+            try {
+                const response = await fetch('api_comentarios.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const result = await response.json();
+                
+                console.log('Resposta da API:', result);
+                
+                const resultDiv = document.getElementById('result');
+                resultDiv.style.display = 'block';
+                
+                if (result.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `
+                        <h3>✅ Sucesso!</h3>
+                        <p><strong>Mensagem:</strong> ${result.message}</p>
+                        <p><strong>Dados enviados:</strong></p>
+                        <pre>${JSON.stringify(formData, null, 2)}</pre>
+                        <p><strong>Resposta da API:</strong></p>
+                        <pre>${JSON.stringify(result, null, 2)}</pre>
+                    `;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `
+                        <h3>❌ Erro!</h3>
+                        <p><strong>Mensagem:</strong> ${result.message}</p>
+                        <p><strong>Dados enviados:</strong></p>
+                        <pre>${JSON.stringify(formData, null, 2)}</pre>
+                        <p><strong>Resposta da API:</strong></p>
+                        <pre>${JSON.stringify(result, null, 2)}</pre>
+                    `;
+                }
+                
+            } catch (error) {
+                console.error('Erro na requisição:', error);
+                
+                const resultDiv = document.getElementById('result');
+                resultDiv.style.display = 'block';
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `
+                    <h3>❌ Erro de Rede!</h3>
+                    <p><strong>Erro:</strong> ${error.message}</p>
+                    <p><strong>Dados enviados:</strong></p>
+                    <pre>${JSON.stringify(formData, null, 2)}</pre>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>

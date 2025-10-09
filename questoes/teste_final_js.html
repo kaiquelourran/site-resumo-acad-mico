@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Final - Erro JavaScript Corrigido</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .test-section { border: 2px solid #e9ecef; padding: 20px; margin: 20px 0; border-radius: 8px; }
+        .btn-responder { background: #ff6b35; color: white; padding: 12px 24px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; }
+        .btn-responder:hover { background: #e55a2b; }
+        .btn-responder:disabled { opacity: 0.6; cursor: not-allowed; }
+        .result { margin-top: 20px; padding: 15px; border-radius: 6px; font-weight: 600; }
+        .success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .error { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .info { background: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460; }
+        .warning { background: #fff3cd; border: 1px solid #ffeaa7; color: #856404; }
+        .console-log { background: #f8f9fa; border: 1px solid #dee2e6; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 12px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Teste Final - Erro JavaScript Corrigido</h1>
+        
+        <div class="info">
+            <h3>📋 O que foi corrigido:</h3>
+            <ul>
+                <li>✅ Verificação dupla de segurança para submitBtn</li>
+                <li>✅ Try-catch para operações de textContent</li>
+                <li>✅ Função auxiliar safeSetTextContent</li>
+                <li>✅ Verificação de textContent antes de usar</li>
+                <li>✅ Logs de debug melhorados</li>
+            </ul>
+        </div>
+        
+        <div class="test-section">
+            <h3>🔬 Teste 1: Formulário Normal</h3>
+            <form id="comment-form-92" class="comment-form">
+                <div class="form-group" style="display: none;">
+                    <input type="text" name="nome_usuario" value="Usuário Teste">
+                </div>
+                <div class="form-group" style="display: none;">
+                    <input type="email" name="email_usuario" value="teste@example.com">
+                </div>
+                <div class="comment-textarea-container">
+                    <textarea name="comentario" placeholder="Escreva o seu comentário" required minlength="10" maxlength="500" class="comment-textarea">Teste de comentário normal.</textarea>
+                </div>
+                <button type="submit" class="btn-responder">Responder</button>
+            </form>
+        </div>
+        
+        <div class="test-section">
+            <h3>🔬 Teste 2: Formulário com Botão Problemático</h3>
+            <form id="comment-form-99" class="comment-form">
+                <div class="form-group" style="display: none;">
+                    <input type="text" name="nome_usuario" value="Usuário Teste 2">
+                </div>
+                <div class="form-group" style="display: none;">
+                    <input type="email" name="email_usuario" value="teste2@example.com">
+                </div>
+                <div class="comment-textarea-container">
+                    <textarea name="comentario" placeholder="Escreva o seu comentário" required minlength="10" maxlength="500" class="comment-textarea">Teste de comentário com botão problemático.</textarea>
+                </div>
+                <button type="submit" class="btn-responder" id="btn-problematico">Responder</button>
+            </form>
+        </div>
+        
+        <div id="result" class="result" style="display: none;"></div>
+        
+        <div class="console-log" id="console-log">
+            <strong>Console Log:</strong><br>
+            <div id="log-content">Aguardando testes...</div>
+        </div>
+    </div>
+
+    <script>
+        // Função auxiliar robusta (copiada do sistema corrigido)
+        function safeSetTextContent(element, text, fallback = '') {
+            if (!element) {
+                console.error('Elemento não encontrado para textContent');
+                return false;
+            }
+            try {
+                element.textContent = text || fallback;
+                return true;
+            } catch (error) {
+                console.error('Erro ao definir textContent:', error);
+                return false;
+            }
+        }
+
+        function showMessage(message, type) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            resultDiv.className = `result ${type}`;
+            resultDiv.innerHTML = `<h3>${type === 'success' ? '✅' : '❌'} ${message}</h3>`;
+            
+            // Adicionar ao log
+            addToLog(`${type.toUpperCase()}: ${message}`);
+        }
+
+        function addToLog(message) {
+            const logContent = document.getElementById('log-content');
+            const timestamp = new Date().toLocaleTimeString();
+            logContent.innerHTML += `[${timestamp}] ${message}<br>`;
+        }
+
+        // Função de teste corrigida (versão final)
+        function handleCommentSubmit(e) {
+            e.preventDefault();
+            
+            const form = e.target;
+            
+            // Verificação adicional de segurança
+            if (!form || !form.id) {
+                console.error('Formulário inválido', form);
+                showMessage('Erro: Formulário inválido', 'error');
+                return;
+            }
+            
+            const questaoId = form.id.replace('comment-form-', '');
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+            data.id_questao = questaoId;
+            
+            console.log('Enviando comentário:', data);
+            addToLog(`Enviando comentário para questão ${questaoId}`);
+            
+            const submitBtn = form.querySelector('.btn-responder');
+            if (!submitBtn) {
+                console.error('Botão de envio não encontrado', form);
+                showMessage('Erro: Botão de envio não encontrado', 'error');
+                return;
+            }
+            
+            // Verificação adicional de segurança
+            if (!submitBtn.textContent) {
+                console.error('Botão sem textContent', submitBtn);
+                showMessage('Erro: Botão inválido', 'error');
+                return;
+            }
+            
+            const originalText = submitBtn.textContent;
+            
+            // Desabilitar botão e mostrar loading com verificação
+            try {
+                submitBtn.disabled = true;
+                safeSetTextContent(submitBtn, 'Enviando...');
+                addToLog('Botão desabilitado e texto alterado com sucesso');
+            } catch (error) {
+                console.error('Erro ao modificar botão:', error);
+                showMessage('Erro ao modificar botão', 'error');
+                return;
+            }
+            
+            // Simular envio
+            setTimeout(() => {
+                try {
+                    // Simular sucesso
+                    showMessage('Comentário enviado com sucesso! (Simulado)', 'success');
+                    addToLog('Comentário processado com sucesso');
+                    
+                    // Reabilitar botão com verificação de segurança
+                    if (submitBtn && submitBtn.textContent !== undefined) {
+                        try {
+                            submitBtn.disabled = false;
+                            safeSetTextContent(submitBtn, originalText);
+                            addToLog('Botão reabilitado com sucesso');
+                        } catch (error) {
+                            console.error('Erro ao reabilitar botão:', error);
+                            addToLog('ERRO: Falha ao reabilitar botão');
+                        }
+                    }
+                } catch (error) {
+                    console.error('Erro simulado:', error);
+                    showMessage('Erro simulado: ' + error.message, 'error');
+                    addToLog(`ERRO: ${error.message}`);
+                    
+                    // Reabilitar botão com verificação de segurança
+                    if (submitBtn && submitBtn.textContent !== undefined) {
+                        try {
+                            submitBtn.disabled = false;
+                            safeSetTextContent(submitBtn, originalText);
+                            addToLog('Botão reabilitado após erro');
+                        } catch (error) {
+                            console.error('Erro ao reabilitar botão:', error);
+                            addToLog('ERRO: Falha ao reabilitar botão após erro');
+                        }
+                    }
+                }
+            }, 2000);
+        }
+
+        // Adicionar event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            const forms = document.querySelectorAll('.comment-form');
+            forms.forEach(form => {
+                form.addEventListener('submit', handleCommentSubmit);
+                addToLog(`Event listener adicionado para ${form.id}`);
+            });
+            
+            addToLog('Sistema inicializado com sucesso');
+        });
+    </script>
+</body>
+</html>
