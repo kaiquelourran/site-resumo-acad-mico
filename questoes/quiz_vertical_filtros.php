@@ -2430,11 +2430,19 @@ if (!window.statsInitialized) {
         
         // Funo auxiliar robusta para elementos
         function safeSetTextContent(element, text, fallback = "") {
-            if (!element) {
-                console.error("Elemento nao encontrado para textContent");
+            try {
+                if (!element) {
+                    console.error("Elemento nao encontrado para textContent");
+                    return false;
+                }
+                element.textContent = typeof text === 'string' ? text : fallback;
+                return true;
+            } catch (err) {
+                console.error("Falha ao definir textContent:", err);
+                if (element) element.textContent = fallback;
                 return false;
-             }
-         }
+            }
+        }
         // Funes para gerenciar comentrios
         function initComments() {
             const commentsButtons = document.querySelectorAll('.comments-toggle-btn');
@@ -2446,19 +2454,30 @@ if (!window.statsInitialized) {
             // Inicializar contadores de caracteres
             const textareas = document.querySelectorAll('textarea[name="comentario"]');
             textareas.forEach(textarea => {
-                const charCount = textarea.parentNode.querySelector('.char-count');
-                textarea.addEventListener('input', function() {
-                    const count = this.value.length;
-                    charCount.textContent = `${count}/500 caracteres`;
-                    
-                    if (count > 450) {
-                        charCount.style.color = '#dc3545';
-                    } else if (count > 400) {
-                        charCount.style.color = '#ffc107';
-                    } else {
-                        charCount.style.color = '#6c757d';
+                const container = textarea.closest('.comment-textarea-container') || textarea.parentElement || textarea;
+                let charCount = container ? container.querySelector('.char-count') : null;
+                if (!charCount && container) {
+                    charCount = document.createElement('div');
+                    charCount.className = 'char-count';
+                    charCount.style.cssText = 'margin-top: 6px; font-size: 12px; color: #6c757d;';
+                    container.appendChild(charCount);
+                }
+                const updateCharCount = () => {
+                    const count = textarea.value.length;
+                    if (charCount) {
+                        safeSetTextContent(charCount, `${count}/500 caracteres`, `${count}/500 caracteres`);
+                        if (count > 450) {
+                            charCount.style.color = '#dc3545';
+                        } else if (count > 400) {
+                            charCount.style.color = '#ffc107';
+                        } else {
+                            charCount.style.color = '#6c757d';
+                        }
                     }
-                });
+                };
+                updateCharCount();
+                textarea.removeEventListener('input', updateCharCount);
+                textarea.addEventListener('input', updateCharCount);
             });
 
             // Inicializar formulrios de comentrios
@@ -2595,6 +2614,13 @@ if (!window.statsInitialized) {
             const data = Object.fromEntries(formData.entries());
             data.id_questao = questaoId;
             
+            // Valida o no cliente
+            const comentarioTexto = (data.comentario || '').trim();
+            if (comentarioTexto.length < 10 || comentarioTexto.length > 500) {
+                showMessage('Coment rio deve ter entre 10 e 500 caracteres', 'error');
+                return;
+            }
+            
             // Debug: log dos dados
             console.log('Enviando comentrio:', data);
             
@@ -2623,8 +2649,12 @@ if (!window.statsInitialized) {
                 if (result.success) {
                     // Limpar formulrio
                     form.reset();
-                    form.querySelector('.char-count').textContent = '0/500 caracteres';
-                    form.querySelector('.char-count').style.color = '#6c757d';
+                    const container = form.querySelector('.comment-textarea-container');
+                    const charCount = container ? container.querySelector('.char-count') : null;
+                    if (charCount) {
+                        charCount.textContent = '0/500 caracteres';
+                        charCount.style.color = '#6c757d';
+                    }
                     
                     // Recarregar comentrios
                     loadComments(questaoId);
@@ -2791,6 +2821,34 @@ if (!window.statsInitialized) {
                     comentarioItem.querySelector('.comment-actions').parentNode;
                 repliesSection.appendChild(formResposta);
                 
+                // Inicializar contador de caracteres para o textarea da resposta
+                const replyTextarea = formResposta.querySelector('textarea[name="comentario"]');
+                if (replyTextarea) {
+                    const container = replyTextarea.closest('.comment-textarea-container') || replyTextarea.parentElement || replyTextarea;
+                    let charCount = container ? container.querySelector('.char-count') : null;
+                    if (!charCount && container) {
+                        charCount = document.createElement('div');
+                        charCount.className = 'char-count';
+                        charCount.style.cssText = 'margin-top: 6px; font-size: 12px; color: #6c757d;';
+                        container.appendChild(charCount);
+                    }
+                    const updateCharCount = () => {
+                        const count = replyTextarea.value.length;
+                        if (charCount) {
+                            safeSetTextContent(charCount, `${count}/500 caracteres`, `${count}/500 caracteres`);
+                            if (count > 450) {
+                                charCount.style.color = '#dc3545';
+                            } else if (count > 400) {
+                                charCount.style.color = '#ffc107';
+                            } else {
+                                charCount.style.color = '#6c757d';
+                            }
+                        }
+                    };
+                    updateCharCount();
+                    replyTextarea.addEventListener('input', updateCharCount);
+                }
+                
                 // Adicionar event listener ao formulario
                 formResposta.querySelector('.reply-form').addEventListener('submit', function(e) {
                     e.preventDefault();
@@ -2806,6 +2864,13 @@ if (!window.statsInitialized) {
             data.id_questao = questaoId;
             data.id_comentario_pai = comentarioPaiId;
             data.nome_usuario = 'Usuario Anonimo'; // Pode ser obtido de um campo oculto
+            
+            // Validao no cliente
+            const comentarioTexto = (data.comentario || '').trim();
+            if (comentarioTexto.length < 10 || comentarioTexto.length > 500) {
+                showMessage('Resposta deve ter entre 10 e 500 caracteres', 'error');
+                return;
+            }
             
             const submitBtn = form.querySelector('.btn-responder');
             if (!submitBtn) {
