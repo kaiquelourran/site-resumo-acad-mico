@@ -1,6 +1,7 @@
 <?php
 header('Content-Type: application/json');
 require_once 'conexao.php';
+session_start();
 
 $method = $_SERVER['REQUEST_METHOD'];
 $response = ['success' => false, 'message' => '', 'data' => []];
@@ -13,6 +14,32 @@ function getUserIP() {
         return $_SERVER['HTTP_X_FORWARDED_FOR'];
     } else {
         return $_SERVER['REMOTE_ADDR'];
+    }
+}
+
+// Helpers: buscar avatar_url e nome do usuário por e-mail
+function getAvatarByEmail(PDO $pdo, string $email): ?string {
+    if (!$email) return null;
+    try {
+        $stmt = $pdo->prepare("SELECT avatar_url FROM usuarios WHERE email = ? LIMIT 1");
+        $stmt->execute([$email]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row['avatar_url'] ?? null;
+    } catch (PDOException $e) {
+        error_log('Erro buscando avatar_url: ' . $e->getMessage());
+        return null;
+    }
+}
+function getNomeByEmail(PDO $pdo, string $email): ?string {
+    if (!$email) return null;
+    try {
+        $stmt = $pdo->prepare("SELECT nome FROM usuarios WHERE email = ? LIMIT 1");
+        $stmt->execute([$email]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row['nome'] ?? null;
+    } catch (PDOException $e) {
+        error_log('Erro buscando nome do usuário: ' . $e->getMessage());
+        return null;
     }
 }
 
@@ -37,6 +64,17 @@ try {
                 ");
                 $stmt->execute([$id_questao]);
                 $comentarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                // Enriquecer comentários principais com avatar_url e nome normalizado
+                if (!empty($comentarios)) {
+                    foreach ($comentarios as &$comentario) {
+                        $email_c = $comentario['email_usuario'] ?? '';
+                        $avatar_c = getAvatarByEmail($pdo, $email_c);
+                        if ($avatar_c) { $comentario['avatar_url'] = $avatar_c; }
+                        $nome_c = getNomeByEmail($pdo, $email_c);
+                        if ($nome_c) { $comentario['nome_usuario'] = $nome_c; }
+                    }
+                    unset($comentario);
+                }
                 
                 // Buscar respostas para cada comentário
                 foreach ($comentarios as &$comentario) {
@@ -50,6 +88,16 @@ try {
                     ");
                     $stmt_respostas->execute([$comentario['id_comentario']]);
                     $comentario['respostas'] = $stmt_respostas->fetchAll(PDO::FETCH_ASSOC);
+                    if (!empty($comentario['respostas'])) {
+                        foreach ($comentario['respostas'] as &$resposta) {
+                            $email_r = $resposta['email_usuario'] ?? '';
+                            $avatar_r = getAvatarByEmail($pdo, $email_r);
+                            if ($avatar_r) { $resposta['avatar_url'] = $avatar_r; }
+                            $nome_r = getNomeByEmail($pdo, $email_r);
+                            if ($nome_r) { $resposta['nome_usuario'] = $nome_r; }
+                        }
+                        unset($resposta);
+                    }
                 }
                 
                 $response['success'] = true;
@@ -74,9 +122,12 @@ try {
             }
             
             $id_questao = (int)$data['id_questao'];
-            $nome_usuario = isset($data['nome_usuario']) ? trim($data['nome_usuario']) : 'Usuário Anônimo';
-            $email_usuario = isset($data['email_usuario']) ? trim($data['email_usuario']) : '';
+            $session_name = $_SESSION['usuario_nome'] ?? $_SESSION['nome_usuario'] ?? $_SESSION['user_name'] ?? null;
+            $session_email = $_SESSION['user_email'] ?? $_SESSION['usuario_email'] ?? $_SESSION['email_usuario'] ?? $_SESSION['email'] ?? null;
+            $nome_usuario = $session_name ? trim($session_name) : (isset($data['nome_usuario']) ? trim($data['nome_usuario']) : 'Usuário Anônimo');
+            $email_usuario = $session_email ? trim($session_email) : (isset($data['email_usuario']) ? trim($data['email_usuario']) : '');
             $comentario = trim($data['comentario']);
+            $id_comentario_pai = isset($data['id_comentario_pai']) ? (int)$data['id_comentario_pai'] : null;
             
             // Validações
             if (empty($nome_usuario) || empty($comentario)) {
@@ -103,12 +154,9 @@ try {
             }
             
             // Inserir comentário
-            $stmt = $pdo->prepare("
-                INSERT INTO comentarios_questoes (id_questao, nome_usuario, email_usuario, comentario) 
-                VALUES (?, ?, ?, ?)
-            ");
+            $stmt = $pdo->prepare("\n                INSERT INTO comentarios_questoes (id_questao, nome_usuario, email_usuario, comentario, id_comentario_pai) \n                VALUES (?, ?, ?, ?, ?)\n            ");
             
-            if ($stmt->execute([$id_questao, $nome_usuario, $email_usuario, $comentario])) {
+            if ($stmt->execute([$id_questao, $nome_usuario, $email_usuario, $comentario, $id_comentario_pai])) {
                 $response['success'] = true;
                 $response['message'] = 'Comentário adicionado com sucesso';
                 
@@ -122,6 +170,22 @@ try {
                 ");
                 $stmt->execute([$id_comentario]);
                 $response['data'] = $stmt->fetch(PDO::FETCH_ASSOC);
+                if ($response['data']) {
+                    $postAvatar = getAvatarByEmail($pdo, $response['data']['email_usuario'] ?? '');
+                    if ($postAvatar) { $response['data']['avatar_url'] = $postAvatar; }
+                    $postNome = getNomeByEmail($pdo, $response['data']['email_usuario'] ?? '');
+                    if ($postNome) { $response['data']['nome_usuario'] = $postNome; }
+                    // Fallback para avatar/nome da sessão quando o e-mail não estiver disponível no banco
+                    if (empty($response['data']['avatar_url'])) {
+                        $sessAvatar = $_SESSION['user_avatar'] ?? $_SESSION['user_picture'] ?? $_SESSION['foto_usuario'] ?? null;
+                        if ($sessAvatar) { $response['data']['avatar_url'] = $sessAvatar; }
+                    }
+                    if (empty($response['data']['nome_usuario'])) {
+                        $sessNome = $_SESSION['usuario_nome'] ?? $_SESSION['nome_usuario'] ?? $_SESSION['user_name'] ?? null;
+                        if ($sessNome) { $response['data']['nome_usuario'] = $sessNome; }
+                    }
+                    if (!isset($response['data']['id_comentario_pai'])) { $response['data']['id_comentario_pai'] = $id_comentario_pai; }
+                }
             } else {
                 $response['message'] = 'Erro ao salvar comentário';
             }

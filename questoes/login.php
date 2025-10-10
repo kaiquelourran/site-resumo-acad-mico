@@ -1,5 +1,7 @@
 <?php
 session_start();
+// Permitir comunicação via postMessage com o Google Identity Services (evita bloqueio por COOP)
+header('Cross-Origin-Opener-Policy: unsafe-none');
 require_once 'conexao.php';
 
 // Gerar token CSRF se não existir
@@ -65,6 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Resumo Acadêmico</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
         * {
             margin: 0;
@@ -287,6 +290,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
              border-color: #0072FF;
              box-shadow: 0 4px 15px rgba(0, 114, 255, 0.25);
          }
+
+         .separator {
+             display: flex;
+             align-items: center;
+             text-align: center;
+             margin: 25px 0;
+             color: #888;
+         }
+
+         .separator::before, .separator::after {
+             content: '';
+             flex: 1;
+             border-bottom: 1px solid #e1e5e9;
+         }
+
+         .separator:not(:empty)::before {
+             margin-right: .25em;
+         }
+
+         .separator:not(:empty)::after {
+             margin-left: .25em;
+         }
          
          @media (max-width: 480px) {
              .login-container {
@@ -356,6 +381,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             <button type="submit" class="btn-login">Entrar</button>
         </form>
+
+        <div class="separator">
+            <span>OU</span>
+        </div>
+
+        <div id="g_id_onload"
+             data-client_id="483177848191-i85ijikssoaftcnam1kjinhkdvi7lf69.apps.googleusercontent.com"
+             data-context="signin"
+             data-ux_mode="popup"
+             data-callback="handleGoogleSignIn"
+             data-auto_prompt="false">
+        </div>
+
+        <div class="g_id_signin"
+             data-type="standard"
+             data-shape="rectangular"
+             data-theme="outline"
+             data-text="signin_with"
+             data-size="large"
+             data-logo_alignment="left">
+        </div>
         
         <div class="help-section">
             <div class="help-title">💡 Como fazer login:</div>
@@ -369,40 +415,68 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <strong>Não tem conta?</strong> <a href="cadastro.php" style="color: #0072FF; text-decoration: none; font-weight: 600;">Cadastre-se aqui</a>
             </div>
         </div>
-     </div>
-     
-     <script>
-         function selectUserType(type) {
-             // Remove active class from all buttons
-             document.querySelectorAll('.type-btn').forEach(btn => {
-                 btn.classList.remove('active');
-             });
-             
-             // Add active class to selected button
-             document.querySelector(`[data-type="${type}"]`).classList.add('active');
-             
-             // Set hidden input value
-             document.getElementById('user_type').value = type;
-         }
-         
-         // Prevent form submission if no user type is selected
-         document.getElementById('loginForm').addEventListener('submit', function(e) {
-             if (!document.getElementById('user_type').value) {
-                 e.preventDefault();
-                 alert('Por favor, selecione o tipo de usuário.');
-                 return; // Evita continuar
-             }
-             // Estado de carregamento
-             const btn = document.querySelector('.btn-login');
-             if (btn) {
-                 btn.disabled = true;
-                 btn.dataset.originalText = btn.textContent;
-                 btn.textContent = 'Entrando...';
-             }
-         });
-     </script>
-     
-     <!-- Script adicional para UX sem alterar a lógica -->
+
+        <script src="https://accounts.google.com/gsi/client" async defer></script>
+        <script>
+            // Utilitário para decodificar o JWT do Google e obter "claims" (como e-mail)
+            if (typeof window.parseJwt !== 'function') {
+                window.parseJwt = function(token) {
+                    try {
+                        const base64Url = token.split('.')[1];
+                        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                        }).join(''));
+                        return JSON.parse(jsonPayload);
+                    } catch (e) {
+                        return null;
+                    }
+                }
+            }
+            
+            // Se a função não existir por algum motivo, definir uma função no escopo global
+            if (typeof window.handleGoogleSignIn !== 'function') {
+                window.handleGoogleSignIn = function(response) {
+                    try {
+                        const id_token = response && response.credential ? response.credential : null;
+                        if (!id_token) {
+                            console.error('ID token ausente no callback do Google.');
+                            alert('Não foi possível obter o token do Google. Tente novamente.');
+                            return;
+                        }
+                        // Tenta decodificar o e-mail (opcional). Mesmo sem parseJwt, o fluxo continua normalmente.
+                        try {
+                            const claims = (typeof parseJwt === 'function') ? parseJwt(id_token) : null;
+                            if (claims && claims.email) {
+                                try { localStorage.setItem('google_email', claims.email); } catch(e) {}
+                            }
+                        } catch (e) {}
+                        
+                        // Envia o token ao servidor para criar sessão e então redireciona automaticamente
+                        fetch('processar_google_login.php', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            credentials: 'same-origin',
+                            body: JSON.stringify({ id_token })
+                        })
+                        .then(async (resp) => {
+                            let data = {};
+                            try { data = await resp.json(); } catch(e) {}
+                            if (resp.ok && data && data.success) {
+                                window.location.href = 'index.php';
+                                return;
+                            }
+                            const statusInfo = `HTTP ${resp.status}`;
+                            const msg = (data && data.message) ? data.message : 'Falha no login com Google.';
+                            alert(`Erro ao fazer login com o Google (${statusInfo}): ${msg}`);
+                        })
+                        .catch(() => alert('Ocorreu um erro inesperado ao tentar fazer login com o Google.'));
+                    } catch (e) {
+                        console.error('Erro em handleGoogleSignIn (fallback):', e);
+                    }
+                }
+            }
+        </script>
      <script>
         document.addEventListener('DOMContentLoaded', function () {
             const emailInput = document.getElementById('email');

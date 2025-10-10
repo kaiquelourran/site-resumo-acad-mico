@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once 'conexao.php';
+header('Cross-Origin-Opener-Policy: unsafe-none');
 
 // Verificar se o usuário está logado
 if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
@@ -817,13 +818,18 @@ include 'header.php';
         }
         ?>
         const userName = "<?php echo htmlspecialchars($displayName, ENT_QUOTES, 'UTF-8'); ?>";
+        const userAvatarUrl = "<?php echo htmlspecialchars($_SESSION['user_avatar'] ?? $_SESSION['user_picture'] ?? $_SESSION['foto_usuario'] ?? '', ENT_QUOTES, 'UTF-8'); ?>";
         if (userName) {
             if (!profile) {
                 const p = document.createElement('div');
                 p.className = 'user-profile';
                 const avatar = document.createElement('div');
                  avatar.className = 'user-avatar';
-                 avatar.textContent = userName.trim().charAt(0).toUpperCase() || '?';
+                 if (userAvatarUrl) {
+                    avatar.innerHTML = '<img src="' + userAvatarUrl + '" alt="Foto do usuário" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" />';
+                 } else {
+                    avatar.textContent = userName.trim().charAt(0).toUpperCase() || '?';
+                 }
                  avatar.setAttribute('aria-hidden', 'true');
                  const nameEl = document.createElement('span');
                  nameEl.className = 'user-name';
@@ -844,7 +850,11 @@ include 'header.php';
                     avatar.className = 'user-avatar';
                     profile.insertBefore(avatar, profile.firstChild);
                 }
-                avatar.textContent = userName.trim().charAt(0).toUpperCase() || '?';
+                if (userAvatarUrl) {
+                    avatar.innerHTML = '<img src="' + userAvatarUrl + '" alt="Foto do usuário" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" />';
+                } else {
+                    avatar.textContent = userName.trim().charAt(0).toUpperCase() || '?';
+                }
                 let nameEl = profile.querySelector('.user-name');
                 if (!nameEl) {
                     nameEl = document.createElement('span');

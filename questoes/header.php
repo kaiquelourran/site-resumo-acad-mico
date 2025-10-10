@@ -1,4 +1,5 @@
 <?php
+if (session_status() === PHP_SESSION_NONE) { session_start(); }
 // Header padrão para o sistema de questões
 // Configuração de breadcrumb padrão se não foi definida
 if (!isset($breadcrumb_items)) {
@@ -51,11 +52,16 @@ if (!isset($page_subtitle)) {
 
         <!-- User Info Section - Novo Design -->
         <div class="user-info">
-            <?php $display_name = $_SESSION['usuario_nome'] ?? $_SESSION['nome_usuario'] ?? null; ?>
+            <?php $display_name = $_SESSION['usuario_nome'] ?? $_SESSION['nome_usuario'] ?? $_SESSION['user_name'] ?? null; ?>
+            <?php $avatar_url = $_SESSION['user_avatar'] ?? $_SESSION['user_picture'] ?? $_SESSION['foto_usuario'] ?? null; ?>
             <?php if ($display_name): ?>
                 <div class="user-profile">
                     <div class="user-avatar">
-                        <?php echo strtoupper(substr($display_name, 0, 1)); ?>
+                        <?php if ($avatar_url): ?>
+                            <img src="<?php echo htmlspecialchars($avatar_url); ?>" alt="Foto do usuário" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" />
+                        <?php else: ?>
+                            <?php echo strtoupper(substr($display_name, 0, 1)); ?>
+                        <?php endif; ?>
                     </div>
                     <span class="user-name"><?php echo htmlspecialchars($display_name); ?></span>
                 </div>

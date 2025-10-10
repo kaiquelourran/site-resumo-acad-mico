@@ -1,5 +1,6 @@
 <?php
 session_start();
+header('Cross-Origin-Opener-Policy: unsafe-none');
 require_once 'conexao.php';
 
 // Gerar token CSRF se não existir
@@ -61,6 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cadastro - Resumo Acadêmico</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
         * {
             margin: 0;
@@ -327,6 +329,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             <button type="submit" class="btn-register">Criar Conta</button>
         </form>
+
+        <div class="separator"><span>OU</span></div>
+
+        <div id="g_id_onload"
+             data-client_id="483177848191-i85ijikssoaftcnam1kjinhkdvi7lf69.apps.googleusercontent.com"
+             data-context="signup"
+             data-ux_mode="popup"
+             data-callback="handleGoogleSignIn"
+             data-auto_prompt="false">
+        </div>
+
+        <div class="g_id_signin"
+             data-type="standard"
+             data-shape="rectangular"
+             data-theme="outline"
+             data-text="signin_with"
+             data-size="large"
+             data-logo_alignment="left">
+        </div>
         
         <div class="password-requirements">
             <h4>📋 Requisitos da senha:</h4>
@@ -401,5 +422,65 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         });
     </script>
+<script>
+    // Utilitário para decodificar o JWT do Google e obter "claims" (como e-mail)
+    if (typeof window.parseJwt !== 'function') {
+        window.parseJwt = function(token) {
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+                return JSON.parse(jsonPayload);
+            } catch (e) {
+                return null;
+            }
+        }
+    }
+
+    // Callback do Google Identity para cadastro/login com Google
+    if (typeof window.handleGoogleSignIn !== 'function') {
+        window.handleGoogleSignIn = function(response) {
+            try {
+                const id_token = response && response.credential ? response.credential : null;
+                if (!id_token) {
+                    console.error('ID token ausente no callback do Google.');
+                    alert('Não foi possível obter o token do Google. Tente novamente.');
+                    return;
+                }
+                // Decodificar claims opcionalmente
+                try {
+                    const claims = (typeof parseJwt === 'function') ? parseJwt(id_token) : null;
+                    if (claims && claims.email) {
+                        try { localStorage.setItem('google_email', claims.email); } catch(e) {}
+                    }
+                } catch (e) {}
+
+                // Envia o token ao servidor para criar/atualizar usuário e abrir sessão
+                fetch('processar_google_login.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ id_token })
+                })
+                .then(async (resp) => {
+                    let data = {};
+                    try { data = await resp.json(); } catch(e) {}
+                    if (resp.ok && data && data.success) {
+                        window.location.href = 'index.php';
+                        return;
+                    }
+                    const statusInfo = `HTTP ${resp.status}`;
+                    const msg = (data && data.message) ? data.message : 'Falha no cadastro/login com Google.';
+                    alert(`Erro ao concluir com o Google (${statusInfo}): ${msg}`);
+                })
+                .catch(() => alert('Ocorreu um erro inesperado ao tentar concluir com o Google.'));
+            } catch (e) {
+                console.error('Erro em handleGoogleSignIn (cadastro):', e);
+            }
+        }
+    }
+</script>
 </body>
 </html>

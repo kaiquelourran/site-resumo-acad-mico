@@ -1272,6 +1272,13 @@ function getNomeFiltro($filtro) {
             color: #666;
             font-size: 18px;
         }
+        .comment-avatar img, .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            display: block;
+        }
 
         .user-status {
             position: absolute;
@@ -1398,6 +1405,13 @@ function getNomeFiltro($filtro) {
         .user-avatar i {
             color: #666;
             font-size: 18px;
+        }
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            display: block;
         }
 
         .user-status {
@@ -1812,12 +1826,15 @@ include 'header.php';
                                     <div class="add-comment-form">
                                         <div class="comment-user-info">
                                             <div class="user-avatar">
-                                                <i class="fas fa-user"></i>
-                                                <div class="user-status">
-                                                    <i class="fas fa-bolt"></i>
-                                                </div>
+                                                <?php $avatar_url = $_SESSION['user_avatar'] ?? $_SESSION['user_picture'] ?? $_SESSION['foto_usuario'] ?? null; ?>
+                                                <?php if (!empty($avatar_url)): ?>
+                                                    <img src="<?= htmlspecialchars($avatar_url, ENT_QUOTES, 'UTF-8'); ?>" alt="Avatar" />
+                                                <?php else: ?>
+                                                    <i class="fas fa-user"></i>
+                                                <?php endif; ?>
+
                                             </div>
-                                            <div class="user-name">Usurio Annimo</div>
+                                            <div class="user-name"><?php echo htmlspecialchars($_SESSION['usuario_nome'] ?? $_SESSION['nome_usuario'] ?? $_SESSION['user_name'] ?? 'Usuário Anônimo', ENT_QUOTES, 'UTF-8'); ?></div>
                                         </div>
                                         
                                         <div class="comment-input-section">
@@ -1843,12 +1860,7 @@ include 'header.php';
                                             </div>
                                             
                                             <form id="comment-form-<?php echo $questao['id_questao']; ?>" class="comment-form">
-                                                <div class="form-group" style="display: none;">
-                                                    <input type="text" name="nome_usuario" placeholder="Seu nome" maxlength="100" value="Usurio Annimo">
-                                                </div>
-                                                <div class="form-group" style="display: none;">
-                                                    <input type="email" name="email_usuario" placeholder="Seu email (opcional)" maxlength="100">
-                                                </div>
+
                                                 <div class="comment-textarea-container">
                                                     <textarea name="comentario" placeholder="Escreva o seu comentrio" required minlength="10" maxlength="500" class="comment-textarea"></textarea>
                                                     <div class="textarea-resize-handle"></div>
@@ -2543,10 +2555,8 @@ if (!window.statsInitialized) {
                 <div class="comment-item" data-comentario-id="${comentario.id_comentario}">
                     <div class="comment-header">
                         <div class="comment-avatar">
-                            <i class="fas fa-user"></i>
-                            <div class="user-status">
-                                <i class="fas fa-bolt"></i>
-                            </div>
+                            ${comentario.avatar_url ? `<img src="${escapeAttr(comentario.avatar_url)}" alt="Avatar" />` : `<i class="fas fa-user"></i>`}
+
                         </div>
                         <div class="comment-author">${escapeHtml(comentario.nome_usuario)}</div>
                         <div class="comment-date">${comentario.data_formatada}</div>
@@ -2569,7 +2579,7 @@ if (!window.statsInitialized) {
                                 <div class="reply-item">
                                     <div class="comment-header">
                                         <div class="comment-avatar">
-                                            <i class="fas fa-user"></i>
+                                            ${resposta.avatar_url ? `<img src="${escapeAttr(resposta.avatar_url)}" alt="Avatar" />` : `<i class="fas fa-user"></i>`}
                                         </div>
                                         <div class="comment-author">${escapeHtml(resposta.nome_usuario)}</div>
                                         <div class="comment-date">${resposta.data_formatada}</div>
@@ -2682,6 +2692,12 @@ if (!window.statsInitialized) {
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
+        }
+
+        function escapeAttr(text) {
+            const div = document.createElement('div');
+            div.innerText = text ?? '';
+            return div.innerHTML.replace(/\"/g, '&quot;');
         }
 
         function showMessage(message, type) {
@@ -2863,7 +2879,7 @@ if (!window.statsInitialized) {
             const data = Object.fromEntries(formData.entries());
             data.id_questao = questaoId;
             data.id_comentario_pai = comentarioPaiId;
-            data.nome_usuario = 'Usuario Anonimo'; // Pode ser obtido de um campo oculto
+            // nome_usuario será definido pelo backend com base na sessão do usuário
             
             // Validao no cliente
             const comentarioTexto = (data.comentario || '').trim();
