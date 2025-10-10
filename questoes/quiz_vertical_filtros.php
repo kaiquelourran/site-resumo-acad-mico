@@ -1513,7 +1513,7 @@ function getNomeFiltro($filtro) {
         }
 
         .btn-responder {
-            background: #ff6b35;
+            background: #007bff;
             color: white;
             border: none;
             padding: 10px 20px;
@@ -1525,7 +1525,7 @@ function getNomeFiltro($filtro) {
         }
 
         .btn-responder:hover {
-            background: #e55a2b;
+            background: #0056b3;
             transform: translateY(-1px);
         }
 
@@ -1571,6 +1571,9 @@ function getNomeFiltro($filtro) {
             margin-top: 15px;
             padding-left: 15px;
             border-left: 2px solid #f0f0f0;
+        }
+        .comment-replies.collapsed {
+            display: none;
         }
 
         .reply-item {
@@ -1842,20 +1845,8 @@ include 'header.php';
                                                 <button type="button" class="toolbar-btn" data-format="bold" title="Negrito">
                                                     <strong>B</strong>
                                                 </button>
-                                                <button type="button" class="toolbar-btn" data-format="italic" title="Itlico">
+                                                <button type="button" class="toolbar-btn" data-format="italic" title="Itálico">
                                                     <em>I</em>
-                                                </button>
-                                                <button type="button" class="toolbar-btn" data-format="underline" title="Sublinhado">
-                                                    <u>U</u>
-                                                </button>
-                                                <button type="button" class="toolbar-btn" data-format="color" title="Cor do texto">
-                                                    A<span class="color-underline"></span>
-                                                </button>
-                                                <button type="button" class="toolbar-btn" data-format="ul" title="Lista com marcadores">
-                                                    <i class="fas fa-list-ul"></i>
-                                                </button>
-                                                <button type="button" class="toolbar-btn" data-format="ol" title="Lista numerada">
-                                                    <i class="fas fa-list-ol"></i>
                                                 </button>
                                             </div>
                                             
@@ -2563,7 +2554,7 @@ if (!window.statsInitialized) {
                     </div>
                     <div class="comment-text">${escapeHtml(comentario.comentario)}</div>
                     <div class="comment-actions">
-                        <button class="action-btn curtir-btn" data-comentario-id="${comentario.id_comentario}">
+                        <button class="action-btn curtir-btn${comentario.curtido_pelo_usuario ? ' curtido' : ''}" data-comentario-id="${comentario.id_comentario}" style="${comentario.curtido_pelo_usuario ? 'color: #28a745;' : 'color: #007bff;'}">
                             <i class="fas fa-thumbs-up"></i>
                             Gostei (${comentario.total_curtidas || 0})
                         </button>
@@ -2574,7 +2565,7 @@ if (!window.statsInitialized) {
                         <a href="#" class="report-abuse" data-comentario-id="${comentario.id_comentario}">Reportar abuso</a>
                     </div>
                     ${comentario.respostas && comentario.respostas.length > 0 ? `
-                        <div class="comment-replies">
+                        <div class="comment-replies collapsed">
                             ${comentario.respostas.map(resposta => `
                                 <div class="reply-item">
                                     <div class="comment-header">
@@ -2586,7 +2577,7 @@ if (!window.statsInitialized) {
                                     </div>
                                     <div class="comment-text">${escapeHtml(resposta.comentario)}</div>
                                     <div class="comment-actions">
-                                        <button class="action-btn curtir-btn" data-comentario-id="${resposta.id_comentario}">
+                                        <button class="action-btn curtir-btn${resposta.curtido_pelo_usuario ? ' curtido' : ''}" data-comentario-id="${resposta.id_comentario}" style="${resposta.curtido_pelo_usuario ? 'color: #28a745;' : 'color: #007bff;'}">
                                             <i class="fas fa-thumbs-up"></i>
                                             Gostei (${resposta.total_curtidas || 0})
                                         </button>
@@ -2743,11 +2734,42 @@ if (!window.statsInitialized) {
                 });
             });
 
-            // Botes de responder
+            // Botões de respostas: toggling da seção de respostas + abrir formulário quando expandir
             document.querySelectorAll(`#comments-${questaoId} .responder-btn`).forEach(btn => {
                 btn.addEventListener('click', function() {
                     const comentarioId = this.dataset.comentarioId;
-                    mostrarFormularioResposta(questaoId, comentarioId);
+                    const comentarioItem = document.querySelector(`[data-comentario-id="${comentarioId}"]`);
+                    if (!comentarioItem) return;
+                    let repliesSection = comentarioItem.querySelector('.comment-replies');
+                    if (!repliesSection) {
+                        // cria seção vazia inicialmente oculta
+                        repliesSection = document.createElement('div');
+                        repliesSection.className = 'comment-replies collapsed';
+                        const actions = comentarioItem.querySelector('.comment-actions');
+                        if (actions && actions.parentNode) {
+                            actions.parentNode.insertBefore(repliesSection, actions.nextSibling);
+                        } else {
+                            comentarioItem.appendChild(repliesSection);
+                        }
+                    }
+                    const isCollapsed = repliesSection.classList.contains('collapsed');
+                    if (isCollapsed) {
+                        // expandir: remover classe e garantir que replies estejam carregadas e mostrar formulário
+                        repliesSection.classList.remove('collapsed');
+                        // se a seção está vazia (sem reply-item), recarregar comentários para popular respostas
+                        const hasReplies = repliesSection.querySelector('.reply-item');
+                        if (!hasReplies) {
+                            // recarrega os comentários apenas para este bloco
+                            loadComments(questaoId);
+                        }
+                        // abrir formulário de resposta
+                        mostrarFormularioResposta(questaoId, comentarioId);
+                    } else {
+                        // recolher: adicionar classe e remover formulário de resposta se existir
+                        repliesSection.classList.add('collapsed');
+                        const form = repliesSection.querySelector('.form-resposta');
+                        if (form) form.remove();
+                    }
                 });
             });
 
@@ -2793,6 +2815,8 @@ if (!window.statsInitialized) {
                             botao.classList.remove('curtido');
                             botao.style.color = '#007bff';
                         }
+                        // Atualizar texto para manter ícone e label
+                        botao.innerHTML = `<i class=\"fas fa-thumbs-up\"></i> Gostei (${newCount})`;
                     }
                 } else {
                     showMessage('Erro: ' + result.message, 'error');
@@ -2806,67 +2830,91 @@ if (!window.statsInitialized) {
 
         // Funo para mostrar formulrio de resposta
         function mostrarFormularioResposta(questaoId, comentarioPaiId) {
-            // Implementar formulrio de resposta inline
             const comentarioItem = document.querySelector(`[data-comentario-id="${comentarioPaiId}"]`);
-            let formResposta = comentarioItem.querySelector('.form-resposta');
-            
-            if (!formResposta) {
-                formResposta = document.createElement('div');
-                formResposta.className = 'form-resposta';
-                formResposta.innerHTML = `
-                    <div class="comment-user-info">
-                        <div class="user-avatar">
-                            <i class="fas fa-user"></i>
-                        </div>
-                        <div class="user-name">Usurio Annimo</div>
-                    </div>
-                    <div class="comment-input-section">
-                        <form class="reply-form" data-comentario-pai="${comentarioPaiId}">
-                            <div class="comment-textarea-container">
-                                <textarea name="comentario" placeholder="Escreva sua resposta..." required minlength="10" maxlength="500" class="comment-textarea"></textarea>
-                            </div>
-                            <div style="display: flex; gap: 10px; margin-top: 10px;">
-                                <button type="submit" class="btn-responder">Responder</button>
-                                <button type="button" class="btn-cancelar" onclick="this.closest('.form-resposta').remove()">Cancelar</button>
-                            </div>
-                        </form>
-                    </div>
-                `;
-                
-                const repliesSection = comentarioItem.querySelector('.comment-replies') || 
-                    comentarioItem.querySelector('.comment-actions').parentNode;
-                repliesSection.appendChild(formResposta);
-                
-                // Inicializar contador de caracteres para o textarea da resposta
-                const replyTextarea = formResposta.querySelector('textarea[name="comentario"]');
-                if (replyTextarea) {
-                    const container = replyTextarea.closest('.comment-textarea-container') || replyTextarea.parentElement || replyTextarea;
-                    let charCount = container ? container.querySelector('.char-count') : null;
-                    if (!charCount && container) {
-                        charCount = document.createElement('div');
-                        charCount.className = 'char-count';
-                        charCount.style.cssText = 'margin-top: 6px; font-size: 12px; color: #6c757d;';
-                        container.appendChild(charCount);
-                    }
-                    const updateCharCount = () => {
-                        const count = replyTextarea.value.length;
-                        if (charCount) {
-                            safeSetTextContent(charCount, `${count}/500 caracteres`, `${count}/500 caracteres`);
-                            if (count > 450) {
-                                charCount.style.color = '#dc3545';
-                            } else if (count > 400) {
-                                charCount.style.color = '#ffc107';
-                            } else {
-                                charCount.style.color = '#6c757d';
-                            }
-                        }
-                    };
-                    updateCharCount();
-                    replyTextarea.addEventListener('input', updateCharCount);
+            if (!comentarioItem) {
+                console.error('Comentario pai nao encontrado para id:', comentarioPaiId);
+                showMessage('Erro: Comentário não encontrado para responder', 'error');
+                return;
+            }
+
+            // Garantir a seção de respostas
+            let repliesSection = comentarioItem.querySelector('.comment-replies');
+            if (!repliesSection) {
+                repliesSection = document.createElement('div');
+                repliesSection.className = 'comment-replies collapsed';
+                const actions = comentarioItem.querySelector('.comment-actions');
+                if (actions && actions.parentNode) {
+                    actions.parentNode.insertBefore(repliesSection, actions.nextSibling);
+                } else {
+                    comentarioItem.appendChild(repliesSection);
                 }
-                
-                // Adicionar event listener ao formulario
-                formResposta.querySelector('.reply-form').addEventListener('submit', function(e) {
+            }
+
+            // Evitar múltiplos formulários
+            let formResposta = repliesSection.querySelector('.form-resposta');
+            if (formResposta) {
+                const textareaExistente = formResposta.querySelector('textarea[name="comentario"]');
+                if (textareaExistente) textareaExistente.focus();
+                return;
+            }
+
+            formResposta = document.createElement('div');
+            formResposta.className = 'form-resposta';
+            const sessAvatar = "<?php echo htmlspecialchars($_SESSION['user_avatar'] ?? $_SESSION['user_picture'] ?? $_SESSION['foto_usuario'] ?? '', ENT_QUOTES, 'UTF-8'); ?>";
+            const sessNome = "<?php echo htmlspecialchars($_SESSION['usuario_nome'] ?? $_SESSION['nome_usuario'] ?? $_SESSION['user_name'] ?? 'Usuário Anônimo', ENT_QUOTES, 'UTF-8'); ?>";
+            formResposta.innerHTML = `
+                <div class="comment-user-info">
+                    <div class="user-avatar">${sessAvatar ? `<img src="${sessAvatar}" alt="Avatar" />` : `<i class="fas fa-user"></i>`}</div>
+                    <div class="user-name">${sessNome}</div>
+                </div>
+                <div class="comment-input-section">
+                    <form class="reply-form" data-comentario-pai="${comentarioPaiId}">
+                        <div class="comment-textarea-container">
+                            <textarea name="comentario" placeholder="Escreva sua resposta..." required minlength="10" maxlength="500" class="comment-textarea"></textarea>
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-top: 10px;">
+                            <button type="submit" class="btn-responder">Responder</button>
+                            <button type="button" class="btn-cancelar">Cancelar</button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            repliesSection.appendChild(formResposta);
+
+            // Cancelar
+            const btnCancelar = formResposta.querySelector('.btn-cancelar');
+            if (btnCancelar) {
+                btnCancelar.addEventListener('click', function() {
+                    const container = this.closest('.form-resposta');
+                    if (container && container.parentNode) container.parentNode.removeChild(container);
+                });
+            }
+
+            // Contador de caracteres
+            const replyTextarea = formResposta.querySelector('textarea[name="comentario"]');
+            if (replyTextarea) {
+                const container = replyTextarea.closest('.comment-textarea-container') || replyTextarea.parentElement || replyTextarea;
+                let charCount = container ? container.querySelector('.char-count') : null;
+                if (!charCount && container) {
+                    charCount = document.createElement('div');
+                    charCount.className = 'char-count';
+                    charCount.style.cssText = 'margin-top: 6px; font-size: 12px; color: #6c757d;';
+                    container.appendChild(charCount);
+                }
+                const updateCharCount = () => {
+                    const count = replyTextarea.value.length;
+                    if (charCount) {
+                        safeSetTextContent(charCount, `${count}/500 caracteres`, `${count}/500 caracteres`);
+                        charCount.style.color = count > 450 ? '#dc3545' : (count > 400 ? '#ffc107' : '#6c757d');
+                    }
+                };
+                updateCharCount();
+                replyTextarea.addEventListener('input', updateCharCount);
+            }
+
+            const replyForm = formResposta.querySelector('.reply-form');
+            if (replyForm) {
+                replyForm.addEventListener('submit', function(e) {
                     e.preventDefault();
                     enviarResposta(questaoId, comentarioPaiId, this);
                 });
@@ -3014,15 +3062,9 @@ if (!window.statsInitialized) {
                 case 'italic':
                     formattedText = `*${selectedText}*`;
                     break;
-                case 'underline':
-                    formattedText = `_${selectedText}_`;
-                    break;
-                case 'ul':
-                    formattedText = ` ${selectedText}`;
-                    break;
-                case 'ol':
-                    formattedText = `1. ${selectedText}`;
-                    break;
+                default:
+                    // Formatos removidos: ignorar ações não suportadas
+                    return;
             }
             
             textarea.value = textarea.value.substring(0, start) + formattedText + textarea.value.substring(end);

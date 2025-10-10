@@ -64,6 +64,8 @@ try {
                 ");
                 $stmt->execute([$id_questao]);
                 $comentarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                $ipUsuario = getUserIP();
+                $stmtCurtido = $pdo->prepare("SELECT 1 FROM curtidas_comentarios WHERE id_comentario = ? AND ip_usuario = ? LIMIT 1");
                 // Enriquecer comentários principais com avatar_url e nome normalizado
                 if (!empty($comentarios)) {
                     foreach ($comentarios as &$comentario) {
@@ -72,6 +74,19 @@ try {
                         if ($avatar_c) { $comentario['avatar_url'] = $avatar_c; }
                         $nome_c = getNomeByEmail($pdo, $email_c);
                         if ($nome_c) { $comentario['nome_usuario'] = $nome_c; }
+                        // Curtido pelo usuário (por IP)
+                        $stmtCurtido->execute([$comentario['id_comentario'], $ipUsuario]);
+                        $comentario['curtido_pelo_usuario'] = $stmtCurtido->fetchColumn() ? true : false;
+                        // Fallback: se não tiver avatar/nome por email, usar sessão
+                        $sessionEmail = $_SESSION['user_email'] ?? $_SESSION['usuario_email'] ?? $_SESSION['email_usuario'] ?? $_SESSION['email'] ?? null;
+                        if (empty($comentario['avatar_url']) && (empty($comentario['email_usuario']) || $comentario['email_usuario'] === $sessionEmail)) {
+                            $sessAvatar = $_SESSION['user_avatar'] ?? $_SESSION['user_picture'] ?? $_SESSION['foto_usuario'] ?? null;
+                            if ($sessAvatar) { $comentario['avatar_url'] = $sessAvatar; }
+                        }
+                        if (empty($comentario['nome_usuario']) && (empty($comentario['email_usuario']) || $comentario['email_usuario'] === $sessionEmail)) {
+                            $sessNome = $_SESSION['usuario_nome'] ?? $_SESSION['nome_usuario'] ?? $_SESSION['user_name'] ?? null;
+                            if ($sessNome) { $comentario['nome_usuario'] = $sessNome; }
+                        }
                     }
                     unset($comentario);
                 }
@@ -95,6 +110,19 @@ try {
                             if ($avatar_r) { $resposta['avatar_url'] = $avatar_r; }
                             $nome_r = getNomeByEmail($pdo, $email_r);
                             if ($nome_r) { $resposta['nome_usuario'] = $nome_r; }
+                            // Curtido pelo usuário (por IP)
+                            $stmtCurtido->execute([$resposta['id_comentario'], $ipUsuario]);
+                            $resposta['curtido_pelo_usuario'] = $stmtCurtido->fetchColumn() ? true : false;
+                            // Fallback por sessão quando não há email/registro
+                            $sessionEmail = $_SESSION['user_email'] ?? $_SESSION['usuario_email'] ?? $_SESSION['email_usuario'] ?? $_SESSION['email'] ?? null;
+                            if (empty($resposta['avatar_url']) && (empty($resposta['email_usuario']) || $resposta['email_usuario'] === $sessionEmail)) {
+                                $sessAvatar = $_SESSION['user_avatar'] ?? $_SESSION['user_picture'] ?? $_SESSION['foto_usuario'] ?? null;
+                                if ($sessAvatar) { $resposta['avatar_url'] = $sessAvatar; }
+                            }
+                            if (empty($resposta['nome_usuario']) && (empty($resposta['email_usuario']) || $resposta['email_usuario'] === $sessionEmail)) {
+                                $sessNome = $_SESSION['usuario_nome'] ?? $_SESSION['nome_usuario'] ?? $_SESSION['user_name'] ?? null;
+                                if ($sessNome) { $resposta['nome_usuario'] = $sessNome; }
+                            }
                         }
                         unset($resposta);
                     }
@@ -176,11 +204,12 @@ try {
                     $postNome = getNomeByEmail($pdo, $response['data']['email_usuario'] ?? '');
                     if ($postNome) { $response['data']['nome_usuario'] = $postNome; }
                     // Fallback para avatar/nome da sessão quando o e-mail não estiver disponível no banco
-                    if (empty($response['data']['avatar_url'])) {
+                    $sessionEmail = $_SESSION['user_email'] ?? $_SESSION['usuario_email'] ?? $_SESSION['email_usuario'] ?? $_SESSION['email'] ?? null;
+                    if (empty($response['data']['avatar_url']) && (empty($response['data']['email_usuario']) || $response['data']['email_usuario'] === $sessionEmail)) {
                         $sessAvatar = $_SESSION['user_avatar'] ?? $_SESSION['user_picture'] ?? $_SESSION['foto_usuario'] ?? null;
                         if ($sessAvatar) { $response['data']['avatar_url'] = $sessAvatar; }
                     }
-                    if (empty($response['data']['nome_usuario'])) {
+                    if (empty($response['data']['nome_usuario']) && (empty($response['data']['email_usuario']) || $response['data']['email_usuario'] === $sessionEmail)) {
                         $sessNome = $_SESSION['usuario_nome'] ?? $_SESSION['nome_usuario'] ?? $_SESSION['user_name'] ?? null;
                         if ($sessNome) { $response['data']['nome_usuario'] = $sessNome; }
                     }

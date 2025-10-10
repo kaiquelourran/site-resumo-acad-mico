@@ -45,6 +45,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $_SESSION['user_type'] = $usuario['tipo'];
                     $_SESSION['tipo_usuario'] = $usuario['tipo']; // Para compatibilidade com admin
                     
+                    // NOVO: garantir que nome e email estejam na sessão para o sistema de comentários
+                    $_SESSION['user_email'] = $usuario['email'];
+                    $_SESSION['usuario_nome'] = $usuario['nome'];
+                    $_SESSION['nome_usuario'] = $usuario['nome'];
+                    
+                    // NOVO: tentar carregar avatar_url do usuário (se a coluna existir)
+                    try {
+                        $stmtAvatar = $pdo->prepare("SELECT avatar_url FROM usuarios WHERE id_usuario = ?");
+                        $stmtAvatar->execute([$usuario['id_usuario']]);
+                        $avatarRow = $stmtAvatar->fetch(PDO::FETCH_ASSOC);
+                        $avatarUrl = $avatarRow['avatar_url'] ?? null;
+                        if (!empty($avatarUrl)) {
+                            $_SESSION['user_avatar'] = $avatarUrl;
+                            $_SESSION['user_picture'] = $avatarUrl;
+                            $_SESSION['foto_usuario'] = $avatarUrl;
+                        }
+                    } catch (PDOException $e) {
+                        // Silenciosamente ignorar casa coluna não exista em alguns ambientes
+                    }
+                    
                     // Atualizar último login
                     $stmt_update = $pdo->prepare("UPDATE usuarios SET ultimo_login = NOW() WHERE id_usuario = ?");
                     $stmt_update->execute([$usuario['id_usuario']]);
