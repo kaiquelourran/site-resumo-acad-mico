@@ -51,7 +51,8 @@ try {
                 $id_questao = (int)$_GET['id_questao'];
                 $ordenacao = $_GET['ordenacao'] ?? 'data'; // 'data' ou 'curtidas'
                 
-                $orderBy = $ordenacao === 'curtidas' ? 'c.curtidas DESC, c.data_comentario DESC' : 'c.data_comentario DESC';
+                // Ordena por total de curtidas (do mais curtido para o menos), e desempata pela data mais recente
+                $orderBy = $ordenacao === 'curtidas' ? 'total_curtidas DESC, c.data_comentario DESC' : 'c.data_comentario DESC';
                 
                 $stmt = $pdo->prepare("
                     SELECT c.*, 
@@ -65,7 +66,9 @@ try {
                 $stmt->execute([$id_questao]);
                 $comentarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 $ipUsuario = getUserIP();
-                $stmtCurtido = $pdo->prepare("SELECT 1 FROM curtidas_comentarios WHERE id_comentario = ? AND ip_usuario = ? LIMIT 1");
+                $sessionEmail = $_SESSION['user_email'] ?? $_SESSION['usuario_email'] ?? $_SESSION['email_usuario'] ?? $_SESSION['email'] ?? null;
+                $stmtCurtidoEmail = $pdo->prepare("SELECT 1 FROM curtidas_comentarios WHERE id_comentario = ? AND email_usuario = ? LIMIT 1");
+                $stmtCurtidoIP = $pdo->prepare("SELECT 1 FROM curtidas_comentarios WHERE id_comentario = ? AND ip_usuario = ? LIMIT 1");
                 // Enriquecer comentários principais com avatar_url e nome normalizado
                 if (!empty($comentarios)) {
                     foreach ($comentarios as &$comentario) {
@@ -74,11 +77,22 @@ try {
                         if ($avatar_c) { $comentario['avatar_url'] = $avatar_c; }
                         $nome_c = getNomeByEmail($pdo, $email_c);
                         if ($nome_c) { $comentario['nome_usuario'] = $nome_c; }
-                        // Curtido pelo usuário (por IP)
-                        $stmtCurtido->execute([$comentario['id_comentario'], $ipUsuario]);
-                        $comentario['curtido_pelo_usuario'] = $stmtCurtido->fetchColumn() ? true : false;
+                        // Curtido pelo usuário (por e-mail quando logado; caso contrário, por IP)
+                        // Ajuste robusto: cálculo de curtido_pelo_usuario para COMENTÁRIOS com fallback se coluna email_usuario não existir
+                        if ($sessionEmail) {
+                            try {
+                                $stmtCurtidoEmail->execute([$comentario['id_comentario'], $sessionEmail]);
+                                $comentario['curtido_pelo_usuario'] = $stmtCurtidoEmail->fetchColumn() ? true : false;
+                            } catch (PDOException $e) {
+                                // Fallback por IP quando a coluna email_usuario não existe
+                                $stmtCurtidoIP->execute([$comentario['id_comentario'], $ipUsuario]);
+                                $comentario['curtido_pelo_usuario'] = $stmtCurtidoIP->fetchColumn() ? true : false;
+                            }
+                        } else {
+                            $stmtCurtidoIP->execute([$comentario['id_comentario'], $ipUsuario]);
+                            $comentario['curtido_pelo_usuario'] = $stmtCurtidoIP->fetchColumn() ? true : false;
+                        }
                         // Fallback: se não tiver avatar/nome por email, usar sessão
-                        $sessionEmail = $_SESSION['user_email'] ?? $_SESSION['usuario_email'] ?? $_SESSION['email_usuario'] ?? $_SESSION['email'] ?? null;
                         if (empty($comentario['avatar_url']) && (empty($comentario['email_usuario']) || $comentario['email_usuario'] === $sessionEmail)) {
                             $sessAvatar = $_SESSION['user_avatar'] ?? $_SESSION['user_picture'] ?? $_SESSION['foto_usuario'] ?? null;
                             if ($sessAvatar) { $comentario['avatar_url'] = $sessAvatar; }
@@ -110,11 +124,20 @@ try {
                             if ($avatar_r) { $resposta['avatar_url'] = $avatar_r; }
                             $nome_r = getNomeByEmail($pdo, $email_r);
                             if ($nome_r) { $resposta['nome_usuario'] = $nome_r; }
-                            // Curtido pelo usuário (por IP)
-                            $stmtCurtido->execute([$resposta['id_comentario'], $ipUsuario]);
-                            $resposta['curtido_pelo_usuario'] = $stmtCurtido->fetchColumn() ? true : false;
+                            // Curtido pelo usuário (por e-mail quando logado; caso contrário, por IP)
+                            if ($sessionEmail) {
+                                try {
+                                    $stmtCurtidoEmail->execute([$resposta['id_comentario'], $sessionEmail]);
+                                    $resposta['curtido_pelo_usuario'] = $stmtCurtidoEmail->fetchColumn() ? true : false;
+                                } catch (PDOException $e) {
+                                    $stmtCurtidoIP->execute([$resposta['id_comentario'], $ipUsuario]);
+                                    $resposta['curtido_pelo_usuario'] = $stmtCurtidoIP->fetchColumn() ? true : false;
+                                }
+                            } else {
+                                $stmtCurtidoIP->execute([$resposta['id_comentario'], $ipUsuario]);
+                                $resposta['curtido_pelo_usuario'] = $stmtCurtidoIP->fetchColumn() ? true : false;
+                            }
                             // Fallback por sessão quando não há email/registro
-                            $sessionEmail = $_SESSION['user_email'] ?? $_SESSION['usuario_email'] ?? $_SESSION['email_usuario'] ?? $_SESSION['email'] ?? null;
                             if (empty($resposta['avatar_url']) && (empty($resposta['email_usuario']) || $resposta['email_usuario'] === $sessionEmail)) {
                                 $sessAvatar = $_SESSION['user_avatar'] ?? $_SESSION['user_picture'] ?? $_SESSION['foto_usuario'] ?? null;
                                 if ($sessAvatar) { $resposta['avatar_url'] = $sessAvatar; }
@@ -181,6 +204,17 @@ try {
                 break;
             }
             
+            // Garantir que o avatar do autor esteja salvo na tabela usuarios para que outros usuários visualizem
+            try {
+                $sessAvatar = $_SESSION['user_avatar'] ?? $_SESSION['user_picture'] ?? $_SESSION['foto_usuario'] ?? null;
+                if (!empty($email_usuario) && !empty($sessAvatar)) {
+                    $updAvatar = $pdo->prepare("UPDATE usuarios SET avatar_url = ? WHERE email = ? AND (avatar_url IS NULL OR avatar_url = '')");
+                    $updAvatar->execute([$sessAvatar, $email_usuario]);
+                }
+            } catch (PDOException $e) {
+                error_log('Falha ao atualizar avatar_url do autor do comentário: ' . $e->getMessage());
+            }
+            
             // Inserir comentário
             $stmt = $pdo->prepare("\n                INSERT INTO comentarios_questoes (id_questao, nome_usuario, email_usuario, comentario, id_comentario_pai) \n                VALUES (?, ?, ?, ?, ?)\n            ");
             
@@ -232,37 +266,124 @@ try {
             $id_comentario = (int)$data['id_comentario'];
             $acao = $data['acao']; // 'curtir' ou 'descurtir'
             $ip_usuario = getUserIP();
+            $email_usuario = $_SESSION['user_email'] ?? $_SESSION['usuario_email'] ?? $_SESSION['email_usuario'] ?? $_SESSION['email'] ?? null;
+
+            // Verificar existência prévia de curtida para este usuário (por email e por IP)
+            $hasEmailLike = false;
+            $hasIPLike = false;
+            try {
+                if ($email_usuario) {
+                    $stmt = $pdo->prepare("SELECT id_curtida FROM curtidas_comentarios WHERE id_comentario = ? AND email_usuario = ? LIMIT 1");
+                    $stmt->execute([$id_comentario, $email_usuario]);
+                    $hasEmailLike = (bool)$stmt->fetch();
+                }
+                $stmt = $pdo->prepare("SELECT id_curtida FROM curtidas_comentarios WHERE id_comentario = ? AND ip_usuario = ? LIMIT 1");
+                $stmt->execute([$id_comentario, $ip_usuario]);
+                $hasIPLike = (bool)$stmt->fetch();
+            } catch (PDOException $e) {
+                // Em ambientes sem coluna email_usuario, apenas IP estará disponível
+                $hasEmailLike = false;
+                try {
+                    $stmt = $pdo->prepare("SELECT id_curtida FROM curtidas_comentarios WHERE id_comentario = ? AND ip_usuario = ? LIMIT 1");
+                    $stmt->execute([$id_comentario, $ip_usuario]);
+                    $hasIPLike = (bool)$stmt->fetch();
+                } catch (PDOException $e2) {
+                    $hasIPLike = false;
+                }
+            }
             
             if ($acao === 'curtir') {
-                // Verificar se já curtiu
-                $stmt = $pdo->prepare("SELECT id_curtida FROM curtidas_comentarios WHERE id_comentario = ? AND ip_usuario = ?");
-                $stmt->execute([$id_comentario, $ip_usuario]);
-                
-                if ($stmt->fetch()) {
-                    $response['message'] = 'Você já curtiu este comentário';
-                    break;
-                }
-                
-                // Adicionar curtida
-                $stmt = $pdo->prepare("INSERT INTO curtidas_comentarios (id_comentario, ip_usuario) VALUES (?, ?)");
-                if ($stmt->execute([$id_comentario, $ip_usuario])) {
+                if ($hasEmailLike) {
+                    // Já curtiu por email; não duplicar
                     $response['success'] = true;
-                    $response['message'] = 'Comentário curtido com sucesso';
+                    $response['message'] = 'Você já curtiu este comentário';
+                } elseif ($email_usuario && $hasIPLike) {
+                    // Migração: converter curtida por IP anterior para email do usuário atual
+                    try {
+                        $stmt = $pdo->prepare("UPDATE curtidas_comentarios SET email_usuario = ?, ip_usuario = NULL WHERE id_comentario = ? AND ip_usuario = ?");
+                        $ok = $stmt->execute([$email_usuario, $id_comentario, $ip_usuario]);
+                        $response['success'] = (bool)$ok;
+                        $response['message'] = $ok ? 'Comentário curtido com sucesso' : 'Erro ao curtir comentário';
+                    } catch (PDOException $e) {
+                        // Fallback: se não houver coluna email_usuario, manter por IP
+                        $response['success'] = true;
+                        $response['message'] = 'Comentário curtido com sucesso';
+                    }
                 } else {
-                    $response['message'] = 'Erro ao curtir comentário';
+                    // Adicionar curtida nova
+                    if ($email_usuario) {
+                        try {
+                            $stmt = $pdo->prepare("INSERT INTO curtidas_comentarios (id_comentario, email_usuario, ip_usuario) VALUES (?, ?, NULL)");
+                            $ok = $stmt->execute([$id_comentario, $email_usuario]);
+                        } catch (PDOException $e) {
+                            // Fallback para IP quando coluna email_usuario não existir
+                            $stmt = $pdo->prepare("INSERT INTO curtidas_comentarios (id_comentario, ip_usuario) VALUES (?, ?)");
+                            $ok = $stmt->execute([$id_comentario, $ip_usuario]);
+                        }
+                    } else {
+                        $stmt = $pdo->prepare("INSERT INTO curtidas_comentarios (id_comentario, ip_usuario) VALUES (?, ?)");
+                        $ok = $stmt->execute([$id_comentario, $ip_usuario]);
+                    }
+                    $response['success'] = (bool)$ok;
+                    $response['message'] = $ok ? 'Comentário curtido com sucesso' : 'Erro ao curtir comentário';
                 }
             } elseif ($acao === 'descurtir') {
-                // Remover curtida
-                $stmt = $pdo->prepare("DELETE FROM curtidas_comentarios WHERE id_comentario = ? AND ip_usuario = ?");
-                if ($stmt->execute([$id_comentario, $ip_usuario])) {
+                // Remover curtida do usuário atual. Primeiro por email, depois por IP (backward compatibility)
+                $deleted = false;
+                if ($email_usuario && $hasEmailLike) {
+                    try {
+                        $stmt = $pdo->prepare("DELETE FROM curtidas_comentarios WHERE id_comentario = ? AND email_usuario = ?");
+                        $stmt->execute([$id_comentario, $email_usuario]);
+                        $deleted = ($stmt->rowCount() > 0);
+                    } catch (PDOException $e) {
+                        // Fallback para IP em ambientes sem coluna email
+                        try {
+                            $stmt = $pdo->prepare("DELETE FROM curtidas_comentarios WHERE id_comentario = ? AND ip_usuario = ?");
+                            $stmt->execute([$id_comentario, $ip_usuario]);
+                            $deleted = ($stmt->rowCount() > 0);
+                        } catch (PDOException $e2) { $deleted = false; }
+                    }
+                }
+                // Somente excluir por IP quando o usuário NÃO estiver logado
+                if (!$deleted && !$email_usuario && $hasIPLike) {
+                    $stmt = $pdo->prepare("DELETE FROM curtidas_comentarios WHERE id_comentario = ? AND ip_usuario = ?");
+                    $stmt->execute([$id_comentario, $ip_usuario]);
+                    $deleted = ($stmt->rowCount() > 0);
+                }
+                
+                if ($deleted) {
                     $response['success'] = true;
                     $response['message'] = 'Curtida removida com sucesso';
                 } else {
-                    $response['message'] = 'Erro ao remover curtida';
+                    $response['success'] = false;
+                    $response['message'] = 'Você não tinha curtido este comentário';
                 }
             } else {
                 $response['message'] = 'Ação inválida';
             }
+
+            // Sempre retornar total de curtidas atualizado e estado do usuário para o comentário
+            try {
+                $stmt = $pdo->prepare("SELECT COUNT(*) FROM curtidas_comentarios WHERE id_comentario = ?");
+                $stmt->execute([$id_comentario]);
+                $response['total_curtidas'] = (int)$stmt->fetchColumn();
+            } catch (PDOException $e) {
+                $response['total_curtidas'] = null;
+            }
+            // Estado curtido_pelo_usuario
+            $curtidoAtual = false;
+            try {
+                if ($email_usuario) {
+                    $stmt = $pdo->prepare("SELECT 1 FROM curtidas_comentarios WHERE id_comentario = ? AND email_usuario = ? LIMIT 1");
+                    $stmt->execute([$id_comentario, $email_usuario]);
+                    $curtidoAtual = (bool)$stmt->fetchColumn();
+                } else {
+                    $stmt = $pdo->prepare("SELECT 1 FROM curtidas_comentarios WHERE id_comentario = ? AND ip_usuario = ? LIMIT 1");
+                    $stmt->execute([$id_comentario, $ip_usuario]);
+                    $curtidoAtual = (bool)$stmt->fetchColumn();
+                }
+            } catch (PDOException $e) { $curtidoAtual = false; }
+            $response['curtido_pelo_usuario'] = $curtidoAtual;
             break;
             
         case 'DELETE':

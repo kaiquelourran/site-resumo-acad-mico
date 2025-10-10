@@ -2523,7 +2523,24 @@ if (!window.statsInitialized) {
                     contentDiv.style.display = 'block';
                     
                     if (data.success) {
-                        renderComments(questaoId, data.data);
+                        const all = Array.isArray(data.data) ? data.data : [];
+                        // Preservar avatar_url vindo do backend; não substituir pelo avatar da sessão do visualizador
+                        all.forEach(c => {
+                            if (!c.avatar_url && c.email_usuario) {
+                                // sem ação: render usará ícone fallback; backend já tenta enriquecer
+                            }
+                            if (Array.isArray(c.respostas)) {
+                                c.respostas.forEach(r => {
+                                    if (!r.avatar_url && r.email_usuario) {
+                                        // idem
+                                    }
+                                });
+                            }
+                        });
+                        window.COMMENTS_STATE = window.COMMENTS_STATE || {};
+                        window.COMMENTS_STATE[questaoId] = { all: all, visibleCount: Math.min(5, all.length) };
+                        const subset = all.slice(0, Math.min(5, all.length));
+                        renderComments(questaoId, subset);
                     } else {
                         showCommentsError(questaoId, data.message);
                     }
@@ -2558,6 +2575,7 @@ if (!window.statsInitialized) {
                             <i class="fas fa-thumbs-up"></i>
                             Gostei (${comentario.total_curtidas || 0})
                         </button>
+                        <span class="voce-curtiu" style="${comentario.curtido_pelo_usuario ? 'margin-left:8px;color:#28a745;font-weight:600;' : 'display:none;margin-left:8px;color:#28a745;font-weight:600;'}">Você curtiu</span>
                         <button class="action-btn responder-btn" data-comentario-id="${comentario.id_comentario}">
                             <i class="fas fa-reply"></i>
                             Respostas (${comentario.total_respostas || 0})
@@ -2581,6 +2599,7 @@ if (!window.statsInitialized) {
                                             <i class="fas fa-thumbs-up"></i>
                                             Gostei (${resposta.total_curtidas || 0})
                                         </button>
+                                        <span class="voce-curtiu" style="${resposta.curtido_pelo_usuario ? 'margin-left:8px;color:#28a745;font-weight:600;' : 'display:none;margin-left:8px;color:#28a745;font-weight:600;'}">Você curtiu</span>
                                         <a href="#" class="report-abuse" data-comentario-id="${resposta.id_comentario}">Reportar abuso</a>
                                     </div>
                                 </div>
@@ -2754,15 +2773,9 @@ if (!window.statsInitialized) {
                     }
                     const isCollapsed = repliesSection.classList.contains('collapsed');
                     if (isCollapsed) {
-                        // expandir: remover classe e garantir que replies estejam carregadas e mostrar formulário
+                        // expandir: remover classe e abrir formulário de resposta
+                        // Não recarregar comentários aqui para evitar perder o formulário e o texto digitado
                         repliesSection.classList.remove('collapsed');
-                        // se a seção está vazia (sem reply-item), recarregar comentários para popular respostas
-                        const hasReplies = repliesSection.querySelector('.reply-item');
-                        if (!hasReplies) {
-                            // recarrega os comentários apenas para este bloco
-                            loadComments(questaoId);
-                        }
-                        // abrir formulário de resposta
                         mostrarFormularioResposta(questaoId, comentarioId);
                     } else {
                         // recolher: adicionar classe e remover formulário de resposta se existir
@@ -2800,23 +2813,43 @@ if (!window.statsInitialized) {
             .then(response => response.json())
             .then(result => {
                 if (result.success) {
-                    // Atualizar contador visual
+                    // Atualizar contador visual usando valor do backend quando disponível
                     const texto = botao.textContent;
                     const match = texto.match(/Gostei \((\d+)\)/);
-                    if (match) {
+                    let newCount = null;
+                    if (typeof result.total_curtidas === 'number') {
+                        newCount = result.total_curtidas;
+                    } else if (match) {
                         const count = parseInt(match[1]);
-                        const newCount = acao === 'curtir' ? count + 1 : count - 1;
-                        botao.textContent = texto.replace(/\(\d+\)/, `(${newCount})`);
-                        
-                        if (acao === 'curtir') {
-                            botao.classList.add('curtido');
-                            botao.style.color = '#28a745';
-                        } else {
-                            botao.classList.remove('curtido');
-                            botao.style.color = '#007bff';
-                        }
-                        // Atualizar texto para manter ícone e label
+                        newCount = acao === 'curtir' ? count + 1 : Math.max(count - 1, 0);
+                    }
+                    if (newCount !== null) {
                         botao.innerHTML = `<i class=\"fas fa-thumbs-up\"></i> Gostei (${newCount})`;
+                    }
+                    // Estilo visual de curtido baseado no backend
+                    if (result.curtido_pelo_usuario === true) {
+                        botao.classList.add('curtido');
+                        botao.style.color = '#28a745';
+                    } else {
+                        botao.classList.remove('curtido');
+                        botao.style.color = '#007bff';
+                    }
+                    // Alternar indicador “Você curtiu” com base no backend
+                    const indicator = botao.parentElement.querySelector('.voce-curtiu');
+                    if (result.curtido_pelo_usuario === true) {
+                        if (indicator) {
+                            indicator.style.display = '';
+                        } else {
+                            const span = document.createElement('span');
+                            span.className = 'voce-curtiu';
+                            span.style.cssText = 'margin-left:8px;color:#28a745;font-weight:600;';
+                            span.textContent = 'Você curtiu';
+                            botao.insertAdjacentElement('afterend', span);
+                        }
+                    } else {
+                        if (indicator) {
+                            indicator.style.display = 'none';
+                        }
                     }
                 } else {
                     showMessage('Erro: ' + result.message, 'error');
@@ -3025,11 +3058,27 @@ if (!window.statsInitialized) {
         // Funo para carregar mais comentrios
         function initLoadMore(questaoId) {
             const loadMoreBtn = document.querySelector(`#comments-${questaoId} .load-more-btn`);
+            const state = (window.COMMENTS_STATE = window.COMMENTS_STATE || {});
+            const st = state[questaoId];
             if (loadMoreBtn) {
-                loadMoreBtn.addEventListener('click', function() {
-                    // Implementar paginao se necessrio
-                    showMessage('Funcionalidade de carregar mais em desenvolvimento', 'info');
-                });
+                // Atualizar visibilidade inicialmente
+                if (st && Array.isArray(st.all)) {
+                    loadMoreBtn.style.display = st.visibleCount < st.all.length ? 'inline-block' : 'none';
+                } else {
+                    loadMoreBtn.style.display = 'none';
+                }
+                if (loadMoreBtn.dataset.hasListener !== '1') {
+                    loadMoreBtn.dataset.hasListener = '1';
+                    loadMoreBtn.addEventListener('click', function() {
+                        const s = (window.COMMENTS_STATE || {})[questaoId];
+                        if (!s || !Array.isArray(s.all)) return;
+                        s.visibleCount = Math.min(s.visibleCount + 5, s.all.length);
+                        const subset = s.all.slice(0, s.visibleCount);
+                        renderComments(questaoId, subset);
+                        // atualizar visibilidade do botão
+                        this.style.display = s.visibleCount < s.all.length ? 'inline-block' : 'none';
+                    });
+                }
             }
         }
 
@@ -3087,7 +3136,11 @@ if (!window.statsInitialized) {
                     contentDiv.style.display = 'block';
                     
                     if (data.success) {
-                        renderComments(questaoId, data.data);
+                        const all = Array.isArray(data.data) ? data.data : [];
+                        window.COMMENTS_STATE = window.COMMENTS_STATE || {};
+                        window.COMMENTS_STATE[questaoId] = { all: all, visibleCount: Math.min(5, all.length) };
+                        const subset = all.slice(0, Math.min(5, all.length));
+                        renderComments(questaoId, subset);
                         initTabs(questaoId);
                         initLoadMore(questaoId);
                         initToolbar(questaoId);
