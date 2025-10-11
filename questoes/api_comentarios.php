@@ -387,7 +387,7 @@ try {
             break;
             
         case 'DELETE':
-            // Reportar abuso
+            // Reportar abuso ou apagar comentário (admin)
             $data = json_decode(file_get_contents('php://input'), true);
             
             if (!isset($data['id_comentario'])) {
@@ -396,14 +396,33 @@ try {
             }
             
             $id_comentario = (int)$data['id_comentario'];
+            $acao = isset($data['acao']) ? $data['acao'] : 'reportar';
             
-            // Marcar comentário como inativo (simulando remoção por abuso)
-            $stmt = $pdo->prepare("UPDATE comentarios_questoes SET ativo = 0 WHERE id_comentario = ?");
-            if ($stmt->execute([$id_comentario])) {
-                $response['success'] = true;
-                $response['message'] = 'Comentário reportado com sucesso';
+            if ($acao === 'apagar') {
+                // Apenas administrador pode apagar
+                $isAdmin = (($_SESSION['tipo_usuario'] ?? $_SESSION['user_type'] ?? '') === 'admin');
+                if (!$isAdmin) {
+                    $response['success'] = false;
+                    $response['message'] = 'Ação restrita ao administrador';
+                    break;
+                }
+                // Soft delete: marcar comentário como inativo
+                $stmt = $pdo->prepare("UPDATE comentarios_questoes SET ativo = 0 WHERE id_comentario = ?");
+                if ($stmt->execute([$id_comentario])) {
+                    $response['success'] = true;
+                    $response['message'] = 'Comentário apagado com sucesso';
+                } else {
+                    $response['message'] = 'Erro ao apagar comentário';
+                }
             } else {
-                $response['message'] = 'Erro ao reportar comentário';
+                // Reportar abuso (usuário comum)
+                $stmt = $pdo->prepare("UPDATE comentarios_questoes SET ativo = 0 WHERE id_comentario = ?");
+                if ($stmt->execute([$id_comentario])) {
+                    $response['success'] = true;
+                    $response['message'] = 'Comentário reportado com sucesso';
+                } else {
+                    $response['message'] = 'Erro ao reportar comentário';
+                }
             }
             break;
             

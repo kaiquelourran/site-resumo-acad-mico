@@ -2581,6 +2581,7 @@ if (!window.statsInitialized) {
                             Respostas (${comentario.total_respostas || 0})
                         </button>
                         <a href="#" class="report-abuse" data-comentario-id="${comentario.id_comentario}">Reportar abuso</a>
+                        ${"<?php echo (($_SESSION['tipo_usuario'] ?? $_SESSION['user_type'] ?? '') === 'admin') ? '1' : ''; ?>" ? `<button class="action-btn apagar-btn" data-comentario-id="${comentario.id_comentario}" title="Apagar comentário" style="color:#dc3545;"><i class="fas fa-trash"></i> Apagar</button>` : ''}
                     </div>
                     ${comentario.respostas && comentario.respostas.length > 0 ? `
                         <div class="comment-replies collapsed">
@@ -2601,6 +2602,7 @@ if (!window.statsInitialized) {
                                         </button>
                                         <span class="voce-curtiu" style="${resposta.curtido_pelo_usuario ? 'margin-left:8px;color:#28a745;font-weight:600;' : 'display:none;margin-left:8px;color:#28a745;font-weight:600;'}">Você curtiu</span>
                                         <a href="#" class="report-abuse" data-comentario-id="${resposta.id_comentario}">Reportar abuso</a>
+                                        ${"<?php echo (($_SESSION['tipo_usuario'] ?? $_SESSION['user_type'] ?? '') === 'admin') ? '1' : ''; ?>" ? `<button class="action-btn apagar-btn" data-comentario-id="${resposta.id_comentario}" title="Apagar resposta" style="color:#dc3545;"><i class="fas fa-trash"></i> Apagar</button>` : ''}
                                     </div>
                                 </div>
                             `).join('')}
@@ -2794,6 +2796,14 @@ if (!window.statsInitialized) {
                     reportarAbuso(comentarioId);
                 });
             });
+
+            // Botões de apagar (admin)
+            document.querySelectorAll(`#comments-${questaoId} .apagar-btn`).forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const comentarioId = this.dataset.comentarioId;
+                    apagarComentario(comentarioId, questaoId, this);
+                });
+            });
         }
 
         // Funo para curtir/descurtir comentrio
@@ -2861,6 +2871,44 @@ if (!window.statsInitialized) {
             });
         }
 
+        // Função para apagar comentário (admin)
+        function apagarComentario(comentarioId, questaoId, botao) {
+            if (!confirm('Tem certeza que deseja apagar este comentário? Esta ação não pode ser desfeita.')) return;
+            fetch('api_comentarios.php', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    id_comentario: comentarioId,
+                    acao: 'apagar'
+                })
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    const item = document.querySelector(`[data-comentario-id="${comentarioId}"]`);
+                    if (item) {
+                        item.style.opacity = '0.6';
+                        item.style.pointerEvents = 'none';
+                        item.style.filter = 'grayscale(0.7)';
+                        item.querySelectorAll('.action-btn, .report-abuse').forEach(el => el.remove());
+                        const removed = document.createElement('div');
+                        removed.style.cssText = 'margin-top:8px;color:#dc3545;font-weight:600;';
+                        removed.textContent = 'Comentário apagado pelo administrador';
+                        item.appendChild(removed);
+                    }
+                    showMessage('Comentário apagado com sucesso.', 'success');
+                } else {
+                    showMessage('Erro ao apagar: ' + (result.message || 'tente novamente.'), 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao apagar comentário:', error);
+                showMessage('Erro ao apagar comentário.', 'error');
+            });
+        }
+
         // Funo para mostrar formulrio de resposta
         function mostrarFormularioResposta(questaoId, comentarioPaiId) {
             const comentarioItem = document.querySelector(`[data-comentario-id="${comentarioPaiId}"]`);
@@ -2895,6 +2943,7 @@ if (!window.statsInitialized) {
             formResposta.className = 'form-resposta';
             const sessAvatar = "<?php echo htmlspecialchars($_SESSION['user_avatar'] ?? $_SESSION['user_picture'] ?? $_SESSION['foto_usuario'] ?? '', ENT_QUOTES, 'UTF-8'); ?>";
             const sessNome = "<?php echo htmlspecialchars($_SESSION['usuario_nome'] ?? $_SESSION['nome_usuario'] ?? $_SESSION['user_name'] ?? 'Usuário Anônimo', ENT_QUOTES, 'UTF-8'); ?>";
+            const isAdmin = "<?php echo (($_SESSION['tipo_usuario'] ?? $_SESSION['user_type'] ?? '') === 'admin') ? '1' : ''; ?>";
             formResposta.innerHTML = `
                 <div class="comment-user-info">
                     <div class="user-avatar">${sessAvatar ? `<img src="${sessAvatar}" alt="Avatar" />` : `<i class="fas fa-user"></i>`}</div>

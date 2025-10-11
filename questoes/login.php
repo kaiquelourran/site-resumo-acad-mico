@@ -498,6 +498,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         </script>
      <script>
+        function selectUserType(type) {
+            const buttons = document.querySelectorAll('.type-btn');
+            buttons.forEach(btn => {
+                const isActive = btn.dataset.type === type;
+                btn.classList.toggle('active', isActive);
+                btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+            });
+            const hidden = document.getElementById('user_type');
+            if (hidden) hidden.value = type;
+            try { localStorage.setItem('user_type', type); } catch (e) {}
+        }
         document.addEventListener('DOMContentLoaded', function () {
             const emailInput = document.getElementById('email');
             const passwordInput = document.getElementById('password');
