@@ -600,6 +600,9 @@ $percentual_acerto = $total_respostas > 0 ? round(($acertos / $total_respostas) 
                         <div id="history-<?php echo $questao_atual['id_questao']; ?>">
                             <!-- Histórico será carregado via JavaScript -->
                         </div>
+                        <div class="history-load-more" style="text-align:center; margin-top:10px;">
+                            <button class="load-more-btn" data-role="history">Carregar mais</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -748,22 +751,52 @@ $percentual_acerto = $total_respostas > 0 ? round(($acertos / $total_respostas) 
                 }
             });
             
-            // Render history list
+            // Render history list paginada
             const historyList = document.querySelector('#stats-' + questaoId + ' .stats-history-list');
-            if (data.historico && data.historico.length > 0) {
-                historyList.innerHTML = data.historico.map(item => `
-                    <div class="stats-history-item ${item.acertou ? 'correct' : 'incorrect'}">
-                        <span class="stats-history-date">Em ${item.data}, você respondeu a opção ${item.alternativa}.</span>
-                        <span class="stats-history-result">
-                            ${item.acertou ? 
-                                '<i class="fas fa-check-circle"></i> Você acertou!' : 
-                                '<i class="fas fa-times-circle"></i> Você errou!'}
-                        </span>
-                    </div>
-                `).join('');
+            const all = (data.historico || []).slice();
+            if (all.length > 0) {
+                window.HISTORY_STATE = window.HISTORY_STATE || {};
+                window.HISTORY_STATE[questaoId] = { all: all, visibleCount: Math.min(5, all.length) };
+                renderHistory(questaoId, all.slice(0, 5));
+                initHistoryLoadMore(questaoId);
             } else {
                 historyList.innerHTML = '<p style="text-align: center; color: #6c757d;">Você ainda não respondeu esta questão.</p>';
             }
+        }
+
+        // Funções para histórico paginado
+        function renderHistory(questaoId, items) {
+            const container = document.querySelector('#history-' + questaoId);
+            const panel = document.querySelector('#stats-' + questaoId);
+            const listWrapper = panel.querySelector('.stats-history-list');
+            const btn = panel.querySelector('.history-load-more .load-more-btn');
+            if (!container || !listWrapper) return;
+            const titleEl = listWrapper.querySelector('h4');
+            if (titleEl) { titleEl.insertAdjacentElement('afterend', container); }
+            container.innerHTML = items.map(item => `
+                <div class="stats-history-item ${item.acertou ? 'correct' : 'incorrect'}">
+                    <span class="stats-history-date">Em ${item.data}, você respondeu a opção ${item.alternativa}.</span>
+                    <span class="stats-history-result">
+                        ${item.acertou ? '<i class="fas fa-check-circle"></i> Você acertou!' : '<i class="fas fa-times-circle"></i> Você errou!'}
+                    </span>
+                </div>
+            `).join('');
+            const state = (window.HISTORY_STATE || {})[questaoId];
+            if (btn) {
+                btn.style.display = state && state.visibleCount < state.all.length ? 'inline-block' : 'none';
+            }
+        }
+        
+        function initHistoryLoadMore(questaoId) {
+            const btn = document.querySelector(`#stats-${questaoId} .history-load-more .load-more-btn`);
+            const state = (window.HISTORY_STATE = window.HISTORY_STATE || {});
+            if (!btn) return;
+            btn.onclick = function() {
+                const s = (window.HISTORY_STATE || {})[questaoId];
+                if (!s) return;
+                s.visibleCount = Math.min(s.visibleCount + 5, s.all.length);
+                renderHistory(questaoId, s.all.slice(0, s.visibleCount));
+            };
         }
 
         // Event listeners para as alternativas - VERSÃO SIMPLIFICADA

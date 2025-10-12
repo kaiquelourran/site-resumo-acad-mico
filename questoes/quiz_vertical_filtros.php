@@ -80,7 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_questao']) && isse
                 
                 if ($tem_user_id) {
                     // Usar estrutura com user_id (permitir mltiplas respostas)
-                    $stmt_resposta = $pdo->prepare("\n                        INSERT INTO respostas_usuario (user_id, id_questao, id_alternativa, acertou, data_resposta) \n                        VALUES (?, ?, ?, ?, NOW())\n                        ON DUPLICATE KEY UPDATE\n                            id_alternativa = VALUES(id_alternativa),\n                            acertou = VALUES(acertou),\n                            data_resposta = NOW()\n                    ");
+                    $stmt_resposta = $pdo->prepare("\n                        INSERT INTO respostas_usuario (user_id, id_questao, id_alternativa, acertou, data_resposta) \n                        VALUES (?, ?, ?, ?, NOW())\n                    ");
                     $stmt_resposta->execute([$user_id, $id_questao, $id_alternativa, $acertou]);
 
                     // Registrar tentativa individual em respostas_usuarios para ranking semanal (somente usurios logados)
@@ -1789,6 +1789,9 @@ include 'header.php';
                                     <div class="stats-history">
                                         <h4>Histrico de Respostas</h4>
                                         <div class="stats-history-list"></div>
+                                        <div class="load-more-section history-load-more">
+                                            <button class="load-more-btn" data-role="history">Carregar mais</button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -2402,22 +2405,17 @@ if (!window.statsInitialized) {
                 }
             });
             
-            // Render history list
+            // Render history list com paginação (5 em 5)
             const historyList = document.querySelector('#stats-' + questaoId + ' .stats-history-list');
-            if (data.historico && data.historico.length > 0) {
-                historyList.innerHTML = data.historico.map(item => `
-                    <div class="stats-history-item ${item.acertou ? 'correct' : 'incorrect'}">
-                        <span class="stats-history-date">Em ${item.data}, voc respondeu a opo ${item.alternativa}.</span>
-                        <span class="stats-history-result">
-                            ${item.acertou ? 
-                                '<i class="fas fa-check-circle"></i> Voc acertou!' : 
-                                '<i class="fas fa-times-circle"></i> Voc errou!'}
-                        </span>
-                    </div>
-                `).join('');
-            } else {
-                historyList.innerHTML = '<p style="text-align: center; color: #6c757d;">Voc ainda no respondeu esta questo.</p>';
+            const historyLoadMoreBtn = document.querySelector(`#stats-${questaoId} .history-load-more .load-more-btn`);
+            const all = Array.isArray(data.historico) ? data.historico : [];
+            window.HISTORY_STATE = window.HISTORY_STATE || {};
+            window.HISTORY_STATE[questaoId] = { all: all, visibleCount: Math.min(5, all.length) };
+            renderHistory(questaoId, all.slice(0, Math.min(5, all.length)));
+            if (historyLoadMoreBtn) {
+                historyLoadMoreBtn.style.display = all.length > 5 ? 'inline-block' : 'none';
             }
+            initHistoryLoadMore(questaoId);
         }
 
         // Funo auxiliar para verificar elementos
@@ -2743,6 +2741,52 @@ if (!window.statsInitialized) {
                     messageDiv.parentNode.removeChild(messageDiv);
                 }
             }, 3000);
+        }
+
+        // Renderização do histórico com suporte a paginação
+        function renderHistory(questaoId, items) {
+            const historyList = document.querySelector('#stats-' + questaoId + ' .stats-history-list');
+            if (!historyList) return;
+            if (Array.isArray(items) && items.length > 0) {
+                historyList.innerHTML = items.map(item => `
+                    <div class="stats-history-item ${item.acertou ? 'correct' : 'incorrect'}">
+                        <span class="stats-history-date">Em ${item.data}, você respondeu a opção ${item.alternativa}.</span>
+                        <span class="stats-history-result">
+                            ${item.acertou ? 
+                                '<i class="fas fa-check-circle"></i> Você acertou!' : 
+                                '<i class="fas fa-times-circle"></i> Você errou!'}
+                        </span>
+                    </div>
+                `).join('');
+            } else {
+                historyList.innerHTML = '<p style="text-align: center; color: #6c757d;">Voc ainda no respondeu esta questo.</p>';
+            }
+        }
+
+        // Inicializa o botão "Carregar mais" do histórico
+        function initHistoryLoadMore(questaoId) {
+            const btn = document.querySelector(`#stats-${questaoId} .history-load-more .load-more-btn`);
+            const state = (window.HISTORY_STATE = window.HISTORY_STATE || {});
+            const st = state[questaoId];
+            if (!btn) return;
+            // visibilidade inicial
+            if (st && Array.isArray(st.all)) {
+                btn.style.display = st.visibleCount < st.all.length ? 'inline-block' : 'none';
+            } else {
+                btn.style.display = 'none';
+            }
+            
+            if (btn.dataset.hasListener !== '1') {
+                btn.dataset.hasListener = '1';
+                btn.addEventListener('click', function() {
+                    const s = (window.HISTORY_STATE || {})[questaoId];
+                    if (!s || !Array.isArray(s.all)) return;
+                    s.visibleCount = Math.min(s.visibleCount + 5, s.all.length);
+                    const subset = s.all.slice(0, s.visibleCount);
+                    renderHistory(questaoId, subset);
+                    this.style.display = s.visibleCount < s.all.length ? 'inline-block' : 'none';
+                });
+            }
         }
 
         // Funo para adicionar event listeners aos comentrios

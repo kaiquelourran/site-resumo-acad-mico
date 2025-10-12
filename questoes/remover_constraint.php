@@ -5,18 +5,26 @@ echo "<h1>🔧 REMOVENDO CONSTRAINT UNIQUE</h1>";
 
 try {
     // Remover constraint UNIQUE diretamente
-    echo "<p>Removendo constraint 'unique_questao'...</p>";
-    $pdo->exec("ALTER TABLE respostas_usuario DROP INDEX unique_questao");
-    echo "<p style='color: green;'>✅ Constraint removida!</p>";
+    echo "<p>Removendo constraint 'unique_questao' (se existir)...</p>";
+    try { $pdo->exec("ALTER TABLE respostas_usuario DROP INDEX unique_questao"); } catch (Exception $e) { /* índice pode não existir */ }
+    echo "<p style='color: green;'>✅ Tentativa de remover 'unique_questao' concluída</p>";
     
-    // Verificar se foi removida
-    $stmt = $pdo->query("SHOW INDEX FROM respostas_usuario WHERE Key_name = 'unique_questao'");
-    $constraint = $stmt->fetch();
+    echo "<p>Removendo constraint 'unique_user_questao' (se existir)...</p>";
+    try { $pdo->exec("ALTER TABLE respostas_usuario DROP INDEX unique_user_questao"); } catch (Exception $e) { /* índice pode não existir */ }
+    echo "<p style='color: green;'>✅ Tentativa de remover 'unique_user_questao' concluída</p>";
     
-    if (!$constraint) {
-        echo "<p style='color: green;'>✅ Confirmação: Constraint removida com sucesso!</p>";
+    // Verificar se foram removidas
+    $stmt1 = $pdo->query("SHOW INDEX FROM respostas_usuario WHERE Key_name = 'unique_questao'");
+    $exist1 = $stmt1->fetch();
+    $stmt2 = $pdo->query("SHOW INDEX FROM respostas_usuario WHERE Key_name = 'unique_user_questao'");
+    $exist2 = $stmt2->fetch();
+    
+    if (!$exist1 && !$exist2) {
+        echo "<p style='color: green;'>✅ Confirmação: Constraints removidas com sucesso!</p>";
     } else {
-        echo "<p style='color: red;'>❌ Erro: Constraint ainda existe</p>";
+        echo "<p style='color: orange;'>⚠️ Aviso: Ainda existem índices únicos ativos:</p>";
+        if ($exist1) echo "<p>- unique_questao</p>";
+        if ($exist2) echo "<p>- unique_user_questao</p>";
     }
     
     echo "<h2>🎉 PRONTO!</h2>";
