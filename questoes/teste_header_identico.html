@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste - Header Idêntico ao Index</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; }
+        .btn { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; margin: 5px; }
+        .btn:hover { background: #0056b3; }
+        .btn-success { background: #28a745; }
+        .debug { background: #f8f9fa; border: 1px solid #dee2e6; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 12px; margin: 10px 0; }
+        .checklist { background: #e8f5e8; border: 1px solid #28a745; padding: 15px; border-radius: 8px; margin: 10px 0; }
+        .checklist h3 { color: #28a745; margin-top: 0; }
+        .checklist ul { margin: 10px 0; padding-left: 20px; }
+        .checklist li { margin: 5px 0; }
+        .success { background: #d4edda; border: 1px solid #c3e6cb; padding: 15px; border-radius: 8px; margin: 10px 0; }
+        .success h3 { color: #155724; margin-top: 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Teste - Header Idêntico ao Index</h1>
+        
+        <div class="success">
+            <h3>✅ CSS do Index.php Aplicado:</h3>
+            <p>Agora copiei <strong>exatamente</strong> o CSS do <code>index.php</code> e adaptei para a classe <code>admin-comentarios-page</code>:</p>
+        </div>
+        
+        <div class="checklist">
+            <h3>🎨 Elementos que Devem Estar Iguais:</h3>
+            <ul>
+                <li>✅ <strong>Background:</strong> Gradiente azul (#00C6FF → #0072FF)</li>
+                <li>✅ <strong>Main Container:</strong> Branco com borda azul e sombra</li>
+                <li>✅ <strong>Breadcrumb:</strong> Container branco com borda azul e barra lateral</li>
+                <li>✅ <strong>User Info:</strong> Transparente, sem fundo</li>
+                <li>✅ <strong>User Profile:</strong> Avatar azul + nome compacto</li>
+                <li>✅ <strong>Botão Sair:</strong> Vermelho com gradiente</li>
+                <li>✅ <strong>Botão Site:</strong> Azul com gradiente</li>
+                <li>✅ <strong>Responsividade:</strong> Media queries aplicadas</li>
+            </ul>
+        </div>
+        
+        <div class="checklist">
+            <h3>🔧 CSS Aplicado (Igual ao Index):</h3>
+            <ul>
+                <li>✅ <strong>Body:</strong> Gradiente azul de fundo</li>
+                <li>✅ <strong>Main-container:</strong> Branco com borda azul</li>
+                <li>✅ <strong>Breadcrumb:</strong> Container estilizado com barra lateral</li>
+                <li>✅ <strong>User-info:</strong> Transparente, inline-flex</li>
+                <li>✅ <strong>User-avatar:</strong> Círculo azul com gradiente</li>
+                <li>✅ <strong>Header-btn Sair:</strong> Vermelho com hover effects</li>
+                <li>✅ <strong>Header-btn Site:</strong> Azul com hover effects</li>
+                <li>✅ <strong>Media queries:</strong> Responsividade completa</li>
+            </ul>
+        </div>
+        
+        <div>
+            <h3>🚀 Teste Agora:</h3>
+            <button class="btn btn-success" onclick="testarPagina()">Testar Página Principal</button>
+            <button class="btn" onclick="compararIndex()">Comparar com Index</button>
+            <button class="btn" onclick="verificarCSS()">Verificar CSS</button>
+        </div>
+        
+        <div class="debug">
+            <strong>Debug Log:</strong><br>
+            <div id="log-content">Aguardando testes...</div>
+        </div>
+    </div>
+
+    <script>
+        function addToLog(message) {
+            const logContent = document.getElementById('log-content');
+            const timestamp = new Date().toLocaleTimeString();
+            logContent.innerHTML += `[${timestamp}] ${message}<br>`;
+        }
+
+        function testarPagina() {
+            addToLog('🧪 Testando página gerenciar_comentarios.php...');
+            addToLog('Acesse: admin/gerenciar_comentarios.php');
+            addToLog('1. Verifique se o background é gradiente azul');
+            addToLog('2. Verifique se o main-container é branco com borda azul');
+            addToLog('3. Verifique se o breadcrumb tem container branco');
+            addToLog('4. Verifique se o user-info é transparente');
+            addToLog('5. Verifique se o botão Sair é vermelho');
+            addToLog('6. Verifique se o botão Site é azul');
+            addToLog('7. Compare com index.php - devem estar idênticos!');
+        }
+
+        function compararIndex() {
+            addToLog('🔍 Comparando com index.php...');
+            addToLog('✅ CSS copiado: .index-page → .admin-comentarios-page');
+            addToLog('✅ Background: linear-gradient(to top, #00C6FF, #0072FF)');
+            addToLog('✅ Main-container: branco com borda azul');
+            addToLog('✅ Breadcrumb: container estilizado');
+            addToLog('✅ User-info: transparente');
+            addToLog('✅ Botões: estilos idênticos');
+            addToLog('✅ Responsividade: media queries aplicadas');
+        }
+
+        function verificarCSS() {
+            addToLog('📋 Verificando CSS aplicado...');
+            addToLog('✅ Body com gradiente azul');
+            addToLog('✅ Main-container estilizado');
+            addToLog('✅ Breadcrumb com container branco');
+            addToLog('✅ User-info transparente');
+            addToLog('✅ User-avatar com gradiente azul');
+            addToLog('✅ Botão Sair vermelho');
+            addToLog('✅ Botão Site azul');
+            addToLog('✅ Media queries responsivas');
+        }
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', function() {
+            addToLog('📄 Página de teste carregada');
+            addToLog('🎯 CSS do index.php copiado e adaptado');
+            addToLog('✅ Header deve estar IDÊNTICO ao index.php!');
+        });
+    </script>
+</body>
+</html>

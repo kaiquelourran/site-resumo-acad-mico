@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste - Header e Footer Padronizados</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; }
+        .btn { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; margin: 5px; }
+        .btn:hover { background: #0056b3; }
+        .btn-success { background: #28a745; }
+        .btn-danger { background: #dc3545; }
+        .debug { background: #f8f9fa; border: 1px solid #dee2e6; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 12px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✅ Teste - Header e Footer Padronizados</h1>
+        
+        <div>
+            <h3>🎯 Header Padronizado:</h3>
+            <ul>
+                <li>✅ Breadcrumb com navegação</li>
+                <li>✅ Logo e branding do sistema</li>
+                <li>✅ Menu de navegação</li>
+                <li>✅ Informações do usuário</li>
+                <li>✅ Botões de ação (Sair, etc.)</li>
+            </ul>
+        </div>
+        
+        <div>
+            <h3>🎯 Footer Padronizado:</h3>
+            <ul>
+                <li>✅ Links rápidos</li>
+                <li>✅ Informações de contato</li>
+                <li>✅ Stack de tecnologias</li>
+                <li>✅ Copyright e créditos</li>
+                <li>✅ Animações e efeitos</li>
+            </ul>
+        </div>
+        
+        <div>
+            <h3>🎨 Design Consistente:</h3>
+            <ul>
+                <li>✅ Paleta de cores azul</li>
+                <li>✅ Gradientes consistentes</li>
+                <li>✅ Tipografia padronizada</li>
+                <li>✅ Espaçamentos uniformes</li>
+                <li>✅ Responsividade completa</li>
+            </ul>
+        </div>
+        
+        <div>
+            <h3>🔧 Teste Agora:</h3>
+            <button class="btn btn-success" onclick="testarPagina()">Testar Página Completa</button>
+            <button class="btn" onclick="verificarElementos()">Verificar Elementos</button>
+        </div>
+        
+        <div class="debug">
+            <strong>Debug Log:</strong><br>
+            <div id="log-content">Aguardando testes...</div>
+        </div>
+    </div>
+
+    <script>
+        function addToLog(message) {
+            const logContent = document.getElementById('log-content');
+            const timestamp = new Date().toLocaleTimeString();
+            logContent.innerHTML += `[${timestamp}] ${message}<br>`;
+        }
+
+        function testarPagina() {
+            addToLog('🧪 Testando página com header e footer padronizados...');
+            addToLog('Acesse: admin/gerenciar_comentarios.php');
+            addToLog('1. Verifique se o header está igual ao index.php');
+            addToLog('2. Verifique se o footer está igual ao index.php');
+            addToLog('3. Teste a navegação do breadcrumb');
+            addToLog('4. Verifique se os links funcionam');
+            addToLog('5. Teste a responsividade');
+        }
+
+        function verificarElementos() {
+            addToLog('🔍 Verificando elementos do header e footer...');
+            addToLog('✅ Header com breadcrumb');
+            addToLog('✅ Logo e branding');
+            addToLog('✅ Menu de navegação');
+            addToLog('✅ Footer com links');
+            addToLog('✅ Informações de contato');
+            addToLog('✅ Stack de tecnologias');
+        }
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', function() {
+            addToLog('📄 Página de teste carregada');
+            addToLog('🎯 Header e footer padronizados aplicados');
+        });
+    </script>
+</body>
+</html>

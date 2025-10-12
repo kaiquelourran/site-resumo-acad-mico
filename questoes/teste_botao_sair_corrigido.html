@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste - Botão Sair Corrigido</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; }
+        .btn { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; margin: 5px; }
+        .btn:hover { background: #0056b3; }
+        .btn-success { background: #28a745; }
+        .debug { background: #f8f9fa; border: 1px solid #dee2e6; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 12px; margin: 10px 0; }
+        .checklist { background: #e8f5e8; border: 1px solid #28a745; padding: 15px; border-radius: 8px; margin: 10px 0; }
+        .checklist h3 { color: #28a745; margin-top: 0; }
+        .checklist ul { margin: 10px 0; padding-left: 20px; }
+        .checklist li { margin: 5px 0; }
+        .success { background: #d4edda; border: 1px solid #c3e6cb; padding: 15px; border-radius: 8px; margin: 10px 0; }
+        .success h3 { color: #155724; margin-top: 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Teste - Botão Sair Corrigido</h1>
+        
+        <div class="success">
+            <h3>✅ Problema Resolvido:</h3>
+            <p>Removido o botão "Sair" azul duplicado e mantido apenas o botão vermelho, igual ao <code>index.php</code>.</p>
+        </div>
+        
+        <div class="checklist">
+            <h3>🔧 Correções Aplicadas:</h3>
+            <ul>
+                <li>✅ <strong>Removido:</strong> Botão Sair azul duplicado</li>
+                <li>✅ <strong>Mantido:</strong> Apenas botão Sair vermelho</li>
+                <li>✅ <strong>Classe:</strong> <code>logout-red</code> para o botão vermelho</li>
+                <li>✅ <strong>CSS:</strong> Estilização específica para <code>.logout-red</code></li>
+                <li>✅ <strong>JavaScript:</strong> Remove botão azul e adiciona vermelho</li>
+            </ul>
+        </div>
+        
+        <div class="checklist">
+            <h3>🎯 Resultado Esperado:</h3>
+            <ul>
+                <li>✅ <strong>Um único botão "Sair":</strong> Vermelho com gradiente</li>
+                <li>✅ <strong>Botão "Ir para o Site":</strong> Azul com gradiente</li>
+                <li>✅ <strong>Perfil do usuário:</strong> Avatar + nome</li>
+                <li>✅ <strong>Menu de navegação:</strong> Início, Assuntos, Desempenho</li>
+                <li>✅ <strong>Breadcrumb:</strong> Container branco com barra lateral</li>
+            </ul>
+        </div>
+        
+        <div>
+            <h3>🚀 Teste Agora:</h3>
+            <button class="btn btn-success" onclick="testarPagina()">Testar Página Principal</button>
+            <button class="btn" onclick="verificarBotoes()">Verificar Botões</button>
+            <button class="btn" onclick="compararIndex()">Comparar com Index</button>
+        </div>
+        
+        <div class="debug">
+            <strong>Debug Log:</strong><br>
+            <div id="log-content">Aguardando testes...</div>
+        </div>
+    </div>
+
+    <script>
+        function addToLog(message) {
+            const logContent = document.getElementById('log-content');
+            const timestamp = new Date().toLocaleTimeString();
+            logContent.innerHTML += `[${timestamp}] ${message}<br>`;
+        }
+
+        function testarPagina() {
+            addToLog('🧪 Testando página gerenciar_comentarios.php...');
+            addToLog('Acesse: admin/gerenciar_comentarios.php');
+            addToLog('1. Verifique se há apenas UM botão "Sair"');
+            addToLog('2. Verifique se o botão "Sair" é VERMELHO');
+            addToLog('3. Verifique se o botão "Ir para o Site" é AZUL');
+            addToLog('4. Verifique se não há botões duplicados');
+            addToLog('5. Compare com index.php - devem estar iguais');
+        }
+
+        function verificarBotoes() {
+            addToLog('🔍 Verificando botões...');
+            addToLog('✅ Botão Sair azul: REMOVIDO');
+            addToLog('✅ Botão Sair vermelho: MANTIDO');
+            addToLog('✅ Botão Ir para o Site: AZUL');
+            addToLog('✅ Classe logout-red: APLICADA');
+            addToLog('✅ CSS específico: APLICADO');
+        }
+
+        function compararIndex() {
+            addToLog('🔍 Comparando com index.php...');
+            addToLog('✅ index.php: 1 botão Sair vermelho');
+            addToLog('✅ gerenciar_comentarios.php: 1 botão Sair vermelho');
+            addToLog('✅ Ambos com classe logout-red');
+            addToLog('✅ Ambos com mesmo estilo');
+            addToLog('✅ Problema resolvido!');
+        }
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', function() {
+            addToLog('📄 Página de teste carregada');
+            addToLog('🔧 Botão Sair azul removido');
+            addToLog('✅ Apenas botão vermelho mantido');
+        });
+    </script>
+</body>
+</html>

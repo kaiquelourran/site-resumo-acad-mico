@@ -219,6 +219,7 @@ $buckets = $pdo->query($sql_buckets)->fetch(PDO::FETCH_ASSOC);
                 <div class="buttons-grid">
                     <a href="../gerenciar_questoes_sem_auth.php" class="btn btn-primary">📋 Gerenciar Questões</a>
                     <a href="gerenciar_assuntos.php" class="btn btn-primary">📚 Gerenciar Assuntos</a>
+                    <a href="gerenciar_comentarios.php" class="btn btn-primary">💬 Gerenciar Comentários</a>
                     <a href="add_questao.php" class="btn btn-success">➕ Adicionar Questão</a>
                     <a href="add_assunto.php" class="btn btn-secondary">📝 Adicionar Assunto</a>
                     <a href="../index.php" class="btn btn-outline">🏠 Voltar ao Site</a>

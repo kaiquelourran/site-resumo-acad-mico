@@ -65,10 +65,17 @@ if (!isset($page_subtitle)) {
                     </div>
                     <span class="user-name"><?php echo htmlspecialchars($display_name); ?></span>
                 </div>
+                <?php 
+                // Verificar se estamos na página de gerenciar comentários
+                $current_page = basename($_SERVER['PHP_SELF']);
+                $is_comentarios_page = ($current_page === 'gerenciar_comentarios.php');
+                ?>
+                <?php if (!$is_comentarios_page): ?>
                 <a href="logout.php" class="header-btn">
                     <i class="fas fa-sign-out-alt"></i>
                     <span>Sair</span>
                 </a>
+                <?php endif; ?>
             <?php else: ?>
                 <a href="login.php" class="header-btn primary">
                     <i class="fas fa-sign-in-alt"></i>

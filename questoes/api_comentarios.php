@@ -46,6 +46,24 @@ function getNomeByEmail(PDO $pdo, string $email): ?string {
 try {
     switch ($method) {
         case 'GET':
+            if (isset($_GET['get_reported_comments']) && $_GET['get_reported_comments'] === 'true') {
+                $tipo = $_SESSION['tipo_usuario'] ?? $_SESSION['user_type'] ?? '';
+                $isAdmin = ($tipo === 'admin' || $tipo === 'administrador');
+                if (!$isAdmin) {
+                    $response['success'] = false;
+                    $response['message'] = 'Ação restrita ao administrador';
+                    break;
+                }
+
+                $stmt = $pdo->prepare("\n                    SELECT \n                        c.id_comentario, \n                        c.id_questao, \n                        c.comentario, \n                        c.data_comentario AS data_criacao, \n                        c.ativo, \n                        c.aprovado,\n                        COALESCE(u.nome, c.nome_usuario) AS nome_usuario, \n                        COALESCE(u.email, c.email_usuario) AS email_usuario, \n                        u.avatar_url AS avatar_usuario,\n                        (SELECT COUNT(*) FROM curtidas_comentarios cc WHERE cc.id_comentario = c.id_comentario) AS total_curtidas\n                    FROM \n                        comentarios_questoes c\n                    LEFT JOIN \n                        usuarios u ON u.email = c.email_usuario\n                    WHERE \n                        c.ativo = 0\n                    ORDER BY \n                        c.data_comentario DESC\n                ");
+                $stmt->execute();
+                $reportedComments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                $response['success'] = true;
+                $response['data'] = $reportedComments;
+                $response['message'] = 'Comentários inativos carregados com sucesso';
+                break;
+            }
             // Buscar comentários de uma questão
             if (isset($_GET['id_questao'])) {
                 $id_questao = (int)$_GET['id_questao'];
@@ -350,13 +368,20 @@ try {
                     $stmt->execute([$id_comentario, $ip_usuario]);
                     $deleted = ($stmt->rowCount() > 0);
                 }
-                
-                if ($deleted) {
-                    $response['success'] = true;
-                    $response['message'] = 'Curtida removida com sucesso';
+                $response['success'] = $deleted;
+                $response['message'] = $deleted ? 'Curtida removida com sucesso' : 'Erro ao remover curtida';
+            } elseif ($acao === 'ativar') {
+                // Ativar comentário (apenas para administradores)
+                if (!isset($_SESSION['tipo_usuario']) || ((($_SESSION['tipo_usuario'] ?? '') !== 'administrador') && (($_SESSION['user_type'] ?? '') !== 'admin'))) {
+                    $response['message'] = 'Apenas administradores podem ativar comentários.';
                 } else {
-                    $response['success'] = false;
-                    $response['message'] = 'Você não tinha curtido este comentário';
+                    $stmt = $pdo->prepare("UPDATE comentarios_questoes SET ativo = 1 WHERE id_comentario = ?");
+                    if ($stmt->execute([$id_comentario])) {
+                        $response['success'] = true;
+                        $response['message'] = 'Comentário ativado com sucesso.';
+                    } else {
+                        $response['message'] = 'Erro ao ativar comentário.';
+                    }
                 }
             } else {
                 $response['message'] = 'Ação inválida';
@@ -399,29 +424,50 @@ try {
             $acao = isset($data['acao']) ? $data['acao'] : 'reportar';
             
             if ($acao === 'apagar') {
-                // Apenas administrador pode apagar
-                $isAdmin = (($_SESSION['tipo_usuario'] ?? $_SESSION['user_type'] ?? '') === 'admin');
+                // Apenas administrador pode apagar (soft delete)
+                $isAdmin = (($_SESSION['tipo_usuario'] ?? $_SESSION['user_type'] ?? '') === 'administrador' || ($_SESSION['tipo_usuario'] ?? $_SESSION['user_type'] ?? '') === 'admin');
                 if (!$isAdmin) {
                     $response['success'] = false;
-                    $response['message'] = 'Ação restrita ao administrador';
+                    $response['message'] = 'Apenas administradores podem apagar comentários.';
                     break;
                 }
-                // Soft delete: marcar comentário como inativo
+
                 $stmt = $pdo->prepare("UPDATE comentarios_questoes SET ativo = 0 WHERE id_comentario = ?");
                 if ($stmt->execute([$id_comentario])) {
                     $response['success'] = true;
-                    $response['message'] = 'Comentário apagado com sucesso';
+                    $response['message'] = 'Comentário apagado com sucesso.';
                 } else {
-                    $response['message'] = 'Erro ao apagar comentário';
+                    $response['message'] = 'Erro ao apagar comentário.';
                 }
-            } else {
-                // Reportar abuso (usuário comum)
+            } elseif ($acao === 'excluir_permanente') {
+                // Apenas administrador pode excluir permanentemente
+                $isAdmin = (($_SESSION['tipo_usuario'] ?? $_SESSION['user_type'] ?? '') === 'administrador' || ($_SESSION['tipo_usuario'] ?? $_SESSION['user_type'] ?? '') === 'admin');
+                if (!$isAdmin) {
+                    $response['success'] = false;
+                    $response['message'] = 'Apenas administradores podem excluir comentários permanentemente.';
+                    break;
+                }
+
+                // Excluir curtidas associadas primeiro
+                $stmt = $pdo->prepare("DELETE FROM curtidas_comentarios WHERE id_comentario = ?");
+                $stmt->execute([$id_comentario]);
+
+                // Excluir comentário
+                $stmt = $pdo->prepare("DELETE FROM comentarios_questoes WHERE id_comentario = ?");
+                if ($stmt->execute([$id_comentario])) {
+                    $response['success'] = true;
+                    $response['message'] = 'Comentário excluído permanentemente com sucesso.';
+                } else {
+                    $response['message'] = 'Erro ao excluir comentário permanentemente.';
+                }
+            } else { // reportar abuso
+                // Lógica existente para reportar abuso (soft delete)
                 $stmt = $pdo->prepare("UPDATE comentarios_questoes SET ativo = 0 WHERE id_comentario = ?");
                 if ($stmt->execute([$id_comentario])) {
                     $response['success'] = true;
-                    $response['message'] = 'Comentário reportado com sucesso';
+                    $response['message'] = 'Comentário reportado com sucesso.';
                 } else {
-                    $response['message'] = 'Erro ao reportar comentário';
+                    $response['message'] = 'Erro ao reportar comentário.';
                 }
             }
             break;

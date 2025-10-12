@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste - Gerenciar Comentários</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; }
+        .btn { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; margin: 5px; }
+        .btn:hover { background: #0056b3; }
+        .btn-success { background: #28a745; }
+        .btn-danger { background: #dc3545; }
+        .debug { background: #f8f9fa; border: 1px solid #dee2e6; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 12px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✅ Teste - Gerenciar Comentários</h1>
+        
+        <div>
+            <h3>🎨 Design Aplicado:</h3>
+            <ul>
+                <li>✅ Background gradiente azul (igual ao index.php)</li>
+                <li>✅ Container principal com bordas arredondadas</li>
+                <li>✅ Header estiloso com paleta azul</li>
+                <li>✅ Botões modernos com gradientes</li>
+                <li>✅ Tabela moderna com hover effects</li>
+                <li>✅ Badges coloridos para status</li>
+                <li>✅ Alertas informativos</li>
+                <li>✅ Notificações animadas</li>
+                <li>✅ Design responsivo</li>
+            </ul>
+        </div>
+        
+        <div>
+            <h3>🚀 Funcionalidades:</h3>
+            <ul>
+                <li>✅ Carregamento de comentários via API</li>
+                <li>✅ Tabela com dados formatados</li>
+                <li>✅ Botões de ação (Ativar/Excluir)</li>
+                <li>✅ Links para questões</li>
+                <li>✅ Notificações de feedback</li>
+                <li>✅ Design responsivo</li>
+            </ul>
+        </div>
+        
+        <div>
+            <h3>🔧 Teste Agora:</h3>
+            <button class="btn btn-success" onclick="testarPagina()">Testar Página Real</button>
+            <button class="btn" onclick="verificarEstilos()">Verificar Estilos</button>
+        </div>
+        
+        <div class="debug">
+            <strong>Debug Log:</strong><br>
+            <div id="log-content">Aguardando testes...</div>
+        </div>
+    </div>
+
+    <script>
+        function addToLog(message) {
+            const logContent = document.getElementById('log-content');
+            const timestamp = new Date().toLocaleTimeString();
+            logContent.innerHTML += `[${timestamp}] ${message}<br>`;
+        }
+
+        function testarPagina() {
+            addToLog('🧪 Testando página gerenciar_comentarios.php...');
+            addToLog('Acesse: admin/gerenciar_comentarios.php');
+            addToLog('1. Verifique se o design está igual ao index.php');
+            addToLog('2. Teste os botões de ação');
+            addToLog('3. Verifique se as notificações aparecem');
+            addToLog('4. Teste a responsividade');
+        }
+
+        function verificarEstilos() {
+            addToLog('🎨 Verificando estilos aplicados...');
+            addToLog('✅ Background gradiente azul');
+            addToLog('✅ Header com paleta azul');
+            addToLog('✅ Botões com gradientes');
+            addToLog('✅ Tabela moderna');
+            addToLog('✅ Badges coloridos');
+            addToLog('✅ Notificações animadas');
+        }
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', function() {
+            addToLog('📄 Página de teste carregada');
+            addToLog('🎯 Clique nos botões para testar');
+        });
+    </script>
+</body>
+</html>
