@@ -230,6 +230,13 @@ if (!isset($_SESSION['tipo_usuario']) || ($_SESSION['tipo_usuario'] !== 'admin' 
     .modern-table tr:hover { background: #f8f9fa; }
     .modern-table tr:last-child td { border-bottom: none; }
 
+    /* Correção: evitar corte lateral dos botões e permitir rolagem horizontal */
+    .admin-comentarios-page .card { overflow: visible; }
+    .admin-comentarios-page .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .admin-comentarios-page .modern-table { min-width: 900px; }
+    .admin-comentarios-page .modern-table td:last-child { min-width: 260px; white-space: nowrap; }
+    .admin-comentarios-page .modern-table td .btn { white-space: nowrap; }
+
     .badge { display: inline-block; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
     .badge-success { background: #d4edda; color: #155724; }
     .badge-danger { background: #f8d7da; color: #721c24; }
@@ -244,6 +251,8 @@ if (!isset($_SESSION['tipo_usuario']) || ($_SESSION['tipo_usuario'] !== 'admin' 
     @media (max-width: 768px) {
         .modern-table { font-size: 14px; }
         .modern-table th, .modern-table td { padding: 12px 8px; }
+        /* Em telas pequenas, permitir quebra de linha nos botões */
+        .admin-comentarios-page .modern-table td:last-child { white-space: normal; }
     }
     </style>
 </head>
@@ -353,6 +362,9 @@ include '../header.php';
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const commentsListDiv = document.getElementById('reportedCommentsList');
+    let allReportedComments = [];
+    let showCount = 0;
+    const PAGE_SIZE = 3;
 
     function loadReportedComments() {
         fetch('../api_comentarios.php?get_reported_comments=true', {
@@ -364,7 +376,9 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                renderComments(data.data);
+                allReportedComments = data.data;
+                showCount = PAGE_SIZE;
+                renderComments(allReportedComments, showCount);
             } else {
                 commentsListDiv.innerHTML = `
                     <div class="alert alert-danger">
@@ -387,7 +401,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    function renderComments(comments) {
+    function renderComments(comments, count) {
         if (comments.length === 0) {
             commentsListDiv.innerHTML = `
                 <div class="alert alert-info">
@@ -398,6 +412,8 @@ document.addEventListener('DOMContentLoaded', function() {
             `;
             return;
         }
+
+        const visibleComments = comments.slice(0, Math.min(count, comments.length));
 
         let html = `
             <div class="table-responsive">
@@ -410,22 +426,20 @@ document.addEventListener('DOMContentLoaded', function() {
                             <th><i class="fas fa-user"></i> Autor</th>
                             <th><i class="fas fa-calendar"></i> Data</th>
                             <th><i class="fas fa-flag"></i> Status</th>
+                            <th><i class="fas fa-user-secret"></i> Denúncia</th>
                             <th><i class="fas fa-cogs"></i> Ações</th>
                         </tr>
                     </thead>
                     <tbody>
         `;
         
-        comments.forEach(comment => {
+        visibleComments.forEach(comment => {
             const statusText = comment.ativo == 0 ? 'Inativo' : 'Ativo';
             const statusBadge = comment.ativo == 0 ? 'badge-danger' : 'badge-success';
             const statusIcon = comment.ativo == 0 ? 'fas fa-ban' : 'fas fa-check-circle';
-            
-            // Truncar comentário se muito longo
             const comentarioTruncado = comment.comentario.length > 100 
                 ? comment.comentario.substring(0, 100) + '...' 
                 : comment.comentario;
-            
             html += `
                 <tr>
                     <td><strong>#${comment.id_comentario}</strong></td>
@@ -458,6 +472,16 @@ document.addEventListener('DOMContentLoaded', function() {
                         ${comment.reportado == 1 ? `<span class="badge badge-danger" style="margin-left:6px;"><i class="fas fa-flag"></i> Reportado</span>` : ''}
                     </td>
                     <td>
+                        ${comment.total_denuncias ? `<div>
+                            <strong>${comment.reporter_nome || 'Usuário'}</strong><br>
+                            <small style="color:#666;">${comment.reporter_email || comment.reporter_ip || 'N/A'}</small><br>
+                            <small style="color:#888;">${comment.reporter_data || ''}</small>
+                            ${comment.reporter_tipo ? `<span class="badge badge-warning" style="margin-right:6px;">${String(comment.reporter_tipo || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</span>` : ''}
+                            ${comment.reporter_motivo ? `<small style="color:#555; display:block; margin-top:4px;">Motivo: ${String(comment.reporter_motivo || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</small>` : ''}
+                            <span class="badge badge-info" style="margin-left:6px;">${comment.total_denuncias} denúncia(s)</span>
+                        </div>` : '<small style="color:#888;">Sem detalhes</small>'}
+                    </td>
+                    <td>
                         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                             ${comment.ativo == 0 ? `
                             <button class="btn btn-success btn-sm btn-ativar" 
@@ -482,34 +506,51 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         html += `
-                    </tbody>
-                </table>
-            </div>
+                </tbody>
+            </table>
+        </div>
         `;
+
+        if (comments.length > count) {
+            html += `
+                <div style="text-align: center; margin-top: 12px;">
+                    <button id="btnCarregarMaisReportados" class="btn btn-primary" style="padding: 8px 16px;">
+                        <i class="fas fa-plus"></i> Carregar mais
+                    </button>
+                </div>
+            `;
+        }
         
         commentsListDiv.innerHTML = html;
 
-        // Adicionar event listeners para os botões de ação
         document.querySelectorAll('.btn-ativar').forEach(button => {
             button.addEventListener('click', function() {
                 const comentarioId = this.dataset.id;
-                updateCommentStatus(comentarioId, 1); // Ativar
+                updateCommentStatus(comentarioId, 1);
             });
         });
 
         document.querySelectorAll('.btn-desativar').forEach(button => {
             button.addEventListener('click', function() {
                 const comentarioId = this.dataset.id;
-                updateCommentStatus(comentarioId, 0); // Desativar
+                updateCommentStatus(comentarioId, 0);
             });
         });
 
         document.querySelectorAll('.btn-excluir-permanente').forEach(button => {
             button.addEventListener('click', function() {
                 const comentarioId = this.dataset.id;
-                deleteCommentPermanently(comentarioId); // Excluir permanentemente
+                deleteCommentPermanently(comentarioId);
             });
         });
+
+        const loadMoreBtn = document.getElementById('btnCarregarMaisReportados');
+        if (loadMoreBtn) {
+            loadMoreBtn.addEventListener('click', function() {
+                showCount = Math.min(showCount + PAGE_SIZE, allReportedComments.length);
+                renderComments(allReportedComments, showCount);
+            });
+        }
     }
 
     function updateCommentStatus(comentarioId, status) {

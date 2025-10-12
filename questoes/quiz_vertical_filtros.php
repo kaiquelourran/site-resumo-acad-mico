@@ -1817,7 +1817,7 @@ include 'header.php';
                                             <button class="tab-btn active" data-ordenacao="data">Ordenando por Data</button>
                                             <button class="tab-btn" data-ordenacao="curtidas">Mais curtidos</button>
                                         </div>
-                                        <a href="#" class="follow-comments">Acompanhar comentrios</a>
+
                                     </div>
                                     
                                     <!-- Lista de comentrios -->
@@ -3102,34 +3102,155 @@ if (!window.statsInitialized) {
             });
         }
 
-        // Funo para reportar abuso
-        function reportarAbuso(comentarioId) {
-            if (confirm('Tem certeza que deseja reportar este comentrio por abuso?')) {
-                fetch('api_comentarios.php', {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        id_comentario: comentarioId
-                    })
-                })
-                .then(response => response.json())
-                .then(result => {
-                    if (result.success) {
-                        showMessage('Comentrio reportado com sucesso!', 'success');
-                        // Remover comentrio da interface com segurança
-                        const el = document.querySelector(`[data-comentario-id="${comentarioId}"]`);
-                        if (el) { el.remove(); }
-                    } else {
-                        showMessage('Erro: ' + result.message, 'error');
-                    }
-                })
-                .catch(error => {
-                    console.error('Erro ao reportar abuso:', error);
-                    showMessage('Erro ao reportar abuso', 'error');
-                });
+        // Função para reportar abuso com motivo
+        function ensureReportModal() {
+            if (document.getElementById('report-modal')) return;
+            // Estilos do modal (injetados uma única vez)
+            if (!document.getElementById('report-modal-style')) {
+                const style = document.createElement('style');
+                style.id = 'report-modal-style';
+                style.textContent = `
+                  .modal-overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.4);z-index:1000}
+                  .modal-overlay.open{display:flex}
+                  .modal-card{width:min(520px, calc(100% - 32px));background:#fff;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.25);overflow:hidden}
+                  .modal-header{padding:16px 20px;border-bottom:1px solid #eee;font-weight:600}
+                  .modal-body{padding:16px 20px}
+                  .modal-footer{padding:12px 20px;border-top:1px solid #eee;display:flex;gap:12px;justify-content:flex-end}
+                  #report-motivo{width:100%;min-height:100px;max-height:280px;resize:vertical;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:14px;line-height:1.4}
+                  .count-hint{font-size:12px;color:#666;margin-top:8px}
+                  .btn-outline{background:#fff;border:1px solid #ccc;border-radius:8px;padding:8px 14px;cursor:pointer; display: block !important;}
+                  .btn-primary{background:linear-gradient(135deg,#4A90E2,#007AFF);color:#fff;border:none;border-radius:8px;padding:8px 14px;cursor:pointer}
+                  .btn-primary:disabled{opacity:.7;cursor:not-allowed}
+                  .select-group{display:flex;gap:8px;align-items:center;margin-bottom:10px}
+                  .select-group select{flex:1;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:14px}
+                `;
+                document.head.appendChild(style);
             }
+
+            const overlay = document.createElement('div');
+            overlay.id = 'report-modal';
+            overlay.className = 'modal-overlay';
+            overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5);';
+            overlay.innerHTML = `
+                <div class="modal-card" role="dialog" aria-labelledby="report-title" aria-modal="true">
+                    <div class="modal-header"><span id="report-title">Reportar abuso</span></div>
+                    <div class="modal-body">
+                        <div class="select-group">
+                            <label for="report-tipo" class="sr-only">Tipo de abuso</label>
+                            <select id="report-tipo" aria-label="Tipo de abuso">
+                                <option value="">Selecione um tipo</option>
+                                <option value="spam">Spam</option>
+                                <option value="assedio">Assédio</option>
+                                <option value="odio">Discurso de ódio</option>
+                                <option value="violencia">Violência</option>
+                                <option value="conteudo_inadequado">Conteúdo inadequado</option>
+                                <option value="outro">Outro</option>
+                            </select>
+                        </div>
+                        <label for="report-motivo">Descreva o motivo do abuso (mínimo de 10 caracteres):</label>
+                        <textarea id="report-motivo" maxlength="500" placeholder="Ex.: linguagem ofensiva, assédio, spam..." aria-describedby="report-count"></textarea>
+                        <div class="count-hint"><span id="report-count">0</span>/500</div>
+                    </div>
+                    <div class="modal-footer">
+
+                        <button id="report-submit" class="btn btn-primary" type="button">Enviar</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+
+            // Eventos do modal
+            const motivoInput = overlay.querySelector('#report-motivo');
+            const countEl = overlay.querySelector('#report-count');
+            motivoInput.addEventListener('input', () => {
+                updateReportCount(countEl, motivoInput.value.length);
+            });
+            overlay.querySelector('#report-submit').addEventListener('click', submitReportMotivo);
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) closeReportModal();
+            });
+            document.addEventListener('keydown', (e) => {
+                const isOpen = overlay.classList.contains('open');
+                if (isOpen && e.key === 'Escape') closeReportModal();
+            });
+        }
+
+        function updateReportCount(el, len) {
+            if (!el) return;
+            el.textContent = String(len);
+            el.style.color = len < 10 ? '#D0021B' : '#2E7D32';
+        }
+
+        function openReportModal() {
+            const overlay = document.getElementById('report-modal');
+            if (!overlay) return;
+            const motivoInput = overlay.querySelector('#report-motivo');
+            const tipoSelect = overlay.querySelector('#report-tipo');
+            const countEl = overlay.querySelector('#report-count');
+            motivoInput.value = '';
+            if (tipoSelect) tipoSelect.value = '';
+            updateReportCount(countEl, 0);
+            overlay.classList.add('open');
+            setTimeout(() => { if (tipoSelect) tipoSelect.focus(); else motivoInput.focus(); }, 0);
+        }
+
+        function closeReportModal() {
+            const overlay = document.getElementById('report-modal');
+            if (overlay) overlay.classList.remove('open');
+        }
+
+        async function submitReportMotivo() {
+            const overlay = document.getElementById('report-modal');
+            if (!overlay) return;
+            const motivoInput = overlay.querySelector('#report-motivo');
+            const submitBtn = overlay.querySelector('#report-submit');
+            const motivoTrim = (motivoInput.value || '').trim();
+            const tipoVal = ((overlay.querySelector('#report-tipo')?.value || '')).trim();
+            if (!tipoVal) {
+                showMessage('Por favor, selecione um tipo de abuso.', 'error');
+                overlay.querySelector('#report-tipo')?.focus();
+                return;
+            }
+            if (motivoTrim.length < 10) {
+                showMessage('Por favor, descreva melhor o motivo (mínimo de 10 caracteres).', 'error');
+                motivoInput.focus();
+                return;
+            }
+            const comentarioId = window._currentReportCommentId;
+            if (!comentarioId) {
+                showMessage('Não foi possível identificar o comentário.', 'error');
+                return;
+            }
+            const originalText = submitBtn.textContent;
+            submitBtn.disabled = true;
+            safeSetTextContent(submitBtn, 'Enviando...');
+            try {
+                const resp = await fetch('api_comentarios.php', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id_comentario: comentarioId, motivo: motivoTrim, tipo: tipoVal })
+                });
+                const result = await resp.json();
+                    if (result.success) {
+                    showMessage('Comentário reportado com sucesso! Obrigado por nos ajudar a manter a comunidade segura. O comentário permanecerá visível até revisão do administrador.', 'success');
+                    // Mantemos o comentário visível; apenas fechamos o modal
+                    closeReportModal();
+                } else {
+                    showMessage('Erro: ' + result.message, 'error');
+                }
+            } catch (error) {
+                console.error('Erro ao reportar abuso:', error);
+                showMessage('Erro ao reportar abuso', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                safeSetTextContent(submitBtn, originalText);
+            }
+        }
+
+        function reportarAbuso(comentarioId) {
+            ensureReportModal();
+            window._currentReportCommentId = comentarioId;
+            openReportModal();
         }
 
         // Funo para gerenciar abas de ordenao

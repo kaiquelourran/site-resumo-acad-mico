@@ -59,7 +59,8 @@ try {
                         DATE_FORMAT(c.data_comentario, '%d/%m/%Y às %H:%i') AS data_criacao, 
                         c.ativo, 
                         c.aprovado,
-                        c.reportado,\n                        COALESCE(u.nome, c.nome_usuario) AS nome_usuario, \n                        COALESCE(u.email, c.email_usuario) AS email_usuario, \n                        u.avatar_url AS avatar_usuario,\n                        (SELECT COUNT(*) FROM curtidas_comentarios cc WHERE cc.id_comentario = c.id_comentario) AS total_curtidas\n                    FROM \n                        comentarios_questoes c\n                    LEFT JOIN \n                        usuarios u ON u.email = c.email_usuario\n                    WHERE \n                        c.reportado = 1\n                    ORDER BY \n                        c.data_comentario DESC\n                ");
+                        c.reportado,\n                        COALESCE(u.nome, c.nome_usuario) AS nome_usuario, \n                        COALESCE(u.email, c.email_usuario) AS email_usuario, \n                        u.avatar_url AS avatar_usuario,\n                        (SELECT COUNT(*) FROM curtidas_comentarios cc WHERE cc.id_comentario = c.id_comentario) AS total_curtidas,\n                        (SELECT COUNT(*) FROM denuncias_comentarios dc WHERE dc.id_comentario = c.id_comentario) AS total_denuncias,\n                        (SELECT COALESCE(u2.nome, NULL) FROM usuarios u2 WHERE u2.email = (SELECT dc2.email_usuario FROM denuncias_comentarios dc2 WHERE dc2.id_comentario = c.id_comentario ORDER BY dc2.data_denuncia DESC LIMIT 1) LIMIT 1) AS reporter_nome,\n                        (SELECT dc3.email_usuario FROM denuncias_comentarios dc3 WHERE dc3.id_comentario = c.id_comentario ORDER BY dc3.data_denuncia DESC LIMIT 1) AS reporter_email,\n                        (SELECT dc4.ip_usuario FROM denuncias_comentarios dc4 WHERE dc4.id_comentario = c.id_comentario ORDER BY dc4.data_denuncia DESC LIMIT 1) AS reporter_ip,\n                        (SELECT DATE_FORMAT(dc5.data_denuncia, '%d/%m/%Y às %H:%i') FROM denuncias_comentarios dc5 WHERE dc5.id_comentario = c.id_comentario ORDER BY dc5.data_denuncia DESC LIMIT 1) AS reporter_data,\n                        (SELECT dc6.motivo FROM denuncias_comentarios dc6 WHERE dc6.id_comentario = c.id_comentario ORDER BY dc6.data_denuncia DESC LIMIT 1) AS reporter_motivo,
+                        (SELECT dc7.tipo FROM denuncias_comentarios dc7 WHERE dc7.id_comentario = c.id_comentario ORDER BY dc7.data_denuncia DESC LIMIT 1) AS reporter_tipo\n                    FROM \n                        comentarios_questoes c\n                    LEFT JOIN \n                        usuarios u ON u.email = c.email_usuario\n                    WHERE \n                        c.reportado = 1\n                    ORDER BY \n                        COALESCE((SELECT MAX(dc.data_denuncia) FROM denuncias_comentarios dc WHERE dc.id_comentario = c.id_comentario), c.data_comentario) DESC\n                ");
                 $stmt->execute();
                 $reportedComments = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -478,7 +479,29 @@ try {
                     $response['message'] = 'Erro ao excluir comentário permanentemente.';
                 }
             } else { // reportar abuso
-                // Novo fluxo: marcar como reportado sem inativar
+                // Registrar denúncia com motivo fornecido e marcar como reportado
+                $sessionEmail = $_SESSION['user_email'] ?? $_SESSION['usuario_email'] ?? $_SESSION['email_usuario'] ?? $_SESSION['email'] ?? null;
+                $ipUsuario = getUserIP();
+                $motivo = isset($data['motivo']) ? trim($data['motivo']) : null;
+                if ($motivo) {
+                    // limitar tamanho e remover tags HTML
+                    $motivo = strip_tags($motivo);
+                    if (strlen($motivo) > 1000) { $motivo = substr($motivo, 0, 1000); }
+                }
+                try {
+                    // Inserir denúncia (idempotente via UNIQUE por email/ip)
+                    if ($sessionEmail) {
+                        $stmtIns = $pdo->prepare("INSERT INTO denuncias_comentarios (id_comentario, email_usuario, ip_usuario, motivo, tipo) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE motivo = ?, tipo = ?, data_denuncia = CURRENT_TIMESTAMP");
+                        $stmtIns->execute([$id_comentario, $sessionEmail, null, $motivo, ($data['tipo'] ?? null), $motivo, ($data['tipo'] ?? null)]);
+                    } else {
+                        $stmtIns = $pdo->prepare("INSERT INTO denuncias_comentarios (id_comentario, ip_usuario, motivo, tipo) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE motivo = ?, tipo = ?, data_denuncia = CURRENT_TIMESTAMP");
+                        $stmtIns->execute([$id_comentario, $ipUsuario, $motivo, ($data['tipo'] ?? null), $motivo, ($data['tipo'] ?? null)]);
+                    }
+                } catch (PDOException $e) {
+                    // Falha ao inserir denúncia não deve impedir marcação como reportado
+                    error_log('Erro registrando denúncia: ' . $e->getMessage());
+                }
+                // Marcar comentário como reportado
                 $stmt = $pdo->prepare("UPDATE comentarios_questoes SET reportado = 1 WHERE id_comentario = ?");
                 if ($stmt->execute([$id_comentario])) {
                     $response['success'] = true;
