@@ -27,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_SESSION['nome_usuario'] = $usuario['nome'];
             $_SESSION['tipo_usuario'] = $usuario['tipo'];
             
-            header('Location: dashboard.php');
+            header('Location: /admin/dashboard.php');
             exit;
         } else {
             $mensagem_erro = "Email ou senha incorretos, ou você não tem permissão de administrador.";

@@ -72,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['id_questao'])) {
             $pdo->commit();
             $mensagem_status = '<p style="color:green;">Questão atualizada com sucesso!</p>';
             // Recarrega os dados da questão atualizada
-            header('Location: ../gerenciar_questoes_sem_auth.php?status=updated');
+            header('Location: /admin/gerenciar_questoes_sem_auth.php?status=updated');
             exit;
         } catch (Exception $e) {
             $pdo->rollBack();

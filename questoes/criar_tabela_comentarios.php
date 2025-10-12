@@ -11,8 +11,11 @@ try {
         comentario TEXT NOT NULL,
         data_comentario TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         aprovado BOOLEAN DEFAULT TRUE,
+        ativo BOOLEAN DEFAULT TRUE,
+        reportado BOOLEAN DEFAULT FALSE,
         INDEX idx_questao (id_questao),
         INDEX idx_data (data_comentario),
+        INDEX idx_reportado (reportado),
         FOREIGN KEY (id_questao) REFERENCES questoes(id_questao) ON DELETE CASCADE
     )";
     

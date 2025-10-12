@@ -75,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     
     // Redirecionar para a mesma página para mostrar feedback
-    header("Location: quiz_vertical.php?id=$id_assunto&filtro=$filtro_ativo&questao_atual=$questao_atual");
+    header("Location: /quiz_vertical.php?id=$id_assunto&filtro=$filtro_ativo&questao_atual=$questao_atual");
     exit;
 }
 

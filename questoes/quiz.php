@@ -22,7 +22,7 @@ if (!isset($_SESSION['questoes_progress']) || isset($_GET['novo'])) {
 
 // Redireciona para a página de resultados se o número de questões foi alcançado
 if (count($_SESSION['questoes_progress']['respondidas']) >= $numero_de_questoes_por_questoes) {
-    header('Location: resultado.php');
+    header('Location: /resultado.php');
     exit;
 }
 

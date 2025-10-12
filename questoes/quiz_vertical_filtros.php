@@ -3074,8 +3074,9 @@ if (!window.statsInitialized) {
                 .then(result => {
                     if (result.success) {
                         showMessage('Comentrio reportado com sucesso!', 'success');
-                        // Remover comentrio da interface
-                        document.querySelector(`[data-comentario-id="${comentarioId}"]`).remove();
+                        // Remover comentrio da interface com segurança
+                        const el = document.querySelector(`[data-comentario-id="${comentarioId}"]`);
+                        if (el) { el.remove(); }
                     } else {
                         showMessage('Erro: ' + result.message, 'error');
                     }

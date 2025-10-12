@@ -6,11 +6,13 @@ try {
     try { $pdo->exec("ALTER TABLE comentarios_questoes ADD COLUMN curtidas INT DEFAULT 0"); } catch (PDOException $e) { /* coluna já existe */ }
     try { $pdo->exec("ALTER TABLE comentarios_questoes ADD COLUMN id_comentario_pai INT NULL"); } catch (PDOException $e) { /* coluna já existe */ }
     try { $pdo->exec("ALTER TABLE comentarios_questoes ADD COLUMN ativo BOOLEAN DEFAULT TRUE"); } catch (PDOException $e) { /* coluna já existe */ }
+    try { $pdo->exec("ALTER TABLE comentarios_questoes ADD COLUMN reportado BOOLEAN DEFAULT FALSE"); } catch (PDOException $e) { /* coluna já existe */ }
     echo "✅ Colunas adicionadas com sucesso!<br>";
 
     // Adicionar índices/foreign key (idempotentes)
     try { $pdo->exec("ALTER TABLE comentarios_questoes ADD INDEX idx_curtidas (curtidas)"); } catch (PDOException $e) { /* índice já existe */ }
     try { $pdo->exec("ALTER TABLE comentarios_questoes ADD INDEX idx_pai (id_comentario_pai)"); } catch (PDOException $e) { /* índice já existe */ }
+    try { $pdo->exec("ALTER TABLE comentarios_questoes ADD INDEX idx_reportado (reportado)"); } catch (PDOException $e) { /* índice já existe */ }
     try { $pdo->exec("ALTER TABLE comentarios_questoes ADD CONSTRAINT fk_comentario_pai FOREIGN KEY (id_comentario_pai) REFERENCES comentarios_questoes(id_comentario) ON DELETE CASCADE"); } catch (PDOException $e) { /* constraint já existe */ }
     
     // Criar tabela de curtidas de usuários

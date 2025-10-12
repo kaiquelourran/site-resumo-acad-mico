@@ -3,7 +3,7 @@ session_start();
 
 // Verifica se o usuário é um administrador
 if (!isset($_SESSION['tipo_usuario']) || ($_SESSION['tipo_usuario'] !== 'admin' && $_SESSION['user_type'] !== 'admin')) {
-    header('Location: ../login.php'); // Redireciona para a página de login se não for admin
+    header('Location: /admin/login.php'); // Redireciona para a página de login se não for admin
     exit();
 }
 ?>
@@ -449,21 +449,27 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
                     </td>
                     <td>
-                        <small>${new Date(comment.data_criacao).toLocaleDateString('pt-BR')}</small><br>
-                        <small style="color: #666;">${new Date(comment.data_criacao).toLocaleTimeString('pt-BR')}</small>
+                        <small>${comment.data_criacao}</small>
                     </td>
                     <td>
                         <span class="badge ${statusBadge}">
                             <i class="${statusIcon}"></i> ${statusText}
                         </span>
+                        ${comment.reportado == 1 ? `<span class="badge badge-danger" style="margin-left:6px;"><i class="fas fa-flag"></i> Reportado</span>` : ''}
                     </td>
                     <td>
                         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            ${comment.ativo == 0 ? `
                             <button class="btn btn-success btn-sm btn-ativar" 
                                     data-id="${comment.id_comentario}"
                                     style="padding: 6px 12px; font-size: 12px;">
                                 <i class="fas fa-check"></i> Ativar
-                            </button>
+                            </button>` : `
+                            <button class="btn btn-warning btn-sm btn-desativar" 
+                                    data-id="${comment.id_comentario}"
+                                    style="padding: 6px 12px; font-size: 12px;">
+                                <i class="fas fa-ban"></i> Desativar
+                            </button>`}
                             <button class="btn btn-danger btn-sm btn-excluir-permanente" 
                                     data-id="${comment.id_comentario}"
                                     style="padding: 6px 12px; font-size: 12px;">
@@ -488,6 +494,13 @@ document.addEventListener('DOMContentLoaded', function() {
             button.addEventListener('click', function() {
                 const comentarioId = this.dataset.id;
                 updateCommentStatus(comentarioId, 1); // Ativar
+            });
+        });
+
+        document.querySelectorAll('.btn-desativar').forEach(button => {
+            button.addEventListener('click', function() {
+                const comentarioId = this.dataset.id;
+                updateCommentStatus(comentarioId, 0); // Desativar
             });
         });
 

@@ -11,6 +11,8 @@ $pass = "";       // Senha padrão do XAMPP (em branco)
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$db;charset=utf8", $user, $pass);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    // Garantir nomes de meses/datas em PT-BR nas funções DATE_FORMAT
+    $pdo->exec("SET lc_time_names = 'pt_BR'");
 } catch (PDOException $e) {
     // Log do erro em vez de exibir
     error_log("Erro ao conectar ao banco: " . $e->getMessage());

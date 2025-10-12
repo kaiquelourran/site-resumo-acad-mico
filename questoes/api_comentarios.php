@@ -55,13 +55,17 @@ try {
                     break;
                 }
 
-                $stmt = $pdo->prepare("\n                    SELECT \n                        c.id_comentario, \n                        c.id_questao, \n                        c.comentario, \n                        c.data_comentario AS data_criacao, \n                        c.ativo, \n                        c.aprovado,\n                        COALESCE(u.nome, c.nome_usuario) AS nome_usuario, \n                        COALESCE(u.email, c.email_usuario) AS email_usuario, \n                        u.avatar_url AS avatar_usuario,\n                        (SELECT COUNT(*) FROM curtidas_comentarios cc WHERE cc.id_comentario = c.id_comentario) AS total_curtidas\n                    FROM \n                        comentarios_questoes c\n                    LEFT JOIN \n                        usuarios u ON u.email = c.email_usuario\n                    WHERE \n                        c.ativo = 0\n                    ORDER BY \n                        c.data_comentario DESC\n                ");
+                $stmt = $pdo->prepare("\n                    SELECT \n                        c.id_comentario, \n                        c.id_questao, \n                        c.comentario, 
+                        DATE_FORMAT(c.data_comentario, '%d/%m/%Y às %H:%i') AS data_criacao, 
+                        c.ativo, 
+                        c.aprovado,
+                        c.reportado,\n                        COALESCE(u.nome, c.nome_usuario) AS nome_usuario, \n                        COALESCE(u.email, c.email_usuario) AS email_usuario, \n                        u.avatar_url AS avatar_usuario,\n                        (SELECT COUNT(*) FROM curtidas_comentarios cc WHERE cc.id_comentario = c.id_comentario) AS total_curtidas\n                    FROM \n                        comentarios_questoes c\n                    LEFT JOIN \n                        usuarios u ON u.email = c.email_usuario\n                    WHERE \n                        c.reportado = 1\n                    ORDER BY \n                        c.data_comentario DESC\n                ");
                 $stmt->execute();
                 $reportedComments = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                 $response['success'] = true;
                 $response['data'] = $reportedComments;
-                $response['message'] = 'Comentários inativos carregados com sucesso';
+                $response['message'] = 'Comentários reportados carregados com sucesso';
                 break;
             }
             // Buscar comentários de uma questão
@@ -76,7 +80,7 @@ try {
                     SELECT c.*, 
                            DATE_FORMAT(c.data_comentario, '%d de %M de %Y às %H:%i') as data_formatada,
                            (SELECT COUNT(*) FROM curtidas_comentarios cc WHERE cc.id_comentario = c.id_comentario) as total_curtidas,
-                           (SELECT COUNT(*) FROM comentarios_questoes cr WHERE cr.id_comentario_pai = c.id_comentario AND cr.ativo = 1) as total_respostas
+                           (SELECT COUNT(*) FROM comentarios_questoes cr WHERE cr.id_comentario_pai = c.id_comentario AND cr.ativo = 1 AND cr.aprovado = 1) as total_respostas
                     FROM comentarios_questoes c 
                     WHERE c.id_questao = ? AND c.aprovado = 1 AND c.ativo = 1 AND c.id_comentario_pai IS NULL
                     ORDER BY $orderBy
@@ -130,7 +134,7 @@ try {
                                DATE_FORMAT(c.data_comentario, '%d de %M de %Y às %H:%i') as data_formatada,
                                (SELECT COUNT(*) FROM curtidas_comentarios cc WHERE cc.id_comentario = c.id_comentario) as total_curtidas
                         FROM comentarios_questoes c 
-                        WHERE c.id_comentario_pai = ? AND c.ativo = 1
+                        WHERE c.id_comentario_pai = ? AND c.ativo = 1 AND c.aprovado = 1
                         ORDER BY c.data_comentario ASC
                     ");
                     $stmt_respostas->execute([$comentario['id_comentario']]);
@@ -383,6 +387,19 @@ try {
                         $response['message'] = 'Erro ao ativar comentário.';
                     }
                 }
+            } elseif ($acao === 'desativar') {
+                // Desativar comentário (apenas para administradores)
+                if (!isset($_SESSION['tipo_usuario']) || ((($_SESSION['tipo_usuario'] ?? '') !== 'administrador') && (($_SESSION['user_type'] ?? '') !== 'admin'))) {
+                    $response['message'] = 'Apenas administradores podem desativar comentários.';
+                } else {
+                    $stmt = $pdo->prepare("UPDATE comentarios_questoes SET ativo = 0 WHERE id_comentario = ?");
+                    if ($stmt->execute([$id_comentario])) {
+                        $response['success'] = true;
+                        $response['message'] = 'Comentário desativado com sucesso.';
+                    } else {
+                        $response['message'] = 'Erro ao desativar comentário.';
+                    }
+                }
             } else {
                 $response['message'] = 'Ação inválida';
             }
@@ -461,11 +478,11 @@ try {
                     $response['message'] = 'Erro ao excluir comentário permanentemente.';
                 }
             } else { // reportar abuso
-                // Lógica existente para reportar abuso (soft delete)
-                $stmt = $pdo->prepare("UPDATE comentarios_questoes SET ativo = 0 WHERE id_comentario = ?");
+                // Novo fluxo: marcar como reportado sem inativar
+                $stmt = $pdo->prepare("UPDATE comentarios_questoes SET reportado = 1 WHERE id_comentario = ?");
                 if ($stmt->execute([$id_comentario])) {
                     $response['success'] = true;
-                    $response['message'] = 'Comentário reportado com sucesso.';
+                    $response['message'] = 'Comentário reportado para revisão de abuso.';
                 } else {
                     $response['message'] = 'Erro ao reportar comentário.';
                 }

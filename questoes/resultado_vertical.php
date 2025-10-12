@@ -19,7 +19,7 @@ $resultados = $_SESSION['resultados_quiz_vertical'] ?? [];
 unset($_SESSION['resultados_quiz_vertical']); // Limpar da sessão
 
 if (empty($resultados)) {
-    header("Location: listar_questoes.php?id=$id_assunto&filtro=$filtro_ativo");
+    header("Location: /listar_questoes.php?id=$id_assunto&filtro=$filtro_ativo");
     exit;
 }
 
