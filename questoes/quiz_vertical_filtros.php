@@ -675,8 +675,14 @@ function getNomeFiltro($filtro) {
         }
 
         .status-acertada {
-            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
-            color: #155724;
+            background: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%);
+            color: #FFFFFF;
+            border: 2px solid #28a745;
+        }
+
+        .status-certa {
+            background: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%);
+            color: #FFFFFF;
             border: 2px solid #28a745;
         }
 
@@ -684,6 +690,18 @@ function getNomeFiltro($filtro) {
             background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
             color: #721c24;
             border: 2px solid #dc3545;
+        }
+
+        .status-respondida {
+            background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+            color: #0c5460;
+            border: 2px solid #17a2b8;
+        }
+
+        .status-nao-respondida {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            color: #6c757d;
+            border: 2px solid #dee2e6;
         }
 
         .question-text {
@@ -1866,12 +1884,7 @@ include 'header.php';
                                         </div>
                                     </div>
                                     
-                                    <!-- Boto fechar -->
-                                    <div class="close-comments">
-                                        <button class="close-btn">
-                                            <i class="fas fa-times"></i>
-                                        </button>
-                                    </div>
+
                                 </div>
                             </div>
                         </div>

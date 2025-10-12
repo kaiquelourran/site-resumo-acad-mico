@@ -385,9 +385,9 @@ footer {
     color: #856404;
 }
 
-.status-acertada {
-    background: #d4edda;
-    color: #155724;
+.status-certa {
+    background: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%);
+    color: white;
 }
 
 .status-errada {

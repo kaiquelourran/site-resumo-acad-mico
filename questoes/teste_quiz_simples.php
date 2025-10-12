@@ -229,3 +229,4 @@ $alternativas = $stmt_alt->fetchAll(PDO::FETCH_ASSOC);
 </body>
 </html>
 
+
