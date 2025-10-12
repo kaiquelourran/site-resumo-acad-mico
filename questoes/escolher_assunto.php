@@ -2,6 +2,11 @@
 session_start();
 require_once 'conexao.php';
 
+if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+    header('Location: login.php');
+    exit;
+}
+
 // Buscar todos os assuntos que têm questões
 $sql = "SELECT a.id_assunto, a.nome, COUNT(q.id_questao) as total_questoes 
         FROM assuntos a 

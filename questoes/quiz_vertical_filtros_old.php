@@ -2,6 +2,11 @@
 session_start();
 require_once __DIR__ . '/conexao.php';
 
+if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+    header('Location: login.php');
+    exit;
+}
+
 // Captura parâmetros
 $id_assunto = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 

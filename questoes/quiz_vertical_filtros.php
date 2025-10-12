@@ -18,6 +18,13 @@ function debug_log($message, $data = null) {
 session_start();
 require_once __DIR__ . '/conexao.php';
 
+// Verificar se o usuário está logado
+if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+    // Redirecionar para página de login
+    header('Location: /resumo-quiz/RESUMO ACADÊMICO/questoes/login.php');
+    exit;
+}
+
 // Captura parmetros
 $id_assunto = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 

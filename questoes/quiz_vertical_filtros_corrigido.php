@@ -2,6 +2,11 @@
 session_start();
 require_once 'conexao.php';
 
+if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+    header('Location: login.php');
+    exit;
+}
+
 // Configurar para exibir erros
 ini_set('display_errors', 0);
 ini_set('log_errors', 1);

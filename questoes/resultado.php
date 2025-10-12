@@ -2,6 +2,11 @@
 session_start();
 require_once __DIR__ . '/conexao.php';
 
+if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+    header('Location: login.php');
+    exit;
+}
+
 // Redireciona se a sessão das questões não existir
 if (!isset($_SESSION['questoes_progress'])) {
     header('Location: index.php');

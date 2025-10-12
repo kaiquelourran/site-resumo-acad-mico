@@ -2,11 +2,10 @@
 session_start();
 require_once 'conexao.php';
 
-// Verificar se o usuário está logado (opcional para teste)
-// if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
-//     header('Location: login.php');
-//     exit;
-// }
+if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+    header('Location: login.php');
+    exit;
+}
 
 // Buscar estatísticas do usuário
 try {
