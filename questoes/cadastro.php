@@ -50,6 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             } catch (PDOException $e) {
                 $error_message = 'Erro no banco de dados. Tente novamente.';
+                error_log('PDO Error: ' . $e->getMessage());
             }
         }
     }

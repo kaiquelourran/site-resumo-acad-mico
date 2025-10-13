@@ -2593,7 +2593,7 @@ if (!window.statsInitialized) {
                             <i class="fas fa-thumbs-up"></i>
                             Gostei (${comentario.total_curtidas || 0})
                         </button>
-                        <span class="voce-curtiu" style="${comentario.curtido_pelo_usuario ? 'margin-left:8px;color:#28a745;font-weight:600;' : 'display:none;margin-left:8px;color:#28a745;font-weight:600;'}">Você curtiu</span>
+                        
                         <button class="action-btn responder-btn" data-comentario-id="${comentario.id_comentario}">
                             <i class="fas fa-reply"></i>
                             Respostas (${comentario.total_respostas || 0})
@@ -2618,7 +2618,7 @@ if (!window.statsInitialized) {
                                             <i class="fas fa-thumbs-up"></i>
                                             Gostei (${resposta.total_curtidas || 0})
                                         </button>
-                                        <span class="voce-curtiu" style="${resposta.curtido_pelo_usuario ? 'margin-left:8px;color:#28a745;font-weight:600;' : 'display:none;margin-left:8px;color:#28a745;font-weight:600;'}">Você curtiu</span>
+                                        
                                         <a href="#" class="report-abuse" data-comentario-id="${resposta.id_comentario}">Reportar abuso</a>
                                         ${"<?php echo (($_SESSION['tipo_usuario'] ?? $_SESSION['user_type'] ?? '') === 'admin') ? '1' : ''; ?>" ? `<button class="action-btn apagar-btn" data-comentario-id="${resposta.id_comentario}" title="Apagar resposta" style="color:#dc3545;"><i class="fas fa-trash"></i> Apagar</button>` : ''}
                                     </div>
@@ -2908,23 +2908,7 @@ if (!window.statsInitialized) {
                         botao.classList.remove('curtido');
                         botao.style.color = '#007bff';
                     }
-                    // Alternar indicador “Você curtiu” com base no backend
-                    const indicator = botao.parentElement.querySelector('.voce-curtiu');
-                    if (result.curtido_pelo_usuario === true) {
-                        if (indicator) {
-                            indicator.style.display = '';
-                        } else {
-                            const span = document.createElement('span');
-                            span.className = 'voce-curtiu';
-                            span.style.cssText = 'margin-left:8px;color:#28a745;font-weight:600;';
-                            span.textContent = 'Você curtiu';
-                            botao.insertAdjacentElement('afterend', span);
-                        }
-                    } else {
-                        if (indicator) {
-                            indicator.style.display = 'none';
-                        }
-                    }
+
                 } else {
                     showMessage('Erro: ' + result.message, 'error');
                 }
