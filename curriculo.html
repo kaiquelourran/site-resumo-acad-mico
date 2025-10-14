@@ -6,6 +6,7 @@
   <title>Currículo - Cleice Santana</title>
   <link rel="icon" href="fotos/Logotipo_resumo_academico.png" type="image/png">
   <link rel="apple-touch-icon" href="fotos/minha-logo-apple.png">
+  <link rel="stylesheet" href="style.css">
   <link
     rel="stylesheet"
     href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
@@ -29,59 +30,70 @@
     }
 
     header {
-      min-height: 150px;
-      background-image: linear-gradient(to top, #00C6FF, #0072FF);
+      min-height: 120px;
+      background-image: linear-gradient(135deg, #00C6FF 0%, #0072FF 50%, #0056CC 100%);
       text-align: center;
       font-size: 1.2em;
-      padding-top: 13px;
+      padding: 8px 15px 12px 15px;
       color: white;
       justify-content: center;
-      text-shadow: 5px 1px 3px rgba(0, 0, 0, 0.4);
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
       position: fixed;
       width: 100%;
       top: 0;
       left: 0;
       z-index: 1000;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     }
 
     header p {
-      padding: 1.2em;
+      padding: 0.8em 0.3em;
       font-size: 1.1em;
       font-weight: 100;
     }
 
     nav {
       display: flex;
-      justify-content: left;
-      gap: 35px;
-      background-color: #0096c1;
-      padding: 1px;
+      justify-content: center;
+      gap: 30px;
+      background: linear-gradient(135deg, #0096c1, #0072FF);
+      padding: 7px;
       width: 100%;
       font-size: 0.8em;
       color: white;
-      border-radius: 10px;
+      border-radius: 13px;
+      margin-top: 5px;
+      box-shadow: 0 4px 14px rgba(0, 150, 193, 0.3);
     }
 
     nav a {
       text-decoration: none;
       color: white;
-      font-weight: bold;
-      padding: 2px;
-      transition: background-color 0.3s;
+      font-weight: 600;
+      padding: 9px 14px;
+      border-radius: 7px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.4);
     }
 
     nav a:hover {
-      background-color: #3478F6;
+      background: linear-gradient(135deg, #3478F6, #5B9BD5);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(52, 120, 246, 0.4);
     }
 
     .menu ul {
       list-style: none;
       display: flex;
-      background-color: #0096c1;
-      padding: 10px;
-      gap: 35px;
+      background: transparent;
+      padding: 0;
+      gap: 18px;
       font-size: 0.8em;
       position: relative;
+      align-items: center;
     }
 
     .menu ul li {
@@ -91,15 +103,21 @@
     .menu ul li a {
       text-decoration: none;
       color: white;
-      font-weight: bold;
-      padding: 2px;
+      font-weight: 600;
+      padding: 9px 14px;
+      border-radius: 7px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.4);
       display: block;
-      transition: background-color 0.3s;
     }
 
     .menu ul li a:hover {
-      background-color: #3478F6;
-      border-radius: 4px;
+      background: linear-gradient(135deg, #3478F6, #5B9BD5);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(52, 120, 246, 0.4);
     }
 
     .menu ul li ul.submenu {
@@ -107,16 +125,32 @@
       position: absolute;
       top: 100%;
       left: 0;
-      background-color: #50E3C2;
-      padding: 0;
-      min-width: 160px;
+      background: linear-gradient(135deg, #50E3C2, #00C6FF);
+      padding: 8px 0;
+      min-width: 180px;
       z-index: 1000;
       flex-direction: column;
-      border-radius: 10%;
+      border-radius: 12px;
+      box-shadow: 0 8px 25px rgba(0, 198, 255, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.2);
     }
 
     .menu ul li:hover > ul.submenu {
       display: block;
+    }
+
+    .menu ul li ul.submenu li a {
+      padding: 12px 20px;
+      margin: 2px 8px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .menu ul li ul.submenu li a:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateX(5px);
+      box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
     }
 
     main {
@@ -135,13 +169,13 @@
 
     @media (min-width: 769px) {
       main {
-        margin: 183px auto 10px auto;
+        margin: 160px auto 10px auto;
       }
     }
 
     @media (max-width: 768px) {
       main {
-        margin: 203px auto 10px auto;
+        margin: 180px auto 10px auto;
       }
     }
 
@@ -176,25 +210,6 @@
       line-height: 1.8em;
     }
 
-    footer {
-    background-image: linear-gradient(to top, #0072FF, #00C6FF);
-    text-align: center;
-    padding: 0.1em 0;
-    color: white;
-    font-family: Arial, sans-serif;
-    
-}
-
-.footer-creditos {
-    line-height: 1.4;
-    text-shadow: 2px 2px 3px rgba(0, 0, 0, 0.3);
-}
-
-.footer-creditos p {
-    margin: 3px 0;
-    font-size: 0.7em;
-    font-weight: bold;
-}
 
     
 
@@ -406,11 +421,16 @@
     </article>
   </main>
 
-  <footer>
-    <div class="footer-creditos">
-        <p>SITE CRIADO POR KAIQUE LOURRAN </p>
-        <p>&copy; 2025 Todos os direitos reservados.</p>
-    </div>
-</footer>
+  <!-- Footer será carregado via JavaScript -->
+  <div id="footer-placeholder"></div>
+
+  <script>
+    // Carregar footer externo
+    fetch('footer.html')
+      .then(response => response.text())
+      .then(data => {
+        document.getElementById('footer-placeholder').innerHTML = data;
+      });
+  </script>
 </body>
 </html>

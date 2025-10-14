@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Síndrome de Down</title>
+    <link rel="stylesheet" href="style.css">
     <link rel="icon" href="fotos/Logotipo_resumo_academico.png" type="image/png">
     <link rel="apple-touch-icon" href="fotos/minha-logo-apple.png">
     <!-- Google tag (gtag.js) -->
@@ -30,97 +31,8 @@
       min-height: 100vh;
     }
 
-    header {
-      min-height: 150px;
-      background-image: linear-gradient(to top, #00C6FF, #0072FF);
-      text-align: center;
-      font-size: 1.2em;
-      padding-top: 13px;
-      color: white;
-      justify-content: center;
-      text-shadow: 5px 1px 3px rgba(0, 0, 0, 0.4);
-      position: fixed;
-      width: 100%;
-      top: 0;
-      left: 0;
-      z-index: 1000;
-    }
 
-    header p {
-      padding: 1.2em;
-      font-size: 1.1em;
-      font-family: Arial, Helvetica, sans-serif;
-      font-weight: 100;
-    }
 
-    nav {
-      display: flex;
-      justify-content: left;
-      gap: 35px;
-      background-color: #0096c1;
-      padding: 1px;
-      width: 100%;
-      font-size: 0.8em;
-      color: white;
-      border-radius: 10px;
-    }
-
-    nav a {
-      text-decoration: none;
-      color: white;
-      font-weight: bold;
-      padding: 2px;
-      transition: background-color 0.3s;
-    }
-
-    nav a:hover {
-      background-color: #3478F6;
-    }
-
-    .menu ul {
-      list-style: none;
-      display: flex;
-      background-color: #0096c1;
-      padding: 10px;
-      gap: 35px;
-      font-size: 0.8em;
-      position: relative;
-    }
-
-    .menu ul li {
-      position: relative;
-    }
-
-    .menu ul li a {
-      text-decoration: none;
-      color: white;
-      font-weight: bold;
-      padding: 2px;
-      display: block;
-      transition: background-color 0.3s;
-    }
-
-    .menu ul li a:hover {
-      background-color: #3478F6;
-      border-radius: 4px;
-    }
-
-    .menu ul li ul.submenu {
-      display: none;
-      position: absolute;
-      top: 100%;
-      left: 0;
-      background-color: #50E3C2;
-      padding: 0;
-      min-width: 160px;
-      z-index: 1000;
-      flex-direction: column;
-      border-radius: 10%;
-    }
-
-    .menu ul li:hover > ul.submenu {
-      display: block;
-    }
     main {
       background-color: #FFFFFF;
       max-width: 900px;
@@ -187,26 +99,6 @@
 }
   
 
- /* RODAPÉ PROFISSIONAL (ADAPTADO AO SEU ESTILO) */
-footer {
-    background-image: linear-gradient(to top, #0072FF, #00C6FF);
-    text-align: center;
-    padding: 0.1em 0;
-    color: white;
-    font-family: Arial, sans-serif;
-    
-}
-
-.footer-creditos {
-    line-height: 1.4;
-    text-shadow: 2px 2px 3px rgba(0, 0, 0, 0.3);
-}
-
-.footer-creditos p {
-    margin: 3px 0;
-    font-size: 0.7em;
-    font-weight: bold;
-}
 
 
     @media(max-width: 768px) {
@@ -264,35 +156,8 @@ footer {
     </style>
 </head>
 <body>
-    <header>
-        <h1>Resumo Acadêmico</h1>
-        <p>Facilitamos sua jornada acadêmica com resumos claros e organizados em um só lugar.</p>
-    
-        <nav class="menu">
-            <ul>
-                <li><a href="#">HOME</a>
-                    <ul class="submenu">
-                        <li><a href="#">Início Rápido</a></li>
-                        <li><a href="#">Apresentação</a></li>
-                    </ul>
-                </li>
-                <li><a href="#">SOBRE</a>
-                    <ul class="submenu">
-                        <li><a href="index.html#resumo">RESUMO ACADÊMICO</a></li>
-                        <li><a href="index.html#cleice">EMBAIXADORA T.O</a></li>
-                        <li><a href="index.html#funcionamento">FUNCIONAMENTO</a></li>
-                    </ul>
-                </li>
-                <li><a href="#">CONTEÚDO</a>
-                    <ul class="submenu">
-                        <li><a href="index.html#lista">LISTA DE CONTEUDO</a></li>
-                        <li><a href="index.html#origem">ORIGEM E HISTÓRIA</a></li>
-                        <li><a href="#">Conselhos</a></li>
-                    </ul>
-                </li>
-            </ul>
-        </nav>
-    </header>
+    <!-- Header será carregado via JavaScript -->
+    <div id="header-placeholder"></div>
     <main>
         <article>
           <h1>Síndrome de Down </h1>
@@ -310,12 +175,23 @@ footer {
         </article>
         
     </main>
-    <footer>
-      <div class="footer-creditos">
-          <p>SITE CRIADO POR KAIQUE LOURRAN </p>
-          <p>&copy; 2025 Todos os direitos reservados.</p>
-      </div>
-  </footer>
+    <!-- Footer será carregado via JavaScript -->
+    <div id="footer-placeholder"></div>
+
+    <script>
+      // Carregar header e footer externos
+      fetch('header_infantil.html')
+        .then(response => response.text())
+        .then(data => {
+          document.getElementById('header-placeholder').innerHTML = data;
+        });
+
+      fetch('footer.html')
+        .then(response => response.text())
+        .then(data => {
+          document.getElementById('footer-placeholder').innerHTML = data;
+        });
+      </script>
       
 </body>
 </html>
