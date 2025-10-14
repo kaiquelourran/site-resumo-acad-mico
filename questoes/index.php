@@ -94,7 +94,11 @@ try {
     .header .subtitle { font-size: 1rem; color: #555; }
     @media (max-width: 768px) {
         html, body { overflow-x: hidden; }
-        .main-container { margin: 16px; padding: 18px; }
+        .main-container { 
+            margin: 16px auto; 
+            padding: 18px; 
+            max-width: calc(100% - 32px);
+        }
         .header .title { font-size: 1.6rem; }
         .header .subtitle { font-size: 1rem; }
         .user-info { width: 100%; display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; }
@@ -106,19 +110,18 @@ try {
         .card-title { margin-bottom: 6px; }
         .card-description { font-size: .95rem; }
         .btn { width: 100%; }
+        .app-header .header-inner { flex-direction: column; align-items: flex-start; } 
+        .app-header .user-actions { width: 100%; justify-content: space-between; flex-wrap: wrap; }
     }
     @media (max-width: 480px) {
         .header .title { font-size: 1.4rem; }
         .stat-number { font-size: 1.6rem; }
+        .main-container { 
+            margin: 10px auto; 
+            padding: 15px; 
+            max-width: calc(100% - 20px);
+        }
     }
-    /* Legibilidade em cards com gradiente */
-    .card[style*="linear-gradient"] .card-title { color: #fff; }
-    .card[style*="linear-gradient"] .card-description { color: #f8f9fa; }
-    .card[style*="linear-gradient"] .btn { box-shadow: 0 6px 16px rgba(0,114,255,0.35); }
-    /* Cards clicáveis */
-    .clickable-card { cursor: pointer; }
-    .clickable-card:focus { outline: 3px solid rgba(0,114,255,0.35); outline-offset: 2px; }
-    .clickable-card:active { transform: translateY(0); }
     /* Header estiloso com paleta azul */
     .app-header { background: linear-gradient(135deg, #00C6FF 0%, #0072FF 100%); border-radius: 16px; padding: 18px; color: #fff; box-shadow: 0 12px 30px rgba(0,114,255,0.25); margin-bottom: 24px; }
     .app-header .header-inner { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
@@ -132,7 +135,6 @@ try {
     .logout-btn.logout-red { background: linear-gradient(180deg, #ff4b5a 0%, #dc3545 100%); color: #fff; padding: 10px 14px; border-radius: 10px; text-decoration: none; font-weight: 700; box-shadow: 0 8px 18px rgba(220,53,69,0.35); border: none; display: inline-flex; align-items: center; gap: 8px; transition: transform .2s ease, box-shadow .2s ease, filter .2s ease; }
     .logout-btn.logout-red:hover { transform: translateY(-2px); box-shadow: 0 12px 24px rgba(220,53,69,0.45); filter: brightness(1.02); }
     .logout-btn.logout-red:focus { outline: 3px solid rgba(220,53,69,0.45); outline-offset: 2px; }
-    @media (max-width: 768px) { .app-header .header-inner { flex-direction: column; align-items: flex-start; } .app-header .user-actions { width: 100%; justify-content: space-between; flex-wrap: wrap; } }
     /* ... */
     .card { background: #FFFFFF; border: 1px solid #e1e5e9; border-radius: 12px; padding: 24px; width: 300px; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.06); }
     .card-title { color: #333333; }
@@ -147,33 +149,6 @@ try {
     .card:hover { transform: translateY(-4px); box-shadow: 0 14px 30px rgba(0,114,255,0.18); }
     .header { display: block; }
     .header .subtitle { font-size: 1rem; color: #555; }
-    @media (max-width: 768px) {
-        html, body { overflow-x: hidden; }
-        .main-container { margin: 16px; padding: 18px; }
-        .header .title { font-size: 1.6rem; }
-        .header .subtitle { font-size: 1rem; }
-        .user-info { width: 100%; display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; }
-        .stats-container { flex-direction: column; gap: 12px; }
-        .stat-card { width: 100%; }
-        .cards-container { flex-direction: column; gap: 16px; }
-        .card { width: 100%; padding: 20px; }
-        .card-icon { display: block; font-size: 1.5rem; margin-bottom: 8px; }
-        .card-title { margin-bottom: 6px; }
-        .card-description { font-size: .95rem; }
-        .btn { width: 100%; }
-    }
-    @media (max-width: 480px) {
-        .header .title { font-size: 1.4rem; }
-        .stat-number { font-size: 1.6rem; }
-    }
-    /* Legibilidade em cards com gradiente */
-    .card[style*="linear-gradient"] .card-title { color: #fff; }
-    .card[style*="linear-gradient"] .card-description { color: #f8f9fa; }
-    .card[style*="linear-gradient"] .btn { box-shadow: 0 6px 16px rgba(0,114,255,0.35); }
-    /* Cards clicáveis */
-    .clickable-card { cursor: pointer; }
-    .clickable-card:focus { outline: 3px solid rgba(0,114,255,0.35); outline-offset: 2px; }
-    .clickable-card:active { transform: translateY(0); }
     /* Footer estiloso */
     .app-footer { position: relative; background: #FFFFFF; border-radius: 16px; padding: 22px; box-shadow: 0 10px 24px rgba(0,0,0,0.08); margin-top: 40px; border: 1px solid #e9eef3; }
     .app-footer::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 4px; border-top-left-radius: 16px; border-top-right-radius: 16px; background: linear-gradient(90deg, #00C6FF 0%, #0072FF 100%); }

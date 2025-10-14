@@ -466,6 +466,10 @@ function getNomeFiltro($filtro) {
         @media (max-width: 480px) {
             .subjects-page .header .user-name { display: none; }
             .subjects-page .header .user-avatar { width: 26px; height: 26px; font-size: 0.85rem; }
+            .main-container {
+                margin: 5px auto;
+                max-width: calc(100% - 10px);
+            }
         }
 
         /* Ocultar o boto Entrar na subjects-page */
@@ -1123,8 +1127,9 @@ function getNomeFiltro($filtro) {
 
         @media (max-width: 768px) {
             .main-container {
-                margin: 10px;
+                margin: 10px auto;
                 border-radius: 20px;
+                max-width: calc(100% - 20px);
             }
             
             .content-wrapper {

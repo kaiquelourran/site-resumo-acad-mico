@@ -175,7 +175,7 @@ $buckets = $pdo->query($sql_buckets)->fetch(PDO::FETCH_ASSOC);
     /* Responsividade */
     @media (max-width: 768px) {
         html, body { overflow-x: hidden; }
-        .main-container { margin: 16px; padding: 18px; }
+        .main-container { margin: 16px auto; padding: 18px; max-width: calc(100% - 32px); }
         .app-header .header-inner { flex-direction: column; align-items: flex-start; }
         .app-header .user-actions { width: 100%; justify-content: space-between; flex-wrap: wrap; }
         .stats-container { flex-direction: column; gap: 12px; }
