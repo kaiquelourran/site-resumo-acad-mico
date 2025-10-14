@@ -126,7 +126,7 @@ try {
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #00C6FF 0%, #0072FF 100%);
             min-height: 100vh;
             padding: 20px;
         }
@@ -141,7 +141,7 @@ try {
         }
 
         .header {
-             background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+             background: linear-gradient(135deg, #00C6FF 0%, #0072FF 100%);
              color: white;
              padding: 30px;
              text-align: center;
@@ -219,7 +219,7 @@ try {
         .stat-number {
             font-size: 2rem;
             font-weight: bold;
-            color: #4f46e5;
+            color: #00C6FF;
             display: block;
         }
 
@@ -293,7 +293,7 @@ try {
 
         .form-control:focus {
             outline: none;
-            border-color: #4f46e5;
+            border-color: #00C6FF;
             background: white;
             box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
         }
@@ -341,7 +341,7 @@ try {
         }
 
         .alt-letter {
-            background: #4f46e5;
+            background: #00C6FF;
             color: white;
             width: 24px;
             height: 24px;
@@ -385,11 +385,11 @@ try {
         .radio-item input[type="radio"] {
             width: 18px;
             height: 18px;
-            accent-color: #4f46e5;
+            accent-color: #00C6FF;
         }
 
         .radio-item input[type="radio"]:checked + .radio-label {
-            color: #4f46e5;
+            color: #00C6FF;
             font-weight: 600;
         }
 
@@ -400,7 +400,7 @@ try {
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            background: linear-gradient(135deg, #00C6FF 0%, #0072FF 100%);
             color: white;
             padding: 16px 32px;
             border: none;

@@ -7,7 +7,7 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #00C6FF 0%, #0072FF 100%);
     min-height: 100vh;
     padding: 20px;
     color: #333;
@@ -49,7 +49,7 @@ body {
     font-size: 2.2em;
     font-weight: 600;
     margin-bottom: 8px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #00C6FF 0%, #0072FF 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -63,7 +63,7 @@ body {
 
 /* User Info */
 .user-info {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #00C6FF 0%, #0072FF 100%);
     color: white;
     padding: 15px 25px;
     border-radius: 50px;
@@ -130,7 +130,7 @@ body {
 .card:hover {
     transform: translateY(-8px);
     box-shadow: 0 15px 40px rgba(102, 126, 234, 0.2);
-    border-color: #667eea;
+    border-color: #00C6FF;
 }
 
 .card-icon {
@@ -163,7 +163,7 @@ body {
 .btn {
     display: inline-block;
     padding: 14px 28px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #00C6FF 0%, #0072FF 100%);
     color: white;
     text-decoration: none;
     border-radius: 50px;
@@ -251,7 +251,7 @@ body {
 .form-group select:focus,
 .form-group textarea:focus {
     outline: none;
-    border-color: #667eea;
+    border-color: #00C6FF;
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
     transform: translateY(-2px);
 }
@@ -271,7 +271,7 @@ body {
 }
 
 .table th {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #00C6FF 0%, #0072FF 100%);
     color: white;
     padding: 18px;
     text-align: left;
@@ -353,7 +353,7 @@ body {
     left: 0;
     right: 0;
     height: 4px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #00C6FF 0%, #0072FF 100%);
 }
 
 .stat-card:hover {
@@ -364,7 +364,7 @@ body {
 .stat-number {
     font-size: 2.5em;
     font-weight: 700;
-    color: #667eea;
+    color: #00C6FF;
     margin-bottom: 10px;
     animation: countUp 1s ease-out;
 }
@@ -400,7 +400,7 @@ body {
     left: 0;
     right: 0;
     height: 4px;
-    background: linear-gradient(90deg, #667eea, #764ba2, #667eea);
+    background: linear-gradient(90deg, #00C6FF, #0072FF, #00C6FF);
     background-size: 200% 100%;
     animation: shimmer 3s ease-in-out infinite;
 }
@@ -424,7 +424,7 @@ body {
 
 .progress-bar {
     height: 100%;
-    background: linear-gradient(90deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+    background: linear-gradient(90deg, #00C6FF 0%, #0072FF 50%, #00C6FF 100%);
     border-radius: 20px;
     transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
@@ -457,7 +457,7 @@ body {
 
 /* Question Header Styles */
 .question-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #00C6FF 0%, #0072FF 100%);
     color: white;
     padding: 20px;
     border-radius: 16px;
@@ -552,7 +552,7 @@ body {
     transform: translateY(-50%);
     width: 35px;
     height: 35px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #00C6FF 0%, #0072FF 100%);
     color: white;
     border-radius: 50%;
     display: flex;
@@ -582,7 +582,7 @@ body {
 }
 
 .alternative:hover {
-    border-color: #667eea;
+    border-color: #00C6FF;
     transform: translateX(8px);
     box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
     background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
@@ -594,12 +594,12 @@ body {
 }
 
 .alternative input[type="radio"]:checked + span {
-    color: #667eea;
+    color: #00C6FF;
     font-weight: 600;
 }
 
 .alternative:has(input[type="radio"]:checked) {
-    border-color: #667eea;
+    border-color: #00C6FF;
     background: linear-gradient(135deg, #f0f4ff 0%, #e8ecff 100%);
     transform: translateX(12px);
     box-shadow: 0 10px 30px rgba(102, 126, 234, 0.2);
@@ -615,7 +615,7 @@ body {
 .btn-submit {
     width: 100%;
     padding: 18px 30px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #00C6FF 0%, #0072FF 100%);
     color: white;
     border: none;
     border-radius: 16px;
@@ -936,7 +936,7 @@ body {
     height: 20px;
     border: 3px solid rgba(102, 126, 234, 0.3);
     border-radius: 50%;
-    border-top-color: #667eea;
+    border-top-color: #00C6FF;
     animation: spin 1s ease-in-out infinite;
 }
 

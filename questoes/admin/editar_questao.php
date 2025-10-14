@@ -127,7 +127,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['id_questao'])) {
         .form-group textarea:focus,
         .form-group select:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #00C6FF;
             background: white;
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
@@ -167,7 +167,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['id_questao'])) {
         }
         
         .alternativa-row:hover {
-            border-color: #667eea;
+            border-color: #00C6FF;
             transform: translateY(-2px);
             box-shadow: 0 4px 15px rgba(102, 126, 234, 0.1);
         }
@@ -183,7 +183,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['id_questao'])) {
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #00C6FF 0%, #0072FF 100%);
             color: white;
             border-radius: 50%;
             font-weight: 700;
@@ -210,7 +210,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['id_questao'])) {
         .alternativa-row input[type="radio"] {
             width: 24px;
             height: 24px;
-            accent-color: #667eea;
+            accent-color: #00C6FF;
             cursor: pointer;
             transform: scale(1.2);
         }

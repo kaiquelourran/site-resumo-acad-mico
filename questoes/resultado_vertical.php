@@ -61,7 +61,7 @@ foreach ($questoes_detalhes as $questao) {
             max-width: 1000px;
             margin: 0 auto;
             padding: 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #00C6FF 0%, #0072FF 100%);
             min-height: 100vh;
         }
 
@@ -242,7 +242,7 @@ foreach ($questoes_detalhes as $questao) {
         }
 
         .btn-nav {
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: linear-gradient(135deg, #00C6FF, #0072FF);
             color: white;
             padding: 15px 30px;
             border: none;

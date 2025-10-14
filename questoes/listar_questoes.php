@@ -723,12 +723,12 @@ $contadores['erradas'] = $stmt_count_erradas->fetchColumn();
 
         .btn-secondary {
             background: white;
-            color: #667eea;
-            border: 2px solid #667eea;
+            color: #00C6FF;
+            border: 2px solid #00C6FF;
         }
 
         .btn-secondary:hover {
-            background: #667eea;
+            background: #00C6FF;
             color: white;
         }
 

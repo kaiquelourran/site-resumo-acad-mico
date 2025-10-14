@@ -14,6 +14,29 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
 if (!isset($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
+
+// Buscar notificações não lidas do usuário
+$notificacoes_nao_lidas = 0;
+$ultimas_notificacoes = [];
+
+try {
+    $stmt_notificacoes = $pdo->prepare("
+        SELECT id_relatorio, titulo, resposta_admin, data_atualizacao, status, prioridade
+        FROM relatorios_bugs 
+        WHERE id_usuario = ? 
+        AND resposta_admin IS NOT NULL 
+        AND resposta_admin != '' 
+        AND usuario_viu_resposta = FALSE
+        ORDER BY data_atualizacao DESC 
+        LIMIT 5
+    ");
+    $stmt_notificacoes->execute([$_SESSION['user_id']]);
+    $ultimas_notificacoes = $stmt_notificacoes->fetchAll(PDO::FETCH_ASSOC);
+    $notificacoes_nao_lidas = count($ultimas_notificacoes);
+} catch (Exception $e) {
+    // Em caso de erro, continuar sem notificações
+    error_log("Erro ao buscar notificações: " . $e->getMessage());
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -280,6 +303,154 @@ if (!isset($_SESSION['csrf_token'])) {
         background: linear-gradient(180deg, #ff4b5a 0%, #dc3545 100%);
         color: #fff;
         border: none;
+    }
+    
+    /* Sistema de Notificações */
+    .notificacoes-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+        max-width: 350px;
+    }
+    
+    .notificacao-badge {
+        background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
+        color: white;
+        padding: 8px 12px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        box-shadow: 0 4px 15px rgba(255,107,107,0.3);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        animation: pulse-notification 2s infinite;
+    }
+    
+    .notificacao-badge:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(255,107,107,0.4);
+    }
+    
+    .notificacao-badge.zero {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        animation: none;
+    }
+    
+    .notificacao-badge.zero:hover {
+        box-shadow: 0 4px 15px rgba(40,167,69,0.3);
+    }
+    
+    @keyframes pulse-notification {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+    
+    .notificacoes-dropdown {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        border: 1px solid #e1e5e9;
+        min-width: 300px;
+        max-height: 400px;
+        overflow-y: auto;
+        display: none;
+        z-index: 1001;
+    }
+    
+    .notificacoes-dropdown.show {
+        display: block;
+        animation: slideDown 0.3s ease;
+    }
+    
+    @keyframes slideDown {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .notificacao-item {
+        padding: 15px;
+        border-bottom: 1px solid #f1f3f4;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+    
+    .notificacao-item:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .notificacao-item:last-child {
+        border-bottom: none;
+    }
+    
+    .notificacao-titulo {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 5px;
+        font-size: 0.9rem;
+    }
+    
+    .notificacao-resposta {
+        color: #666;
+        font-size: 0.8rem;
+        line-height: 1.4;
+        margin-bottom: 8px;
+    }
+    
+    .notificacao-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.75rem;
+        color: #888;
+    }
+    
+    .notificacao-status {
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-weight: 500;
+    }
+    
+    .status-resolvido { background: #d4edda; color: #155724; }
+    .status-em_andamento { background: #fff3cd; color: #856404; }
+    .status-aberto { background: #f8d7da; color: #721c24; }
+    .status-fechado { background: #e2e3e5; color: #6c757d; }
+    
+    .notificacao-header {
+        background: linear-gradient(135deg, #00C6FF 0%, #0072FF 100%);
+        color: white;
+        padding: 15px;
+        border-radius: 12px 12px 0 0;
+        text-align: center;
+        font-weight: 600;
+    }
+    
+    .notificacao-empty {
+        padding: 20px;
+        text-align: center;
+        color: #666;
+        font-style: italic;
+    }
+    
+    @media (max-width: 768px) {
+        .notificacoes-container {
+            top: 10px;
+            right: 10px;
+            left: 10px;
+            max-width: none;
+        }
+        
+        .notificacoes-dropdown {
+            min-width: auto;
+            width: 100%;
+        }
+    }
         font-weight: 700;
         text-decoration: none;
         box-shadow: 0 4px 10px rgba(220,53,69,0.30);
@@ -327,6 +498,43 @@ if (!isset($_SESSION['csrf_token'])) {
     </style>
 </head>
 <body class="index-page">
+<!-- Sistema de Notificações -->
+<div class="notificacoes-container">
+    <div class="notificacao-badge <?php echo $notificacoes_nao_lidas == 0 ? 'zero' : ''; ?>" onclick="toggleNotificacoes()">
+        <span>🔔</span>
+        <span><?php echo $notificacoes_nao_lidas > 0 ? $notificacoes_nao_lidas . ' nova' . ($notificacoes_nao_lidas > 1 ? 's' : '') : 'Sem mensagens'; ?></span>
+    </div>
+    
+    <div class="notificacoes-dropdown" id="notificacoesDropdown">
+        <div class="notificacao-header">
+            📬 Suas Mensagens
+        </div>
+        
+        <?php if (empty($ultimas_notificacoes)): ?>
+            <div class="notificacao-empty">
+                Nenhuma mensagem nova
+            </div>
+        <?php else: ?>
+            <?php foreach ($ultimas_notificacoes as $notificacao): ?>
+                <div class="notificacao-item" onclick="marcarComoLida(<?php echo $notificacao['id_relatorio']; ?>)">
+                    <div class="notificacao-titulo">
+                        <?php echo htmlspecialchars($notificacao['titulo']); ?>
+                    </div>
+                    <div class="notificacao-resposta">
+                        <?php echo htmlspecialchars(substr($notificacao['resposta_admin'], 0, 100)) . (strlen($notificacao['resposta_admin']) > 100 ? '...' : ''); ?>
+                    </div>
+                    <div class="notificacao-meta">
+                        <span class="notificacao-status status-<?php echo $notificacao['status']; ?>">
+                            <?php echo ucfirst(str_replace('_', ' ', $notificacao['status'])); ?>
+                        </span>
+                        <span><?php echo date('d/m/Y H:i', strtotime($notificacao['data_atualizacao'])); ?></span>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        <?php endif; ?>
+    </div>
+</div>
+
 <?php
 $breadcrumb_items = [
     ['icon' => '🏠', 'text' => 'Início', 'link' => 'index.php', 'current' => true]
@@ -681,6 +889,14 @@ include 'header.php';
                 <a href="escolher_assunto.php" class="btn" style="box-shadow:0 6px 16px rgba(0,114,255,0.35);">Iniciar Questões</a>
             </div>
 
+            <!-- Card Relatar Problema -->
+            <div class="card fade-in clickable-card" style="background: linear-gradient(to top, #FF6B6B, #FF8E53); color: white;">
+                <span class="card-icon">🐛</span>
+                <h3 class="card-title" style="color:#fff;">Relatar Problema</h3>
+                <p class="card-description" style="color:#f8f9fa;">Reporte bugs e sugestões</p>
+                <a href="relatar_problema.php" class="btn" style="box-shadow:0 6px 16px rgba(255,107,107,0.35);">Relatar</a>
+            </div>
+
             <?php if ($_SESSION['user_type'] === 'admin'): ?>
             <!-- Card Gerenciar - Apenas para Admins -->
             <div class="card fade-in clickable-card" style="background: linear-gradient(to top, #00C6FF, #0072FF); color: white;">
@@ -718,11 +934,18 @@ include 'header.php';
                     <p class="card-description" style="color:#f8f9fa;">Interface administrativa para criar questões completas.</p>
                     <a href="admin/add_questao.php" class="btn" style="background: rgba(255,255,255,0.2); border: 2px solid white;">Nova Questão</a>
                 </div>
+
+                <div class="card fade-in clickable-card" style="background: linear-gradient(to top, #FF6B6B, #FF8E53); color: white;">
+                    <span class="card-icon">🐛</span>
+                    <h3 class="card-title" style="color:#fff;">Gerenciar Relatórios</h3>
+                    <p class="card-description" style="color:#f8f9fa;">Visualize e responda relatórios de bugs e sugestões.</p>
+                    <a href="admin/gerenciar_relatorios.php" class="btn" style="background: rgba(255,255,255,0.2); border: 2px solid white;">Gerenciar</a>
+                </div>
             </div>
         </div>
         <?php else: ?>
         <div style="text-align: center; margin-top: 50px; padding: 40px; background: rgba(102, 126, 234, 0.1); border-radius: 16px;">
-            <h2 style="color: #667eea; margin-bottom: 15px;">🔒 Área Administrativa</h2>
+            <h2 style="color: #00C6FF; margin-bottom: 15px;">🔒 Área Administrativa</h2>
             <p style="color: #666; font-size: 1.1em;">Área restrita para administradores</p>
             <p style="color: #888;">Faça login como administrador para acessar essas funcionalidades</p>
         </div>
@@ -922,6 +1145,56 @@ include 'header.php';
             }
         } catch (e) { /* noop */ }
     });
+    </script>
+    
+    <!-- JavaScript para Sistema de Notificações -->
+    <script>
+    function toggleNotificacoes() {
+        const dropdown = document.getElementById('notificacoesDropdown');
+        dropdown.classList.toggle('show');
+        
+        // Fechar dropdown ao clicar fora
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('.notificacoes-container')) {
+                dropdown.classList.remove('show');
+            }
+        });
+    }
+    
+    function marcarComoLida(idRelatorio) {
+        // Fazer requisição AJAX para marcar como lida
+        fetch('marcar_notificacao_lida.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: 'id_relatorio=' + idRelatorio + '&csrf_token=<?php echo $_SESSION['csrf_token']; ?>'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Atualizar contador
+                location.reload();
+            }
+        })
+        .catch(error => {
+            console.error('Erro ao marcar como lida:', error);
+        });
+    }
+    
+    // Auto-refresh das notificações a cada 30 segundos
+    setInterval(function() {
+        fetch('verificar_notificacoes.php')
+        .then(response => response.json())
+        .then(data => {
+            if (data.count !== <?php echo $notificacoes_nao_lidas; ?>) {
+                location.reload();
+            }
+        })
+        .catch(error => {
+            console.error('Erro ao verificar notificações:', error);
+        });
+    }, 30000);
     </script>
 </body>
 </html>

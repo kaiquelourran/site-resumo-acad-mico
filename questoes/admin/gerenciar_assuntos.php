@@ -40,7 +40,7 @@ $assuntos = $stmt_assuntos->fetchAll(PDO::FETCH_ASSOC);
         }
         
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #00C6FF 0%, #0072FF 100%);
             color: white;
             padding: 20px;
             border-radius: 10px;
@@ -144,7 +144,7 @@ $assuntos = $stmt_assuntos->fetchAll(PDO::FETCH_ASSOC);
         .stat-number {
             font-size: 2em;
             font-weight: bold;
-            color: #667eea;
+            color: #00C6FF;
         }
         
         .header {

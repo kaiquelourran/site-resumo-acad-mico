@@ -238,7 +238,7 @@ try {
         
         .stat-card {
             flex: 1;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #00C6FF 0%, #0072FF 100%);
             color: white;
             padding: 20px;
             border-radius: 12px;
@@ -280,6 +280,27 @@ try {
             border-radius: 4px;
             font-size: 12px;
             color: #495057;
+        }
+        
+        /* Garantir que botões user-link sejam azuis */
+        .user-info a,
+        .user-link {
+            background: linear-gradient(135deg, #00C6FF 0%, #0072FF 100%) !important;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 600;
+            padding: 10px 20px;
+            margin: 0 10px;
+            display: inline-block;
+            transition: transform 0.2s;
+            box-shadow: 0 4px 15px rgba(0,114,255,0.3);
+        }
+        
+        .user-info a:hover,
+        .user-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,114,255,0.4);
         }
     </style>
 </head>
