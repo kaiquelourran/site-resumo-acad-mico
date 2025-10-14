@@ -33,7 +33,7 @@ $filtro_ativo = isset($_GET['filtro']) ? $_GET['filtro'] : 'todas';
 $questao_inicial = isset($_GET['questao_inicial']) ? (int)$_GET['questao_inicial'] : 0;
 
 // Busca informaes do assunto
-$assunto_nome = 'Todas as Questes';
+$assunto_nome = 'Todas as Questões';
 if ($id_assunto > 0) {
     $stmt_assunto = $pdo->prepare("SELECT nome FROM assuntos WHERE id_assunto = ?");
     $stmt_assunto->execute([$id_assunto]);
@@ -203,7 +203,7 @@ try {
 $user_id = isset($_SESSION['id_usuario']) ? (int)$_SESSION['id_usuario'] : (isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : 0);
 
 if ($filtro_ativo === 'nao-respondidas') {
-    // Para "no-respondidas", selecionar apenas questes sem resposta (por usurio quando houver)
+    // Para "no-respondidas", selecionar apenas questões sem resposta (por usuário quando houver)
     if ($tem_user_id && $user_id !== null) {
     $sql = "SELECT q.id_questao, q.enunciado, q.alternativa_a, q.alternativa_b, 
                    q.alternativa_c, q.alternativa_d, q.alternativa_correta, q.explicacao,
@@ -218,7 +218,7 @@ if ($filtro_ativo === 'nao-respondidas') {
                 )";
         $params = [$user_id];
     } else {
-        // Sem coluna user_id (ou sem usurio em sesso): considerar questes sem qualquer resposta
+        // Sem coluna user_id (ou sem usuário em sessão): considerar questões sem qualquer resposta
         $sql = "SELECT q.id_questao, q.enunciado, q.alternativa_a, q.alternativa_b, 
                        q.alternativa_c, q.alternativa_d, q.alternativa_correta, q.explicacao,
                        a.nome,
@@ -315,9 +315,14 @@ switch($filtro_ativo) {
 
 $sql .= " ORDER BY q.id_questao";
 
-$stmt = $pdo->prepare($sql);
-$stmt->execute($params);
-$questoes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+try {
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
+    $questoes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (Exception $e) {
+    error_log("Erro ao executar query de questões: " . $e->getMessage());
+    $questoes = [];
+}
 
 // Log para diagnstico - comentado para produo
 /*
@@ -350,12 +355,12 @@ if ($questao_inicial > 0) {
 // Funo para obter nome do filtro
 function getNomeFiltro($filtro) {
     switch($filtro) {
-        case 'todas': return 'Todas as Questes';
-        case 'respondidas': return 'Questes Respondidas';
-        case 'nao-respondidas': return 'Questes No Respondidas';
-        case 'certas': return 'Questes Certas';
-        case 'erradas': return 'Questes Erradas';
-        default: return 'Questes';
+        case 'todas': return 'Todas as Questões';
+        case 'respondidas': return 'Questões Respondidas';
+        case 'nao-respondidas': return 'Questões Não Respondidas';
+        case 'certas': return 'Questões Certas';
+        case 'erradas': return 'Questões Erradas';
+        default: return 'Questões';
     }
 }
 ?>
@@ -364,7 +369,7 @@ function getNomeFiltro($filtro) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Questes - <?php echo htmlspecialchars($assunto_nome); ?> - Resumo Acadmico</title>
+    <title>Questões - <?php echo htmlspecialchars($assunto_nome); ?> - Resumo Acadêmico</title>
     <link rel="stylesheet" href="modern-style.css">
     <link rel="stylesheet" href="alternative-fix.css">
     <style>
@@ -1620,10 +1625,10 @@ function getNomeFiltro($filtro) {
 $breadcrumb_items = [
     ['icon' => '', 'text' => 'Incio', 'link' => 'index.php', 'current' => false],
     ['icon' => '', 'text' => 'Assuntos', 'link' => 'escolher_assunto.php', 'current' => false],
-    ['icon' => '', 'text' => 'Lista de Questes', 'link' => 'listar_questoes.php?id=' . $id_assunto . '&filtro=' . $filtro_ativo, 'current' => false],
-    ['icon' => '', 'text' => 'Questes', 'link' => '', 'current' => true]
+    ['icon' => '', 'text' => 'Lista de Questões', 'link' => 'listar_questoes.php?id=' . $id_assunto . '&filtro=' . $filtro_ativo, 'current' => false],
+    ['icon' => '', 'text' => 'Questões', 'link' => '', 'current' => true]
 ];
-$page_title = ' Questes';
+$page_title = ' Questões';
 $page_subtitle = htmlspecialchars($assunto_nome) . ' - ' . getNomeFiltro($filtro_ativo);
 include 'header.php';
 ?>
@@ -1686,20 +1691,20 @@ include 'header.php';
     }
     </script>
 
-            <!-- Informaes das Questes -->
+            <!-- Informações das Questões -->
             <div class="questoes-info">
                 <h3> <?php echo getNomeFiltro($filtro_ativo); ?></h3>
                 <p><?php echo count($questoes); ?> questo(es) disponvel(eis)</p>
             </div>
 
-            <!-- Container das Questes -->
+            <!-- Container das Questões -->
             <?php if (empty($questoes)): ?>
                 <div class="empty-state">
                     <div class="empty-state-icon"></div>
                     <h3 class="empty-state-title">Nenhuma questo encontrada</h3>
                     <p class="empty-state-text">
-                        No h questes disponiveis para o filtro selecionado.<br>
-                        Volte  lista de questes para selecionar outro filtro.
+                        Não há questões disponíveis para o filtro selecionado.<br>
+                        Volte à lista de questões para selecionar outro filtro.
                     </p>
                 </div>
             <?php else: ?>
@@ -1925,23 +1930,14 @@ include 'header.php';
     <script>
         // Funcao para mostrar feedback visual
         function mostrarFeedbackVisual(questaoId, alternativaSelecionada, alternativaCorreta, explicacao) {
-            console.log('mostrarFeedbackVisual chamada com:', {
-                questaoId, alternativaSelecionada, alternativaCorreta, explicacao
-            });
-            
             const questaoCard = document.querySelector(`#questao-${questaoId}`);
             
             if (!questaoCard) {
                 console.error('Questao nao encontrada:', questaoId);
-                console.log('Tentando buscar por:', `#questao-${questaoId}`);
-                console.log('Elementos disponiveis:', document.querySelectorAll('[id^="questao-"]'));
                 return;
             }
             
-            console.log(' Questao encontrada:', questaoCard);
-            
             const alternativas = questaoCard.querySelectorAll('.alternative');
-            console.log(' Alternativas encontradas:', alternativas.length);
             
             // Limpar feedback anterior
             alternativas.forEach(alt => {
@@ -1993,12 +1989,10 @@ include 'header.php';
 
         // Event listeners para as alternativas - VERSO FINAL CORRIGIDA
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM carregado, configurando alternativas...');
             const filtroAtual = '<?php echo addslashes($filtro_ativo); ?>';
             
             // Verificar se ja foi configurado para evitar duplicao
             if (window.alternativasConfiguradas) {
-                console.log('Alternativas ja configuradas, pulando...');
                 return;
             }
             window.alternativasConfiguradas = true;
@@ -2019,7 +2013,6 @@ include 'header.php';
                 });
                 
                 if (duplicatas.length > 0) {
-                    console.log('Removendo', duplicatas.length, 'duplicatas iniciais...');
                     duplicatas.forEach(questao => questao.remove());
                     return true; // Houve duplicatas
                 }
@@ -2036,11 +2029,8 @@ include 'header.php';
             
             // Configurar TODAS as alternativas de uma vez (SEM clonagem para evitar duplicao)
             const todasAlternativas = document.querySelectorAll('.alternative');
-            console.log('Total de alternativas encontradas:', todasAlternativas.length);
             
             todasAlternativas.forEach((alternativa, index) => {
-                console.log('Configurando alternativa', index + 1);
-                
                 // Garantir que seja clicvel
                 alternativa.style.pointerEvents = 'auto';
                 alternativa.style.cursor = 'pointer';
@@ -2059,7 +2049,6 @@ include 'header.php';
                 
                 // Adicionar event listener diretamente
                 alternativa.addEventListener('click', function(e) {
-                    console.log(' CLIQUE DETECTADO!', this);
                     e.preventDefault();
                     e.stopPropagation();
                     
@@ -2067,19 +2056,13 @@ include 'header.php';
                     const alternativaSelecionada = this.dataset.alternativa;
                     const questaoCard = this.closest('.question-card');
                     
-                    console.log('Questao ID:', questaoId);
-                    console.log('Alternativa selecionada:', alternativaSelecionada);
-                    console.log('Questao card:', questaoCard);
-                    
                     // Verificar se ja foi respondida
                     if (questaoCard.dataset.respondida === 'true') {
-                        console.log('Questao ja respondida, ignorando...');
                         return;
                     }
                     
                     // Verificar se esta alternativa ja foi clicada
                     if (this.dataset.clicked === 'true') {
-                        console.log('Alternativa ja foi clicada, ignorando...');
                         return;
                     }
                     
@@ -2134,15 +2117,11 @@ include 'header.php';
                         body: formData
                     })
                     .then(response => {
-                        console.log('Resposta recebida:', response);
-                        console.log('Status:', response.status);
                         return response.text();
                     })
                     .then(data => {
-                        console.log('Dados recebidos:', data);
                         try {
                             const jsonData = JSON.parse(data);
-                            console.log('JSON parseado:', jsonData);
                             
                             // Log de diagnstico - comentado para produo
                             /*
@@ -2198,7 +2177,6 @@ include 'header.php';
                                     const questaoAtualId = questaoCard.id;
                                     
                                     if (questoesIds.filter(id => id === questaoAtualId).length > 1) {
-                                        console.log('Duplicata detectada aps processamento, removendo...');
                                         const questoesDuplicadas = document.querySelectorAll(`#${questaoAtualId}`);
                                         for (let i = 1; i < questoesDuplicadas.length; i++) {
                                             questoesDuplicadas[i].remove();
@@ -2209,7 +2187,6 @@ include 'header.php';
                                 }, 100);
                             
                         } else {
-                                console.log('Erro na resposta:', jsonData.message);
                             // Reabilitar cliques em caso de erro
                             questaoCard.dataset.respondida = 'false';
                                 todasAlternativas.forEach(alt => {
@@ -2219,7 +2196,6 @@ include 'header.php';
                             }
                         } catch (e) {
                             console.error('Erro ao fazer parse do JSON:', e);
-                            console.log('Dados brutos:', data);
                             // Reabilitar cliques em caso de erro
                             questaoCard.dataset.respondida = 'false';
                             todasAlternativas.forEach(alt => {
@@ -2248,9 +2224,9 @@ include 'header.php';
                         <div class="empty-state-icon"></div>
                         <div class="empty-state-title">Parabns!</div>
                         <div class="empty-state-text">
-                            Voc respondeu todas as questes deste filtro!<br>
+                            Você respondeu todas as questões deste filtro!<br>
                             <a href="?id=<?php echo $id_assunto; ?>&filtro=todas" class="nav-btn" style="margin-top: 20px; display: inline-block;">
-                                 Ver Todas as Questes
+                                 Ver Todas as Questões
                             </a>
                         </div>
                     </div>
@@ -2293,7 +2269,7 @@ if (!window.statsInitialized) {
                 });
                 
                 if (duplicatas.length > 0) {
-                    console.log('Removendo', duplicatas.length, 'questes duplicadas...');
+                    console.log('Removendo', duplicatas.length, 'questões duplicadas...');
                     duplicatas.forEach(questao => questao.remove());
                     return true; // Houve duplicatas removidas
                 }
@@ -2666,8 +2642,7 @@ if (!window.statsInitialized) {
                 return;
             }
             
-            // Debug: log dos dados
-            console.log('Enviando comentrio:', data);
+            // Enviando comentário
             
             const submitBtn = form.querySelector('.btn-responder');
             if (!submitBtn) {

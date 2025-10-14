@@ -2,6 +2,9 @@
 session_start();
 require_once 'conexao.php';
 header('Cross-Origin-Opener-Policy: unsafe-none');
+header('X-Content-Type-Options: nosniff');
+header('X-Frame-Options: DENY');
+header('X-XSS-Protection: 1; mode=block');
 
 // Verificar se o usuário está logado
 if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
@@ -30,7 +33,7 @@ try {
         ORDER BY data_atualizacao DESC 
         LIMIT 5
     ");
-    $stmt_notificacoes->execute([$_SESSION['user_id']]);
+    $stmt_notificacoes->execute([$_SESSION['id_usuario']]);
     $ultimas_notificacoes = $stmt_notificacoes->fetchAll(PDO::FETCH_ASSOC);
     $notificacoes_nao_lidas = count($ultimas_notificacoes);
 } catch (Exception $e) {
@@ -659,7 +662,12 @@ include 'header.php';
                               LIMIT 5";
                 $debug_info['sql'] = $sql_rank;
                 
-                $ranking_semanal = $pdo->query($sql_rank)->fetchAll(PDO::FETCH_ASSOC);
+                try {
+                    $ranking_semanal = $pdo->query($sql_rank)->fetchAll(PDO::FETCH_ASSOC);
+                } catch (Exception $e) {
+                    error_log("Erro ao executar query de ranking: " . $e->getMessage());
+                    $ranking_semanal = [];
+                }
                 $debug_info['resultado'] = $ranking_semanal;
 
                 // Calcular posição do usuário atual no ranking completo (sem LIMIT)

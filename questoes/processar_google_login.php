@@ -112,7 +112,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         // Marcar sessão como logada e padronizar chaves
                         session_regenerate_id(true);
                         $_SESSION['logged_in'] = true;
-                        $_SESSION['user_id'] = $user['id'];
                         $_SESSION['id_usuario'] = $user['id'];
                         $_SESSION['user_email'] = $user['email'];
                         $_SESSION['user_name'] = $user['nome'];
@@ -142,7 +141,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         // Marcar sessão como logada e padronizar chaves
                         session_regenerate_id(true);
                         $_SESSION['logged_in'] = true;
-                        $_SESSION['user_id'] = $new_user_id;
                         $_SESSION['id_usuario'] = $new_user_id;
                         $_SESSION['user_email'] = $email;
                         $_SESSION['user_name'] = $name;

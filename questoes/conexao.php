@@ -31,7 +31,7 @@ try {
 // Helpers de segurança e sessão
 if (!function_exists('csrf_token')) {
     function csrf_token(): string {
-        if (!isset($_SESSION)) { session_start(); }
+        if (session_status() === PHP_SESSION_NONE) { session_start(); }
         if (empty($_SESSION['csrf_token'])) {
             $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
         }
@@ -47,7 +47,7 @@ if (!function_exists('csrf_field')) {
 
 if (!function_exists('validate_csrf')) {
     function validate_csrf(): bool {
-        if (!isset($_SESSION)) { session_start(); }
+        if (session_status() === PHP_SESSION_NONE) { session_start(); }
         return isset($_POST['csrf_token'], $_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $_POST['csrf_token']);
     }
 }

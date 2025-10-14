@@ -51,8 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id_questao = isset($data['id_questao']) ? (int)$data['id_questao'] : 0;
     $id_alternativa_selecionada = isset($data['id_alternativa']) ? (int)$data['id_alternativa'] : 0;
 
-    // Debug: log dos dados recebidos
-    error_log("DEBUG processar_resposta: id_questao=$id_questao, id_alternativa=$id_alternativa_selecionada");
+    // Dados extraídos do JSON
 
     if ($id_questao > 0 && $id_alternativa_selecionada > 0) {
         // Encontra a alternativa correta no banco de dados
@@ -109,13 +108,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
     } else {
-        // Debug: log quando dados são inválidos
-        error_log("DEBUG processar_resposta: Dados inválidos - id_questao=$id_questao, id_alternativa=$id_alternativa_selecionada");
+        // Dados inválidos - não logar em produção
     }
 }
 
 // Código para lidar com requisições inválidas
-error_log("DEBUG processar_resposta: Chegou ao final - retornando erro 400");
 http_response_code(400);
 echo json_encode(['sucesso' => false, 'erro' => 'Requisição inválida']);
 ?>

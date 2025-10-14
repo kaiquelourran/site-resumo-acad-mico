@@ -34,7 +34,7 @@ try {
         AND resposta_admin != ''
     ");
     
-    $result = $stmt->execute([$id_relatorio, $_SESSION['user_id']]);
+    $result = $stmt->execute([$id_relatorio, $_SESSION['id_usuario']]);
     
     if ($result && $stmt->rowCount() > 0) {
         echo json_encode(['success' => true, 'message' => 'Notificação marcada como lida']);

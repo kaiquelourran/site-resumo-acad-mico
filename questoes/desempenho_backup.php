@@ -10,7 +10,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
 
 // Buscar estatísticas do usuário
 try {
-    $user_id = $_SESSION['user_id'];
+    $user_id = $_SESSION['id_usuario'];
     
     // Total de respostas do usuário
     $stmt_total = $pdo->prepare("SELECT COUNT(*) as total FROM respostas_usuario WHERE user_id = ?");

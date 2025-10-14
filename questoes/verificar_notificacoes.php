@@ -21,7 +21,7 @@ try {
         AND usuario_viu_resposta = FALSE
     ");
     
-    $stmt->execute([$_SESSION['user_id']]);
+    $stmt->execute([$_SESSION['id_usuario']]);
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
     
     echo json_encode(['count' => intval($result['total'])]);

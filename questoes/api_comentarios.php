@@ -187,8 +187,7 @@ try {
             $input = file_get_contents('php://input');
             $data = json_decode($input, true);
             
-            // Debug: log dos dados recebidos
-            error_log("API Comentários - Dados recebidos: " . $input);
+            // Processando dados recebidos
             
             if (!$data || !isset($data['id_questao']) || !isset($data['comentario'])) {
                 $response['message'] = 'Dados obrigatórios não fornecidos. Dados recebidos: ' . $input;

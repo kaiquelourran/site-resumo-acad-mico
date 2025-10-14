@@ -1,5 +1,8 @@
 <?php
 session_start();
+header('X-Content-Type-Options: nosniff');
+header('X-Frame-Options: DENY');
+header('X-XSS-Protection: 1; mode=block');
 require_once __DIR__ . '/../conexao.php';
 
 // Verificar se é admin
@@ -10,23 +13,28 @@ if (!isset($_SESSION['tipo_usuario']) || $_SESSION['tipo_usuario'] !== 'admin') 
 
 // Processar ações
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($_POST['action'])) {
-        $id_relatorio = (int)$_POST['id_relatorio'];
-        
-        switch ($_POST['action']) {
-            case 'atualizar_status':
-                $novo_status = $_POST['novo_status'];
-                $stmt = $pdo->prepare("UPDATE relatorios_bugs SET status = ? WHERE id_relatorio = ?");
-                $stmt->execute([$novo_status, $id_relatorio]);
-                break;
-                
-            case 'responder':
-                $resposta = trim($_POST['resposta']);
-                if (!empty($resposta)) {
-                    $stmt = $pdo->prepare("UPDATE relatorios_bugs SET resposta_admin = ?, status = 'resolvido', usuario_viu_resposta = FALSE WHERE id_relatorio = ?");
-                    $stmt->execute([$resposta, $id_relatorio]);
-                }
-                break;
+    // Validar CSRF
+    if (!validate_csrf()) {
+        $mensagem_erro = 'Token de segurança inválido. Atualize a página e tente novamente.';
+    } else {
+        if (isset($_POST['action'])) {
+            $id_relatorio = (int)$_POST['id_relatorio'];
+            
+            switch ($_POST['action']) {
+                case 'atualizar_status':
+                    $novo_status = $_POST['novo_status'];
+                    $stmt = $pdo->prepare("UPDATE relatorios_bugs SET status = ? WHERE id_relatorio = ?");
+                    $stmt->execute([$novo_status, $id_relatorio]);
+                    break;
+                    
+                case 'responder':
+                    $resposta = trim($_POST['resposta']);
+                    if (!empty($resposta)) {
+                        $stmt = $pdo->prepare("UPDATE relatorios_bugs SET resposta_admin = ?, status = 'resolvido', usuario_viu_resposta = FALSE WHERE id_relatorio = ?");
+                        $stmt->execute([htmlspecialchars($resposta, ENT_QUOTES, 'UTF-8'), $id_relatorio]);
+                    }
+                    break;
+            }
         }
     }
 }
@@ -562,6 +570,7 @@ $stats = [
                 <span class="close" onclick="fecharModal('modalStatus')">&times;</span>
             </div>
             <form method="POST" action="">
+                <?php echo csrf_field(); ?>
                 <input type="hidden" name="action" value="atualizar_status">
                 <input type="hidden" name="id_relatorio" id="status_id_relatorio">
                 
@@ -588,6 +597,7 @@ $stats = [
                 <span class="close" onclick="fecharModal('modalResposta')">&times;</span>
             </div>
             <form method="POST" action="">
+                <?php echo csrf_field(); ?>
                 <input type="hidden" name="action" value="responder">
                 <input type="hidden" name="id_relatorio" id="resposta_id_relatorio">
                 

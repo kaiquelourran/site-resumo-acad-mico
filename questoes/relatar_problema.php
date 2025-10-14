@@ -1,5 +1,8 @@
 <?php
 session_start();
+header('X-Content-Type-Options: nosniff');
+header('X-Frame-Options: DENY');
+header('X-XSS-Protection: 1; mode=block');
 require_once 'conexao.php';
 
 $mensagem = '';
@@ -7,46 +10,55 @@ $tipo_mensagem = '';
 
 // Processar formulário se enviado
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $nome = trim($_POST['nome'] ?? '');
-    $email = trim($_POST['email'] ?? '');
-    $tipo_problema = $_POST['tipo_problema'] ?? '';
-    $titulo = trim($_POST['titulo'] ?? '');
-    $descricao = trim($_POST['descricao'] ?? '');
-    $pagina_erro = trim($_POST['pagina_erro'] ?? '');
-    
-    // Validação
-    if (empty($nome) || empty($email) || empty($tipo_problema) || empty($titulo) || empty($descricao)) {
-        $mensagem = 'Por favor, preencha todos os campos obrigatórios.';
+    // Validar CSRF
+    if (!validate_csrf()) {
+        $mensagem = 'Token de segurança inválido. Atualize a página e tente novamente.';
         $tipo_mensagem = 'error';
     } else {
-        try {
-            // Inserir relatório
-            $stmt = $pdo->prepare("
-                INSERT INTO relatorios_bugs (id_usuario, nome_usuario, email_usuario, tipo_problema, titulo, descricao, pagina_erro) 
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            ");
-            
-            $id_usuario = isset($_SESSION['id_usuario']) ? $_SESSION['id_usuario'] : null;
-            
-            $stmt->execute([
-                $id_usuario,
-                $nome,
-                $email,
-                $tipo_problema,
-                $titulo,
-                $descricao,
-                $pagina_erro
-            ]);
-            
-            $mensagem = 'Relatório enviado com sucesso! Entraremos em contato em breve.';
-            $tipo_mensagem = 'success';
-            
-            // Limpar formulário
-            $nome = $email = $titulo = $descricao = $pagina_erro = '';
-            
-        } catch (Exception $e) {
-            $mensagem = 'Erro ao enviar relatório. Tente novamente.';
+        $nome = trim($_POST['nome'] ?? '');
+        $email = trim($_POST['email'] ?? '');
+        $tipo_problema = $_POST['tipo_problema'] ?? '';
+        $titulo = trim($_POST['titulo'] ?? '');
+        $descricao = trim($_POST['descricao'] ?? '');
+        $pagina_erro = trim($_POST['pagina_erro'] ?? '');
+        
+        // Validação
+        if (empty($nome) || empty($email) || empty($tipo_problema) || empty($titulo) || empty($descricao)) {
+            $mensagem = 'Por favor, preencha todos os campos obrigatórios.';
             $tipo_mensagem = 'error';
+        } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $mensagem = 'Por favor, insira um email válido.';
+            $tipo_mensagem = 'error';
+        } else {
+            try {
+                // Inserir relatório
+                $stmt = $pdo->prepare("
+                    INSERT INTO relatorios_bugs (id_usuario, nome_usuario, email_usuario, tipo_problema, titulo, descricao, pagina_erro) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                ");
+                
+                $id_usuario = isset($_SESSION['id_usuario']) ? $_SESSION['id_usuario'] : null;
+                
+                $stmt->execute([
+                    $id_usuario,
+                    htmlspecialchars($nome, ENT_QUOTES, 'UTF-8'),
+                    htmlspecialchars($email, ENT_QUOTES, 'UTF-8'),
+                    htmlspecialchars($tipo_problema, ENT_QUOTES, 'UTF-8'),
+                    htmlspecialchars($titulo, ENT_QUOTES, 'UTF-8'),
+                    htmlspecialchars($descricao, ENT_QUOTES, 'UTF-8'),
+                    htmlspecialchars($pagina_erro, ENT_QUOTES, 'UTF-8')
+                ]);
+                
+                $mensagem = 'Relatório enviado com sucesso! Entraremos em contato em breve.';
+                $tipo_mensagem = 'success';
+                
+                // Limpar formulário
+                $nome = $email = $titulo = $descricao = $pagina_erro = '';
+                
+            } catch (Exception $e) {
+                $mensagem = 'Erro ao enviar relatório. Tente novamente.';
+                $tipo_mensagem = 'error';
+            }
         }
     }
 }
@@ -295,6 +307,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <?php endif; ?>
 
             <form method="POST" action="">
+                <?php echo csrf_field(); ?>
                 <div class="form-group">
                     <label for="nome">
                         Nome Completo <span class="required">*</span>

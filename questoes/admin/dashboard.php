@@ -295,7 +295,6 @@ $buckets = $pdo->query($sql_buckets)->fetch(PDO::FETCH_ASSOC);
     <script>
         // Função para voltar à página anterior
         function goBack() {
-            console.log('Botão Voltar clicado');
             // Verifica se há histórico de navegação
             if (window.history.length > 1) {
                 window.history.back();
@@ -305,53 +304,9 @@ $buckets = $pdo->query($sql_buckets)->fetch(PDO::FETCH_ASSOC);
             }
         }
 
-        // Adicionar event listeners para debug
+        // Inicialização do dashboard
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('Dashboard carregado');
-            
-            // Verificar todos os links
-            const links = document.querySelectorAll('a');
-            console.log(`Total de links encontrados: ${links.length}`);
-            
-            links.forEach((link, index) => {
-                console.log(`Link ${index + 1}: ${link.href} - Texto: ${link.textContent.trim()}`);
-                
-                // Verificar se o link está visível e clicável
-                const rect = link.getBoundingClientRect();
-                const isVisible = rect.width > 0 && rect.height > 0;
-                const isClickable = getComputedStyle(link).pointerEvents !== 'none';
-                
-                console.log(`  - Visível: ${isVisible}, Clicável: ${isClickable}`);
-                
-                // Adicionar event listener para debug
-                link.addEventListener('click', function(e) {
-                    console.log(`Link clicado: ${this.href} - Texto: ${this.textContent.trim()}`);
-                    
-                    // Verificar se o link tem href válido
-                    if (!this.href || this.href === '#' || this.href === 'javascript:void(0)') {
-                        console.warn('Link sem href válido!');
-                        e.preventDefault();
-                    }
-                });
-            });
-
-            // Verificar todos os botões
-            const buttons = document.querySelectorAll('button');
-            console.log(`Total de botões encontrados: ${buttons.length}`);
-            
-            buttons.forEach((button, index) => {
-                console.log(`Botão ${index + 1}: ${button.textContent.trim()}`);
-                
-                // Adicionar event listener para debug
-                button.addEventListener('click', function(e) {
-                    console.log(`Botão clicado: ${this.textContent.trim()}`);
-                });
-            });
-            
-            // Teste de clique em qualquer lugar da página
-            document.addEventListener('click', function(e) {
-                console.log('Clique detectado em:', e.target.tagName, e.target.className);
-            });
+            // Dashboard inicializado com sucesso
         });
     </script>
 </body>

@@ -2,6 +2,9 @@
 session_start();
 // Permitir comunicação via postMessage com o Google Identity Services (evita bloqueio por COOP)
 header('Cross-Origin-Opener-Policy: unsafe-none');
+header('X-Content-Type-Options: nosniff');
+header('X-Frame-Options: DENY');
+header('X-XSS-Protection: 1; mode=block');
 require_once 'conexao.php';
 
 // Gerar token CSRF se não existir
