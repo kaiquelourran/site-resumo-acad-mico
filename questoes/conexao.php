@@ -3,10 +3,11 @@
 ini_set('display_errors', 0);
 ini_set('log_errors', 1);
 
-$host = "localhost";
-$db   = "resumo_quiz"; // Nome do seu banco de dados local
-$user = "root";   // Usuário padrão do XAMPP
-$pass = "";       // Senha padrão do XAMPP (em branco)
+// Configuração do banco de dados - adaptável para produção
+$host = $_ENV['DB_HOST'] ?? "localhost";
+$db   = $_ENV['DB_NAME'] ?? "resumo_quiz";
+$user = $_ENV['DB_USER'] ?? "root";
+$pass = $_ENV['DB_PASS'] ?? "";
 
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$db;charset=utf8", $user, $pass);

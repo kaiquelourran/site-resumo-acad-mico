@@ -14,7 +14,7 @@ $success_message = '';
 
 // Verificar se já está logado
 if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
-    header('Location: /resumo-quiz/RESUMO ACADÊMICO/questoes/index.php');
+    header('Location: index.php');
     exit;
 }
 
@@ -69,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stmt_update = $pdo->prepare("UPDATE usuarios SET ultimo_login = NOW() WHERE id_usuario = ?");
                     $stmt_update->execute([$usuario['id_usuario']]);
                     
-                    header('Location: /resumo-quiz/RESUMO ACADÊMICO/questoes/index.php');
+                    header('Location: index.php');
                     exit;
                 } else {
                     $error = 'Email, senha ou tipo de usuário incorretos.';
