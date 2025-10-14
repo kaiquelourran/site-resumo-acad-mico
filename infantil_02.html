@@ -141,7 +141,7 @@
       padding-left: 9px;
     }
 
-    main h1 {
+    main h2 {
       margin-top: 20px;
       margin-bottom: 10px;
       padding-left: 10px;
@@ -173,8 +173,8 @@
   font-weight: bolder;
 }
 
-         /*         download de apostila        */
-         .download {
+    /*         download de apostila        */
+    .download {
     display: inline-block;
     padding: 12px 20px;
     background: linear-gradient(to right, #0072FF, #00C6FF);
@@ -297,24 +297,24 @@ footer {
             </ul>
         </nav>
     </header>
-    <main> 
+    <main>
         <article>
 
-          <h1>Transtorno do Espectro Autista (TEA)</h1>
-          <p>Nesta página, você encontra um resumo completo e detalhado sobre o **Transtorno do Espectro Autista (TEA)**, um material de apoio essencial para estudantes e profissionais da área da saúde.</p>
+          <h2>Transtorno do Espectro Autista</h2>
+          <p>Nesta página, você encontra um resumo completo e detalhado sobre o Transtorno do Espectro Autista (TEA), um material de apoio essencial para estudantes e profissionais da área da saúde .</p>
           <p>Para sua conveniência, a  <mark>apostila</mark>  está disponível para visualização e download no botão abaixo. Logo em seguida, você encontrará um  <mark>mapa mental</mark>  com os tópicos essenciais para a fixação do conteúdo.</p>
 
-        <iframe src="apostilas/apostila_TEA_Transtorno_do_Espectro_Autista.pdf" width="100%" height="600px" style="border: none;"  title="Apostila sobre Transtorno do Espectro Autista (TEA)"></iframe>
 
-      <a href="apostilas/apostila_TEA_Transtorno_do_Espectro_Autista.pdf" 
-      class="download" download>📘 Baixar Apostila com o conteúdo completo.</a>
-
-      <a href="mapas mentais/TEA_Transtorno_do_Espectro_Autista.png" 
-        class="download" download>📘 Baixe o mapa mental com os tópicos essenciais .</a>
-          
           
         </article>
-        
+        <iframe src="apostilas/apostila_Transtorno_do_Espectro_Autista.pdf" width="100%" height="600px" style="border: none;" title="Apostila sobre Transtorno do Espectro Autista (TEA)"></iframe>
+
+        <a href="apostilas/apostila_Transtorno_do_Espectro_Autista.pdf" 
+        class="download" download>📘 Baixar Apostila completa sobre Transtorno do Espectro Autista (TEA).</a>
+
+        <a href="mapas mentais/Terapia_Ocupacional_e_Transtorno_do_Espectro_Autista.png" 
+        class="download" download>📘 Baixe o mapa mental com os tópicos essenciais .</a>
+
     </main>
     <footer>
       <div class="footer-creditos">
@@ -324,16 +324,16 @@ footer {
   </footer>
 
       <script>
-      document.querySelector('.download').addEventListener('click', function(e) {
-          e.preventDefault(); // impede abrir no navegador
-          const link = document.createElement('a');
-          link.href = this.href;
-          link.download = this.href.split('/').pop(); // mantém o nome do arquivo
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-      });
-      </script>
+        document.querySelector('.download').addEventListener('click', function(e) {
+            e.preventDefault(); // impede abrir no navegador
+            const link = document.createElement('a');
+            link.href = this.href;
+            link.download = this.href.split('/').pop(); // mantém o nome do arquivo
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+        </script>
       
 </body>
 </html>

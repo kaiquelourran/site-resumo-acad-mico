@@ -6,7 +6,6 @@
   <title>Currículo - Cleice Santana</title>
   <link rel="icon" href="fotos/Logotipo_resumo_academico.png" type="image/png">
   <link rel="apple-touch-icon" href="fotos/minha-logo-apple.png">
-  <link rel="stylesheet" href="style.css">
   <link
     rel="stylesheet"
     href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
@@ -14,39 +13,41 @@
     crossorigin="anonymous"
     referrerpolicy="no-referrer"
   />
-</head>
-<body>
-    <header class="header-padrao">
-        <h1>Resumo Acadêmico</h1>
-        <p>Facilitamos sua jornada acadêmica com resumos claros e organizados em um só lugar.</p>
-    
-        <nav class="menu-padrao">
-            <ul>
-                <li><a href="index.html">HOME</a>
-                    <ul class="submenu">
-                        <li><a href="index.html#resumo">Início Rápido</a></li>
-                        <li><a href="index.html#apresentacao">Apresentação</a></li>
-                    </ul>
-                </li>
-                <li><a href="curriculo.html">CURRÍCULO</a>
-                    <ul class="submenu">
-                        <li><a href="#formacao">Formação</a></li>
-                        <li><a href="#experiencia">Experiência</a></li>
-                        <li><a href="#cursos">Cursos</a></li>
-                    </ul>
-                </li>
-                <li><a href="questoes/index.php">QUESTÕES</a>
-                    <ul class="submenu">
-                        <li><a href="questoes/index.php">Quiz Interativo</a></li>
-                        <li><a href="questoes/perfil_usuario.php">Meu Perfil</a></li>
-                    </ul>
-                </li>
-            </ul>
-        </nav>
-    </header>
+  <style>
 
-  <main class="main-padrao">
-    <article>
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background-image: linear-gradient(to top, #4A90E2, #50E3C2);
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    header {
+      min-height: 150px;
+      background-image: linear-gradient(to top, #00C6FF, #0072FF);
+      text-align: center;
+      font-size: 1.2em;
+      padding-top: 13px;
+      color: white;
+      justify-content: center;
+      text-shadow: 5px 1px 3px rgba(0, 0, 0, 0.4);
+      position: fixed;
+      width: 100%;
+      top: 0;
+      left: 0;
+      z-index: 1000;
+    }
+
+    header p {
+      padding: 1.2em;
+      font-size: 1.1em;
+      font-weight: 100;
     }
 
     nav {
@@ -405,7 +406,7 @@
     </article>
   </main>
 
-  <footer class="footer-padrao">
+  <footer>
     <div class="footer-creditos">
         <p>SITE CRIADO POR KAIQUE LOURRAN </p>
         <p>&copy; 2025 Todos os direitos reservados.</p>
