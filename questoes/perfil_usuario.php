@@ -52,6 +52,8 @@ foreach ($respostas as $resposta) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel do Usuário</title>
+    <link rel="icon" href="../fotos/Logotipo_resumo_academico.png" type="image/png">
+    <link rel="apple-touch-icon" href="../fotos/minha-logo-apple.png">
     <link rel="stylesheet" href="../style.css">
     <link rel="stylesheet" href="modern-style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

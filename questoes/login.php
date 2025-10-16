@@ -90,6 +90,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Resumo Acadêmico</title>
+    <link rel="icon" href="../fotos/Logotipo_resumo_academico.png" type="image/png">
+    <link rel="apple-touch-icon" href="../fotos/minha-logo-apple.png">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
         * {

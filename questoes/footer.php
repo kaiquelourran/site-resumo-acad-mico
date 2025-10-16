@@ -68,6 +68,92 @@
 .footer-modern .footer-contact-icon { font-size: 1rem; color: #0072FF; }
 .footer-modern .footer-contact-text { font-size: 0.95rem; }
 
+/* Estilos animados para contatos da Cleice */
+.footer-modern .footer-contact-intro {
+    color: #333;
+    font-size: 0.9rem;
+    margin-bottom: 12px;
+    font-style: italic;
+    text-align: center;
+    font-weight: 600;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    background: linear-gradient(45deg, #0072FF, #00C6FF);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    opacity: 0.9;
+}
+
+.footer-modern .footer-contact-item.animated-contact {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 8px;
+}
+
+.footer-modern .footer-contact-item.animated-contact:hover {
+    background: linear-gradient(135deg, rgba(0, 198, 255, 0.1), rgba(0, 114, 255, 0.1));
+    border-color: rgba(0, 198, 255, 0.3);
+    transform: translateX(5px);
+    box-shadow: 0 4px 15px rgba(0, 198, 255, 0.2);
+}
+
+.footer-modern .footer-contact-link {
+    color: #0072FF;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.footer-modern .footer-contact-link::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s ease;
+}
+
+.footer-modern .footer-contact-link:hover::before {
+    left: 100%;
+}
+
+.footer-modern .footer-contact-link:hover {
+    color: #00C6FF;
+    text-shadow: 0 0 8px rgba(0, 198, 255, 0.5);
+}
+
+.footer-modern .footer-contact-item.animated-contact .footer-contact-icon {
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+    animation: pulse 2s infinite;
+}
+
+.footer-modern .footer-contact-item.animated-contact:hover .footer-contact-icon {
+    transform: scale(1.2) rotate(5deg);
+    animation: bounce 0.6s ease;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% { transform: scale(1.2) rotate(5deg) translateY(0); }
+    40% { transform: scale(1.3) rotate(10deg) translateY(-3px); }
+    60% { transform: scale(1.25) rotate(7deg) translateY(-1px); }
+}
+
 /* Tecnologias */
 .footer-modern .footer-tech-stack { display: flex; align-items: center; gap: 10px; }
 .footer-modern .footer-tech-item {
@@ -145,17 +231,25 @@
                     <!-- Informações de Contato -->
                     <div class="footer-section">
                         <h4 class="footer-section-title">
-                            <span class="footer-section-icon">📞</span>
+                            <span class="footer-section-icon">💬</span>
                             Contato
                         </h4>
                         <div class="footer-contact">
-                            <div class="footer-contact-item">
+                            <p class="footer-contact-intro">
+                                Para entrar em contato, fale com a nossa embaixadora.
+                            </p>
+                            <div class="footer-contact-item animated-contact">
                                 <span class="footer-contact-icon">📧</span>
-                                <span class="footer-contact-text">contato@resumoacademico.com</span>
+                                <a href="mailto:Cleicevitoria02@gmail.com" class="footer-contact-link">
+                                    Cleicevitoria02@gmail.com
+                                </a>
                             </div>
-                            <div class="footer-contact-item">
-                                <span class="footer-contact-icon">📱</span>
-                                <span class="footer-contact-text">WhatsApp: (11) 99999-9999</span>
+                            <div class="footer-contact-item animated-contact">
+                                <span class="footer-contact-icon">📸</span>
+                                <a href="https://www.instagram.com/cleice.santtana?igsh=ZmQ2bHExeTh0YWJ5&utm_source=qr" 
+                                   target="_blank" class="footer-contact-link">
+                                    @cleice.santtana
+                                </a>
                             </div>
                         </div>
                     </div>

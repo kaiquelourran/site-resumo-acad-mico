@@ -95,6 +95,8 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Meu Desempenho - Resumo Acadêmico</title>
+    <link rel="icon" href="../fotos/Logotipo_resumo_academico.png" type="image/png">
+    <link rel="apple-touch-icon" href="../fotos/minha-logo-apple.png">
     <link rel="stylesheet" href="modern-style.css">
     <style>
         /* Background gradiente azul */

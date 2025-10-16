@@ -25,6 +25,8 @@ session_destroy();
 <head>
   <meta charset="UTF-8">
   <title>Saindo...</title>
+  <link rel="icon" href="../fotos/Logotipo_resumo_academico.png" type="image/png">
+  <link rel="apple-touch-icon" href="../fotos/minha-logo-apple.png">
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
