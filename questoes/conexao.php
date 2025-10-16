@@ -8,7 +8,7 @@ ini_set('log_errors', 1);
 // =======================================================
 
 // Hostinger DB Host (Confirmado: srv2023.hstgr.io)
-$host = "srv2023.hstgr.io";
+$host = "localhost"; // Use localhost para conexões internas
 
 // Hostinger DB Name (Confirmado: u775269467_questoes)
 $db  = "u775269467_questoes";
