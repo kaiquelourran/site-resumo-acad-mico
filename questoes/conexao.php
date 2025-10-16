@@ -11,7 +11,7 @@ ini_set('log_errors', 1);
 $host = "srv2023.hstgr.io";
 
 // Hostinger DB Name (Confirmado: u775269467_questoes)
-$db   = "u775269467_questoes";
+$db  = "u775269467_questoes";
 
 // Hostinger DB User (Confirmado: u775269467_kaique)
 $user = "u775269467_kaique";
@@ -24,8 +24,8 @@ $pass = "Mel976@24";
 // =======================================================
 
 try {
-    $pdo = new PDO("mysql:host=$host;dbname=$db;charset=utf8", $user, $pass);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+ $pdo = new PDO("mysql:host=$host;dbname=$db;charset=utf8", $user, $pass);
+ $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     // Garantir nomes de meses/datas em PT-BR nas funções DATE_FORMAT
     $pdo->exec("SET lc_time_names = 'pt_BR'");
 } catch (PDOException $e) {
