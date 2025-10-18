@@ -7,6 +7,9 @@ header('X-Frame-Options: DENY');
 header('X-XSS-Protection: 1; mode=block');
 require_once 'conexao.php';
 
+// Verificação de modo de manutenção
+require_once 'maintenance_check.php';
+
 // Gerar token CSRF se não existir
 if (!isset($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
@@ -78,7 +81,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $error = 'Email, senha ou tipo de usuário incorretos.';
                 }
             } catch (PDOException $e) {
-                $error = 'Erro no sistema. Tente novamente.';
+                if ($is_local && isset($_GET['debug']) && $_GET['debug'] == '1') {
+                    $error = 'Erro no sistema: ' . $e->getMessage();
+                } else {
+                    $error = 'Erro no sistema. Tente novamente.';
+                }
             }
         }
     }

@@ -2,6 +2,9 @@
 session_start();
 require_once 'conexao.php';
 
+// Verificação de modo de manutenção
+require_once 'maintenance_check.php';
+
 // Gerar token CSRF se não existir
 if (!isset($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));

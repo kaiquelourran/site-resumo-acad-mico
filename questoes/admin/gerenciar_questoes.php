@@ -9,6 +9,9 @@ if (!isset($_SESSION['id_usuario']) || $_SESSION['tipo_usuario'] !== 'admin') {
 
 require_once __DIR__ . '/../conexao.php';
 
+// Verificação de modo de manutenção não é necessária para admins
+$skip_maintenance_check = true;
+
 try {
     $stmt_questoes = $pdo->query("SELECT q.id_questao, q.enunciado, a.nome AS nome_assunto
                                  FROM questoes q

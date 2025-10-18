@@ -2,6 +2,10 @@
 session_start();
 require_once __DIR__ . '/../conexao.php'; // Caminho para o arquivo conexao.php
 
+// Verificação de modo de manutenção - permitir acesso para admins
+$skip_maintenance_check = true;
+require_once __DIR__ . '/../maintenance_check.php';
+
 $mensagem_erro = '';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {

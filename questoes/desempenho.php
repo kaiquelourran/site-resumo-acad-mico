@@ -2,6 +2,9 @@
 session_start();
 require_once 'conexao.php';
 
+// Verificação de modo de manutenção
+require_once 'maintenance_check.php';
+
 if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
     header('Location: login.php');
     exit;

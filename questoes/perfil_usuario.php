@@ -2,6 +2,9 @@
 session_start();
 require_once __DIR__ . '/conexao.php';
 
+// Verificação de modo de manutenção
+require_once 'maintenance_check.php';
+
 // Redireciona para a página de login se o usuário não estiver logado
 if (!isset($_SESSION['id_usuario'])) {
     header('Location: login.php');

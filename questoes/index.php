@@ -1,6 +1,10 @@
 <?php
 session_start();
 require_once 'conexao.php';
+
+// Verificação de modo de manutenção
+require_once 'maintenance_check.php';
+
 header('Cross-Origin-Opener-Policy: unsafe-none');
 header('X-Content-Type-Options: nosniff');
 header('X-Frame-Options: DENY');

@@ -4,42 +4,57 @@ ini_set('display_errors', 0);
 ini_set('log_errors', 1);
 
 // =======================================================
-// Configuração do banco de dados - CREDENCIAIS HOSTRINGER
+// Configuração do banco de dados
 // =======================================================
 
-// Hostinger DB Host (Confirmado: srv2023.hstgr.io)
-$host = "localhost"; // Use localhost para conexões internas
+// Detectar se estamos em ambiente local ou produção
+$is_local = (
+    $_SERVER['HTTP_HOST'] === 'localhost' || 
+    $_SERVER['HTTP_HOST'] === '127.0.0.1' || 
+    strpos($_SERVER['HTTP_HOST'], 'localhost:') === 0 ||
+    strpos($_SERVER['HTTP_HOST'], '127.0.0.1:') === 0
+);
 
-// Hostinger DB Name (Confirmado: u775269467_questoes)
-$db  = "u775269467_questoes";
-
-// Hostinger DB User (Confirmado: u775269467_kaique)
-$user = "u775269467_kaique";
-
-// Hostinger DB Password: *** COLOQUE A SUA SENHA REAL AQUI! ***
-$pass = "Mel976@24"; 
+if ($is_local) {
+    // Configurações para desenvolvimento local (XAMPP)
+    $host = "localhost";
+    $db = "resumo_quiz_local";
+    $user = "root";
+    $pass = ""; // XAMPP padrão não tem senha para root
+} else {
+    // Configurações para produção (Hostinger)
+    $host = "localhost";
+    $db = "u775269467_questoes";
+    $user = "u775269467_kaique";
+    $pass = "Kaique1976@24";
+}
 
 // =======================================================
 // FIM DAS CONFIGURAÇÕES
 // =======================================================
 
 try {
- $pdo = new PDO("mysql:host=$host;dbname=$db;charset=utf8", $user, $pass);
- $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
- // Garantir nomes de meses/datas em PT-BR nas funções DATE_FORMAT
- $pdo->exec("SET lc_time_names = 'pt_BR'");
+    $pdo = new PDO("mysql:host=$host;dbname=$db;charset=utf8mb4", $user, $pass);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    // Garantir nomes de meses/datas em PT-BR nas funções DATE_FORMAT
+    $pdo->exec("SET lc_time_names = 'pt_BR'");
+    
+    // Log de sucesso (opcional para debug)
+    $env = $is_local ? 'local' : 'produção';
+    error_log("Conexão com banco ($env) estabelecida com sucesso");
+    
 } catch (PDOException $e) {
- // Log do erro em vez de exibir
- error_log("Erro ao conectar ao banco: " . $e->getMessage());
- 
- // Se for uma requisição AJAX, retornar JSON
- if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
-     header('Content-Type: application/json');
-     echo json_encode(['success' => false, 'message' => 'Erro de conexão com o banco de dados']);
-     exit;
- }
- 
- die("Erro ao conectar com o banco de dados");}
+    // Log do erro
+    error_log("Erro de conexão com banco: " . $e->getMessage());
+    
+    // Em desenvolvimento, você pode mostrar o erro
+    if ($is_local && isset($_GET['debug']) && $_GET['debug'] == '1') {
+        die("Erro de conexão: " . $e->getMessage());
+    }
+    
+    // Em produção, redirecionar para página de erro
+    die("Erro interno do servidor. Tente novamente mais tarde.");
+}
 
 // Helpers de segurança e sessão
 if (!function_exists('csrf_token')) {

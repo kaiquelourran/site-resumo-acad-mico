@@ -10,6 +10,9 @@ if (!isset($_SESSION['id_usuario']) || $_SESSION['tipo_usuario'] !== 'admin') {
 // Incluir o arquivo de conexão
 require_once __DIR__ . '/../conexao.php';
 
+// Verificação de modo de manutenção não é necessária para admins
+$skip_maintenance_check = true;
+
 // --- Consultas para métricas gerais do site ---
 // Total de usuários cadastrados
 $stmt_usuarios = $pdo->query("SELECT COUNT(*) AS total_usuarios FROM usuarios");
@@ -224,6 +227,9 @@ $buckets = $pdo->query($sql_buckets)->fetch(PDO::FETCH_ASSOC);
                     <a href="gerenciar_comentarios.php" class="btn btn-primary">💬 Gerenciar Comentários</a>
                     <a href="add_questao.php" class="btn btn-success">➕ Adicionar Questão</a>
                     <a href="add_assunto.php" class="btn btn-secondary">📝 Adicionar Assunto</a>
+                    <button id="maintenanceToggle" class="btn btn-warning" onclick="toggleMaintenance()">
+                        🔧 <span id="maintenanceText">Ativar Manutenção</span>
+                    </button>
                     <a href="../index.php" class="btn btn-outline">🏠 Voltar ao Site</a>
                 </div>
             </section>
@@ -306,9 +312,75 @@ $buckets = $pdo->query($sql_buckets)->fetch(PDO::FETCH_ASSOC);
             }
         }
 
+        // Função para alternar o modo de manutenção
+        function toggleMaintenance() {
+            const button = document.getElementById('maintenanceToggle');
+            const text = document.getElementById('maintenanceText');
+            
+            // Desabilita o botão durante a requisição
+            button.disabled = true;
+            button.style.opacity = '0.6';
+            text.textContent = 'Processando...';
+            
+            // Cria o FormData com CSRF token
+            const formData = new FormData();
+            formData.append('csrf_token', '<?= csrf_token() ?>');
+            
+            fetch('toggle_maintenance.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Atualiza o texto do botão baseado no novo status
+                    if (data.maintenance_mode) {
+                        text.textContent = 'Desativar Manutenção';
+                        button.className = 'btn btn-danger';
+                        alert('✅ ' + data.message + '\n\n⚠️ O site agora está em modo de manutenção para todos os usuários (exceto administradores).');
+                    } else {
+                        text.textContent = 'Ativar Manutenção';
+                        button.className = 'btn btn-warning';
+                        alert('✅ ' + data.message + '\n\n🎉 O site voltou ao funcionamento normal!');
+                    }
+                } else {
+                    alert('❌ Erro: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                alert('❌ Erro ao processar a solicitação. Tente novamente.');
+            })
+            .finally(() => {
+                // Reabilita o botão
+                button.disabled = false;
+                button.style.opacity = '1';
+            });
+        }
+
+        // Função para verificar o status atual da manutenção ao carregar a página
+        function checkMaintenanceStatus() {
+            <?php
+            require_once __DIR__ . '/../maintenance_config.php';
+            $current_maintenance = is_maintenance_mode();
+            ?>
+            
+            const isMaintenanceActive = <?= json_encode($current_maintenance) ?>;
+            const button = document.getElementById('maintenanceToggle');
+            const text = document.getElementById('maintenanceText');
+            
+            if (isMaintenanceActive) {
+                text.textContent = 'Desativar Manutenção';
+                button.className = 'btn btn-danger';
+            } else {
+                text.textContent = 'Ativar Manutenção';
+                button.className = 'btn btn-warning';
+            }
+        }
+
         // Inicialização do dashboard
         document.addEventListener('DOMContentLoaded', function() {
-            // Dashboard inicializado com sucesso
+            checkMaintenanceStatus();
         });
     </script>
 </body>
