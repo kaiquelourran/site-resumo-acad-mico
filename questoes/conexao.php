@@ -1,3 +1,4 @@
+
 <?php
 // Configurar para não mostrar erros na saída
 ini_set('display_errors', 0);
@@ -7,27 +8,14 @@ ini_set('log_errors', 1);
 // Configuração do banco de dados
 // =======================================================
 
-// Detectar se estamos em ambiente local ou produção
-$is_local = (
-    $_SERVER['HTTP_HOST'] === 'localhost' || 
-    $_SERVER['HTTP_HOST'] === '127.0.0.1' || 
-    strpos($_SERVER['HTTP_HOST'], 'localhost:') === 0 ||
-    strpos($_SERVER['HTTP_HOST'], '127.0.0.1:') === 0
-);
+// CONFIGURAÇÕES DE PRODUÇÃO (HOSTINGER) - **USE ESTE CÓDIGO NA HOSTINGER**
+$host = "localhost"; // O host do MySQL da Hostinger é frequentemente 'localhost'
+$db = "u775269467_questoes";
+$user = "u775269467_kaique";
+$pass = "deixardesercurioso";
 
-if ($is_local) {
-    // Configurações para desenvolvimento local (XAMPP)
-    $host = "localhost";
-    $db = "resumo_quiz_local";
-    $user = "root";
-    $pass = ""; // XAMPP padrão não tem senha para root
-} else {
-    // Configurações para produção (Hostinger)
-    $host = "localhost";
-    $db = "u775269467_questoes";
-    $user = "u775269467_kaique";
-    $pass = "Kaique1976@24";
-}
+// Definir que NÃO está em ambiente local (MUDANÇA CRUCIAL PARA PRODUÇÃO)
+$is_local = false; 
 
 // =======================================================
 // FIM DAS CONFIGURAÇÕES
@@ -56,11 +44,19 @@ try {
     die("Erro interno do servidor. Tente novamente mais tarde.");
 }
 
+// Função auxiliar para determinar a coluna ID correta
+function get_id_column($pdo) {
+    global $is_local;
+    
+    // CORREÇÃO MANTIDA: Usa 'id_usuario' que é o nome correto da coluna
+    return 'id_usuario';
+}
+
 // Helpers de segurança e sessão
 if (!function_exists('csrf_token')) {
  function csrf_token(): string {
      if (session_status() === PHP_SESSION_NONE) { session_start(); }
-     if (empty($_SESSION['csrf_token'])) {
+     if (!isset($_SESSION['csrf_token'])) {
          $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
      }
      return $_SESSION['csrf_token'];
@@ -79,4 +75,4 @@ if (!function_exists('validate_csrf')) {
      return isset($_POST['csrf_token'], $_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $_POST['csrf_token']);
  }
 }
-?>
+?>   

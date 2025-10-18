@@ -84,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             if ($usuario_logado) {
                 // Insere a resposta apenas para usuários logados (tabela original)
-                $stmt_salvar = $pdo->prepare("INSERT INTO respostas_usuarios (id_usuario, id_questao, acertou, data_resposta) VALUES (?, ?, ?, ?)");
+                $stmt_salvar = $pdo->prepare("INSERT INTO respostas_usuario (id_usuario, id_questao, acertou, data_resposta) VALUES (?, ?, ?, ?)");
                 $stmt_salvar->execute([$id_usuario, $id_questao, $resposta_correta ? 1 : 0, $data_resposta]);
             }
 

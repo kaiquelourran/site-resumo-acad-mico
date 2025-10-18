@@ -3,8 +3,7 @@ session_start();
 require_once __DIR__ . '/../conexao.php'; // Caminho para o arquivo conexao.php
 
 // Verificação de modo de manutenção - permitir acesso para admins
-$skip_maintenance_check = true;
-require_once __DIR__ . '/../maintenance_check.php';
+
 
 $mensagem_erro = '';
 
@@ -18,8 +17,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (empty($email) || empty($senha)) {
         $mensagem_erro = "Por favor, preencha todos os campos.";
     } else {
-        // CORREÇÃO 1: A consulta SQL agora busca a senha e o tipo de usuário
-        $stmt = $pdo->prepare("SELECT id_usuario, nome, senha, tipo FROM usuarios WHERE email = ? AND tipo = 'admin'");
+        // Verificar credenciais do administrador
+        $id_column = get_id_column($pdo);
+        $stmt = $pdo->prepare("SELECT $id_column as id_usuario, nome, senha, tipo FROM usuarios WHERE email = ? AND tipo = 'admin'");
         $stmt->execute([$email]);
         $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
 

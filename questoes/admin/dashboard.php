@@ -11,7 +11,7 @@ if (!isset($_SESSION['id_usuario']) || $_SESSION['tipo_usuario'] !== 'admin') {
 require_once __DIR__ . '/../conexao.php';
 
 // Verificação de modo de manutenção não é necessária para admins
-$skip_maintenance_check = true;
+
 
 // --- Consultas para métricas gerais do site ---
 // Total de usuários cadastrados
@@ -22,17 +22,39 @@ $total_usuarios = $stmt_usuarios->fetch(PDO::FETCH_ASSOC)['total_usuarios'];
 $stmt_respostas_geral = $pdo->query("SELECT COUNT(*) AS total_respostas_geral FROM respostas_usuarios");
 $total_respostas_geral = $stmt_respostas_geral->fetch(PDO::FETCH_ASSOC)['total_respostas_geral'];
 
-// NOVO: Contagem de usuários que fizeram login hoje
-$stmt_usuarios_hoje = $pdo->query("SELECT COUNT(DISTINCT id_usuario) AS usuarios_hoje FROM usuarios WHERE DATE(ultimo_login) = CURDATE()");
-$usuarios_hoje = $stmt_usuarios_hoje->fetch(PDO::FETCH_ASSOC)['usuarios_hoje'];
+// NOVO: Contagem de usuários que fizeram login hoje (usando created_at como fallback)
+try {
+    $stmt_usuarios_hoje = $pdo->query("SELECT COUNT(DISTINCT id_usuario) AS usuarios_hoje FROM usuarios WHERE DATE(created_at) = CURDATE()");
+    $usuarios_hoje = $stmt_usuarios_hoje->fetch(PDO::FETCH_ASSOC)['usuarios_hoje'];
+} catch (Exception $e) {
+    $usuarios_hoje = 0;
+}
 
 // NOVO: Contagem de usuários que fizeram login na última semana
-$stmt_usuarios_semana = $pdo->query("SELECT COUNT(DISTINCT id_usuario) AS usuarios_semana FROM usuarios WHERE ultimo_login >= CURDATE() - INTERVAL 7 DAY");
-$usuarios_semana = $stmt_usuarios_semana->fetch(PDO::FETCH_ASSOC)['usuarios_semana'];
+try {
+    $stmt_usuarios_semana = $pdo->query("SELECT COUNT(DISTINCT id_usuario) AS usuarios_semana FROM usuarios WHERE created_at >= CURDATE() - INTERVAL 7 DAY");
+    $usuarios_semana = $stmt_usuarios_semana->fetch(PDO::FETCH_ASSOC)['usuarios_semana'];
+} catch (Exception $e) {
+    $usuarios_semana = 0;
+}
 
 // NOVO: Contagem de usuários que fizeram login no último mês
-$stmt_usuarios_mes = $pdo->query("SELECT COUNT(DISTINCT id_usuario) AS usuarios_mes FROM usuarios WHERE ultimo_login >= CURDATE() - INTERVAL 30 DAY");
-$usuarios_mes = $stmt_usuarios_mes->fetch(PDO::FETCH_ASSOC)['usuarios_mes'];
+try {
+    $stmt_usuarios_mes = $pdo->query("SELECT COUNT(DISTINCT id_usuario) AS usuarios_mes FROM usuarios WHERE created_at >= CURDATE() - INTERVAL 30 DAY");
+    $usuarios_mes = $stmt_usuarios_mes->fetch(PDO::FETCH_ASSOC)['usuarios_mes'];
+} catch (Exception $e) {
+    $usuarios_mes = 0;
+}
+
+// Lista de usuários cadastrados (últimos 10)
+try {
+    $stmt_usuarios_lista = $pdo->query("SELECT id_usuario, nome, email, tipo, created_at FROM usuarios ORDER BY created_at DESC LIMIT 10");
+    $usuarios_lista = $stmt_usuarios_lista->fetchAll(PDO::FETCH_ASSOC);
+     error_log("DEBUG: Conteúdo de $usuarios_lista: " . print_r($usuarios_lista, true));
+} catch (Exception $e) {
+    error_log("ERRO PDO ao buscar usuários: " . $e->getMessage());
+    $usuarios_lista = [];
+}
 
 // Métricas adicionais de conteúdo e desempenho
 // Acerto por assunto
@@ -193,6 +215,174 @@ $buckets = $pdo->query($sql_buckets)->fetch(PDO::FETCH_ASSOC);
         .app-header .titles .title { font-size: 1.4rem; }
         .stat-number { font-size: 1.6rem; }
         }
+
+    /* Estilos para seção de usuários */
+    .users-section {
+        background: white;
+        border-radius: 16px;
+        padding: 30px;
+        margin-bottom: 30px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+
+    .users-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #f0f0f0;
+    }
+
+    .users-header p {
+        color: #666;
+        margin: 0;
+        font-size: 14px;
+    }
+
+    .users-table {
+        background: #f8f9fa;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid #e9ecef;
+    }
+
+    .table-header {
+        display: grid;
+        grid-template-columns: 2fr 2fr 1fr 1fr 1.5fr;
+        gap: 15px;
+        padding: 15px 20px;
+        background: linear-gradient(135deg, #0072FF, #00C6FF);
+        color: white;
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    .table-body {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .table-row {
+        display: grid;
+        grid-template-columns: 2fr 2fr 1fr 1fr 1.5fr;
+        gap: 15px;
+        padding: 15px 20px;
+        border-bottom: 1px solid #e9ecef;
+        transition: background-color 0.2s ease;
+        align-items: center;
+    }
+
+    .table-row:hover {
+        background: #f0f7ff;
+    }
+
+    .table-row:last-child {
+        border-bottom: none;
+    }
+
+    .col-name {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 500;
+    }
+
+    .user-avatar-small {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #0072FF, #00C6FF);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    .col-email {
+        color: #666;
+        font-size: 14px;
+    }
+
+    .type-badge {
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+        text-align: center;
+    }
+
+    .type-badge.admin {
+        background: #ff6b6b;
+        color: white;
+    }
+
+    .type-badge.user {
+        background: #4ecdc4;
+        color: white;
+    }
+
+    .col-date, .col-login {
+        font-size: 13px;
+        color: #666;
+    }
+
+    .never-logged {
+        color: #999;
+        font-style: italic;
+    }
+
+    .no-users {
+        text-align: center;
+        padding: 40px;
+        color: #666;
+    }
+
+    /* Responsividade para tabela de usuários */
+    @media (max-width: 768px) {
+        .table-header, .table-row {
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+        
+        .table-header {
+            display: none;
+        }
+        
+        .table-row {
+            display: block;
+            padding: 15px;
+            border: 1px solid #e9ecef;
+            margin-bottom: 10px;
+            border-radius: 8px;
+        }
+        
+        .col-name, .col-email, .col-type, .col-date, .col-login {
+            margin-bottom: 8px;
+        }
+        
+        .col-name::before {
+            content: "👤 ";
+        }
+        
+        .col-email::before {
+            content: "📧 ";
+        }
+        
+        .col-type::before {
+            content: "🏷️ ";
+        }
+        
+        .col-date::before {
+            content: "📅 ";
+        }
+        
+        .col-login::before {
+            content: "🕐 ";
+        }
+    }
     </style>
 </head>
 <body>
@@ -227,9 +417,7 @@ $buckets = $pdo->query($sql_buckets)->fetch(PDO::FETCH_ASSOC);
                     <a href="gerenciar_comentarios.php" class="btn btn-primary">💬 Gerenciar Comentários</a>
                     <a href="add_questao.php" class="btn btn-success">➕ Adicionar Questão</a>
                     <a href="add_assunto.php" class="btn btn-secondary">📝 Adicionar Assunto</a>
-                    <button id="maintenanceToggle" class="btn btn-warning" onclick="toggleMaintenance()">
-                        🔧 <span id="maintenanceText">Ativar Manutenção</span>
-                    </button>
+
                     <a href="../index.php" class="btn btn-outline">🏠 Voltar ao Site</a>
                 </div>
             </section>
@@ -256,6 +444,55 @@ $buckets = $pdo->query($sql_buckets)->fetch(PDO::FETCH_ASSOC);
                     <div class="stat-card slide-in">
                         <h3>📈 Logins Último Mês</h3>
                         <div class="stat-number"><?= htmlspecialchars($usuarios_mes) ?></div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="users-section">
+                <h2>👥 Usuários Cadastrados</h2>
+                <div class="users-container">
+                    <div class="users-header">
+                        <p>Últimos 10 usuários cadastrados no sistema</p>
+                        <a href="gerenciar_usuarios.php" class="btn btn-outline">Ver Todos</a>
+                    </div>
+                    <div class="users-table">
+                        <div class="table-header">
+                            <div class="col-name">Nome</div>
+                            <div class="col-email">Email</div>
+                            <div class="col-type">Tipo</div>
+                            <div class="col-date">Cadastro</div>
+                            <div class="col-login">Último Login</div>
+                        </div>
+                        <div class="table-body">
+                            <?php if (!empty($usuarios_lista)): ?>
+                                <?php foreach ($usuarios_lista as $usuario): ?>
+                                    <div class="table-row">
+                                        <div class="col-name">
+                                            <div class="user-avatar-small">
+                                                <?= strtoupper(substr($usuario['nome'], 0, 1)) ?>
+                                            </div>
+                                            <span><?= htmlspecialchars($usuario['nome']) ?></span>
+                                        </div>
+                                        <div class="col-email"><?= htmlspecialchars($usuario['email']) ?></div>
+                                        <div class="col-type">
+                                            <span class="type-badge <?= $usuario['tipo'] === 'admin' ? 'admin' : 'user' ?>">
+                                                <?= $usuario['tipo'] === 'admin' ? '👑 Admin' : '👤 Usuário' ?>
+                                            </span>
+                                        </div>
+                                        <div class="col-date">
+                                            <?= date('d/m/Y', strtotime($usuario['created_at'])) ?>
+                                        </div>
+                                        <div class="col-login">
+                                            <span class="never-logged">N/A</span>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <div class="no-users">
+                                    <p>Nenhum usuário cadastrado ainda.</p>
+                                </div>
+                            <?php endif; ?>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -312,76 +549,7 @@ $buckets = $pdo->query($sql_buckets)->fetch(PDO::FETCH_ASSOC);
             }
         }
 
-        // Função para alternar o modo de manutenção
-        function toggleMaintenance() {
-            const button = document.getElementById('maintenanceToggle');
-            const text = document.getElementById('maintenanceText');
-            
-            // Desabilita o botão durante a requisição
-            button.disabled = true;
-            button.style.opacity = '0.6';
-            text.textContent = 'Processando...';
-            
-            // Cria o FormData com CSRF token
-            const formData = new FormData();
-            formData.append('csrf_token', '<?= csrf_token() ?>');
-            
-            fetch('toggle_maintenance.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Atualiza o texto do botão baseado no novo status
-                    if (data.maintenance_mode) {
-                        text.textContent = 'Desativar Manutenção';
-                        button.className = 'btn btn-danger';
-                        alert('✅ ' + data.message + '\n\n⚠️ O site agora está em modo de manutenção para todos os usuários (exceto administradores).');
-                    } else {
-                        text.textContent = 'Ativar Manutenção';
-                        button.className = 'btn btn-warning';
-                        alert('✅ ' + data.message + '\n\n🎉 O site voltou ao funcionamento normal!');
-                    }
-                } else {
-                    alert('❌ Erro: ' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Erro:', error);
-                alert('❌ Erro ao processar a solicitação. Tente novamente.');
-            })
-            .finally(() => {
-                // Reabilita o botão
-                button.disabled = false;
-                button.style.opacity = '1';
-            });
-        }
 
-        // Função para verificar o status atual da manutenção ao carregar a página
-        function checkMaintenanceStatus() {
-            <?php
-            require_once __DIR__ . '/../maintenance_config.php';
-            $current_maintenance = is_maintenance_mode();
-            ?>
-            
-            const isMaintenanceActive = <?= json_encode($current_maintenance) ?>;
-            const button = document.getElementById('maintenanceToggle');
-            const text = document.getElementById('maintenanceText');
-            
-            if (isMaintenanceActive) {
-                text.textContent = 'Desativar Manutenção';
-                button.className = 'btn btn-danger';
-            } else {
-                text.textContent = 'Ativar Manutenção';
-                button.className = 'btn btn-warning';
-            }
-        }
-
-        // Inicialização do dashboard
-        document.addEventListener('DOMContentLoaded', function() {
-            checkMaintenanceStatus();
-        });
     </script>
 </body>
 </html>

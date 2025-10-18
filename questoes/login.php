@@ -8,7 +8,7 @@ header('X-XSS-Protection: 1; mode=block');
 require_once 'conexao.php';
 
 // Verificação de modo de manutenção
-require_once 'maintenance_check.php';
+
 
 // Gerar token CSRF se não existir
 if (!isset($_SESSION['csrf_token'])) {
@@ -38,7 +38,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             try {
                 // Buscar usuário no banco de dados
-                $stmt = $pdo->prepare("SELECT id_usuario, nome, email, senha, tipo FROM usuarios WHERE email = ? AND tipo = ?");
+                // Determinar a coluna ID correta baseada no ambiente
+                $id_column = get_id_column($pdo);
+                $stmt = $pdo->prepare("SELECT $id_column as id_usuario, nome, email, senha, tipo FROM usuarios WHERE email = ? AND tipo = ?");
                 $stmt->execute([$email, $user_type]);
                 $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
                 
@@ -58,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     
                     // NOVO: tentar carregar avatar_url do usuário (se a coluna existir)
                     try {
-                        $stmtAvatar = $pdo->prepare("SELECT avatar_url FROM usuarios WHERE id_usuario = ?");
+                        $stmtAvatar = $pdo->prepare("SELECT avatar_url FROM usuarios WHERE $id_column = ?");
                         $stmtAvatar->execute([$usuario['id_usuario']]);
                         $avatarRow = $stmtAvatar->fetch(PDO::FETCH_ASSOC);
                         $avatarUrl = $avatarRow['avatar_url'] ?? null;
@@ -72,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                     
                     // Atualizar último login
-                    $stmt_update = $pdo->prepare("UPDATE usuarios SET ultimo_login = NOW() WHERE id_usuario = ?");
+                    $stmt_update = $pdo->prepare("UPDATE usuarios SET ultimo_login = NOW() WHERE $id_column = ?");
                     $stmt_update->execute([$usuario['id_usuario']]);
                     
                     header('Location: index.php');

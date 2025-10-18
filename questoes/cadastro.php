@@ -4,7 +4,7 @@ header('Cross-Origin-Opener-Policy: unsafe-none');
 require_once 'conexao.php';
 
 // Verificação de modo de manutenção
-require_once 'maintenance_check.php';
+
 
 // Gerar token CSRF se não existir
 if (!isset($_SESSION['csrf_token'])) {
@@ -33,7 +33,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             try {
                 // Verificar se o email já existe
-                $stmt_check = $pdo->prepare("SELECT id_usuario FROM usuarios WHERE email = ?");
+        $id_column = get_id_column($pdo);
+        $stmt_check = $pdo->prepare("SELECT $id_column FROM usuarios WHERE email = ?");
                 $stmt_check->execute([$email]);
                 
                 if ($stmt_check->fetch()) {

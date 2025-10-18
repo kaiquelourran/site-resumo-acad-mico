@@ -3,7 +3,7 @@ session_start();
 require_once 'conexao.php';
 
 // Verificação de modo de manutenção
-require_once 'maintenance_check.php';
+
 
 if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
     header('Location: login.php');
@@ -17,13 +17,13 @@ try {
     // Buscar dados da tabela respostas_usuario
     
     // Total de respostas (sem filtro de user_id pois a coluna não existe)
-    $stmt_total = $pdo->prepare("SELECT COUNT(*) as total FROM respostas_usuario");
-    $stmt_total->execute();
+    $stmt_total = $pdo->prepare("SELECT COUNT(*) as total FROM respostas_usuario WHERE user_id = ?");
+    $stmt_total->execute([$user_id]);
     $total_respostas = $stmt_total->fetch()['total'];
     
     // Respostas corretas (sem filtro de user_id pois a coluna não existe)
-    $stmt_corretas = $pdo->prepare("SELECT COUNT(*) as corretas FROM respostas_usuario WHERE acertou = 1");
-    $stmt_corretas->execute();
+    $stmt_corretas = $pdo->prepare("SELECT COUNT(*) as corretas FROM respostas_usuario WHERE user_id = ? AND acertou = 1");
+    $stmt_corretas->execute([$user_id]);
     $respostas_corretas = $stmt_corretas->fetch()['corretas'];
     
     // Calcular percentual de acerto
@@ -39,10 +39,11 @@ try {
         FROM respostas_usuario r
         JOIN questoes q ON r.id_questao = q.id_questao
         JOIN assuntos a ON q.id_assunto = a.id_assunto
-        GROUP BY a.id_assunto, a.nome
+        WHERE r.user_id = ?
+        GROUP BY a.id_assunto, a.nome_assunto
         ORDER BY percentual DESC
     ");
-    $stmt_assuntos->execute();
+    $stmt_assuntos->execute([$user_id]);
     $stats_assuntos = $stmt_assuntos->fetchAll();
     
     // Últimas atividades (sem filtro de user_id)
@@ -55,26 +56,27 @@ try {
         FROM respostas_usuario r
         JOIN questoes q ON r.id_questao = q.id_questao
         JOIN assuntos a ON q.id_assunto = a.id_assunto
+        WHERE r.user_id = ?
         ORDER BY r.data_resposta DESC
         LIMIT 10
     ");
-    $stmt_atividades->execute();
+    $stmt_atividades->execute([$user_id]);
     $atividades_recentes = $stmt_atividades->fetchAll();
     
     // Estatísticas por período - sem filtro de user_id
     // 24 horas
-    $stmt_24h = $pdo->prepare("SELECT COUNT(*) as total FROM respostas_usuario WHERE data_resposta >= DATE_SUB(NOW(), INTERVAL 1 DAY)");
-    $stmt_24h->execute();
+    $stmt_24h = $pdo->prepare("SELECT COUNT(*) as total FROM respostas_usuario WHERE user_id = ? AND data_resposta >= DATE_SUB(NOW(), INTERVAL 1 DAY)");
+    $stmt_24h->execute([$user_id]);
     $questoes_24h = $stmt_24h->fetch()['total'];
     
     // 7 dias
-    $stmt_7d = $pdo->prepare("SELECT COUNT(*) as total FROM respostas_usuario WHERE data_resposta >= DATE_SUB(NOW(), INTERVAL 7 DAY)");
-    $stmt_7d->execute();
+    $stmt_7d = $pdo->prepare("SELECT COUNT(*) as total FROM respostas_usuario WHERE user_id = ? AND data_resposta >= DATE_SUB(NOW(), INTERVAL 7 DAY)");
+    $stmt_7d->execute([$user_id]);
     $questoes_7d = $stmt_7d->fetch()['total'];
     
     // 365 dias
-    $stmt_365d = $pdo->prepare("SELECT COUNT(*) as total FROM respostas_usuario WHERE data_resposta >= DATE_SUB(NOW(), INTERVAL 365 DAY)");
-    $stmt_365d->execute();
+    $stmt_365d = $pdo->prepare("SELECT COUNT(*) as total FROM respostas_usuario WHERE user_id = ? AND data_resposta >= DATE_SUB(NOW(), INTERVAL 365 DAY)");
+    $stmt_365d->execute([$user_id]);
     $questoes_365d = $stmt_365d->fetch()['total'];
     
     // Sempre (total geral)
