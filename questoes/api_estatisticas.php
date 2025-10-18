@@ -1,5 +1,8 @@
 <?php
 header('Content-Type: application/json');
+
+// Definir o fuso horário para São Paulo
+date_default_timezone_set('America/Sao_Paulo');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET');
 header('Access-Control-Allow-Headers: Content-Type');

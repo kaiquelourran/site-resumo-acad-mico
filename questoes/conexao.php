@@ -12,7 +12,7 @@ ini_set('log_errors', 1);
 $host = "localhost"; // O host do MySQL da Hostinger é frequentemente 'localhost'
 $db = "u775269467_questoes";
 $user = "u775269467_kaique";
-$pass = "Kaique1976@24";
+$pass = "deixar de ser curioso";
 
 // Definir que NÃO está em ambiente local (MUDANÇA CRUCIAL PARA PRODUÇÃO)
 $is_local = false; 
@@ -76,4 +76,3 @@ if (!function_exists('validate_csrf')) {
  }
 }
 ?>   
-
