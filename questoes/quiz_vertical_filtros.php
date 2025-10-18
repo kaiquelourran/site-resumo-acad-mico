@@ -2753,18 +2753,26 @@ if (!window.statsInitialized) {
             const historyList = document.querySelector('#stats-' + questaoId + ' .stats-history-list');
             if (!historyList) return;
             if (Array.isArray(items) && items.length > 0) {
-                historyList.innerHTML = items.map(item => `
-                    <div class="stats-history-item ${item.acertou ? 'correct' : 'incorrect'}">
-                        <span class="stats-history-date">Em ${item.data}, você respondeu a opção ${item.alternativa}.</span>
-                        <span class="stats-history-result">
-                            ${item.acertou ? 
-                                '<i class="fas fa-check-circle"></i> Você acertou!' : 
-                                '<i class="fas fa-times-circle"></i> Você errou!'}
-                        </span>
-                    </div>
-                `).join('');
+                historyList.innerHTML = items.map(item => {
+                    // Parse data no formato DD/MM/YYYY HH:MM:SS
+                    const [dateStr, timeStr] = item.data.split(' ');
+                    const [day, month, year] = dateStr.split('/').map(Number);
+                    const [hours, minutes, seconds] = timeStr.split(':').map(Number);
+                    // Note: month is 0-indexed in JavaScript Date constructor
+                    const date = new Date(year, month - 1, day, hours, minutes, seconds);
+                    return `
+                        <div class="stats-history-item ${item.acertou ? 'correct' : 'incorrect'}">
+                            <span class="stats-history-date">Em ${date.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}, você respondeu a opção ${item.alternativa}.</span>
+                            <span class="stats-history-result">
+                                ${item.acertou ? 
+                                    '<i class="fas fa-check-circle"></i> Você acertou!' : 
+                                    '<i class="fas fa-times-circle"></i> Você errou!'}
+                            </span>
+                        </div>
+                    `;
+                }).join('');
             } else {
-                historyList.innerHTML = '<p style="text-align: center; color: #6c757d;">Voc ainda no respondeu esta questo.</p>';
+                historyList.innerHTML = '<p style="text-align: center; color: #6c757d;">Você ainda não respondeu esta questão.</p>';
             }
         }
 

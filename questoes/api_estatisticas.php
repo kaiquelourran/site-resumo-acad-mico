@@ -72,7 +72,7 @@ try {
         }
         
         // Adicionar ao histórico
-        $data_formatada = date('d/m/y \à\s H:i', strtotime($resposta['data_resposta']));
+        $data_formatada = date('d/m/Y H:i:s', strtotime($resposta['data_resposta']));
         $historico[] = [
             'data' => $data_formatada,
             'alternativa' => $letra_alternativa,
