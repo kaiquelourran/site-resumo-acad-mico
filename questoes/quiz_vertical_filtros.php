@@ -194,6 +194,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_questao']) && isse
 }
 
 // Construir query SQL baseada no filtro
+$skipQueryWithEmptyResults = false; // quando true, retornaremos lista vazia propositalmente
 // Detectar suporte a user_id na tabela de respostas e obter user_id atual
 $tem_user_id = false;
 try {
@@ -207,7 +208,7 @@ $user_id = isset($_SESSION['id_usuario']) ? (int)$_SESSION['id_usuario'] : (isse
 
 if ($filtro_ativo === 'nao-respondidas') {
     // Para "no-respondidas", selecionar apenas questões sem resposta (por usuário quando houver)
-    if ($tem_user_id && $user_id !== null) {
+    if ($tem_user_id && $user_id > 0) {
     $sql = "SELECT q.id_questao, q.enunciado, q.alternativa_a, q.alternativa_b, 
                    q.alternativa_c, q.alternativa_d, q.alternativa_correta, q.explicacao,
                    a.nome,
@@ -221,23 +222,13 @@ if ($filtro_ativo === 'nao-respondidas') {
                 )";
         $params = [$user_id];
     } else {
-        // Sem coluna user_id (ou sem usuário em sessão): considerar questões sem qualquer resposta
-        $sql = "SELECT q.id_questao, q.enunciado, q.alternativa_a, q.alternativa_b, 
-                       q.alternativa_c, q.alternativa_d, q.alternativa_correta, q.explicacao,
-                       a.nome,
-                       'nao-respondida' as status_resposta,
-                       NULL as id_alternativa
-                FROM questoes q 
-                LEFT JOIN assuntos a ON q.id_assunto = a.id_assunto
-                WHERE NOT EXISTS (
-                    SELECT 1 FROM respostas_usuario ru
-                    WHERE ru.id_questao = q.id_questao
-                )";
-        $params = [];
+        // Sem usuário logado ou sem suporte a user_id: não faz sentido listar "não respondidas".
+        // Para evitar confusão, retornamos lista vazia.
+        $skipQueryWithEmptyResults = true;
     }
 } else {
     // Para todos os outros filtros (incluindo "todas"), carregar dados de resposta considerando a ltima resposta por questo
-    if ($tem_user_id && $user_id !== null) {
+    if ($tem_user_id && $user_id > 0) {
         // Com coluna user_id: considerar a ltima resposta do usurio atual por questo
         $sql = "SELECT q.id_questao, q.enunciado, q.alternativa_a, q.alternativa_b, 
                        q.alternativa_c, q.alternativa_d, q.alternativa_correta, q.explicacao,
@@ -300,7 +291,7 @@ if ($id_assunto > 0) {
 // Aplicar filtro especfico
 switch($filtro_ativo) {
     case 'respondidas':
-        $sql .= " AND r.id_questao IS NOT NULL";
+        $sql .= " AND r.id_questao IS NOT NULL AND r.id_alternativa IS NOT NULL";
         break;
     case 'nao-respondidas':
         // Para no-respondidas, no aplicar filtro adicional pois ja no carregamos respostas
@@ -319,9 +310,13 @@ switch($filtro_ativo) {
 $sql .= " ORDER BY q.id_questao";
 
 try {
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute($params);
-    $questoes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    if ($skipQueryWithEmptyResults) {
+        $questoes = [];
+    } else {
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        $questoes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 } catch (Exception $e) {
     error_log("Erro ao executar query de questões: " . $e->getMessage());
     $questoes = [];
@@ -1741,8 +1736,8 @@ include 'header.php';
                             </div>
                             
                             <div class="question-text">
-                                <?php echo htmlspecialchars($questao['enunciado']); ?>
-                            </div>
+                            <?php echo htmlspecialchars($questao['enunciado']); ?>
+                        </div>
                             
                             <form class="questoes-form" data-questao-id="<?php echo $questao['id_questao']; ?>">
                                 <input type="hidden" name="id_questao" value="<?php echo $questao['id_questao']; ?>">
@@ -1780,14 +1775,15 @@ include 'header.php';
                                         // NO aplicar classes visuais automaticamente - deixar para o JavaScript
                                         // Isso permite que o usurio clique e responda novamente
                                         ?>
-                                        <div class="alternative <?php echo $class; ?>" 
+                                        <label class="alternative <?php echo $class; ?>"
                                              data-alternativa="<?php echo $letra; ?>"
                                              data-alternativa-id="<?php echo $alternativa['id_alternativa']; ?>"
                                              data-questao-id="<?php echo $questao['id_questao']; ?>"
                                              data-correta="<?php echo $is_correct ? 'true' : 'false'; ?>">
+                                            <input type="radio" name="alternative_<?php echo $questao['id_questao']; ?>" value="<?php echo $alternativa['id_alternativa']; ?>" style="display: none;">
                                             <div class="alternative-letter"><?php echo $letra; ?></div>
                                             <div class="alternative-text"><?php echo htmlspecialchars($alternativa['texto']); ?></div>
-                                        </div>
+                                        </label>
                                         <?php
                                     }
                                     ?>
@@ -2335,8 +2331,17 @@ if (!window.statsInitialized) {
             contentDiv.style.display = 'none';
             
             // Fetch statistics from API
+            console.log('Fetching statistics for questaoId:', questaoId); // Debug log
             fetch('api_estatisticas.php?id_questao=' + questaoId)
-                .then(response => response.json())
+                .then(async (response) => {
+                    const raw = await response.text();
+                    try {
+                        return JSON.parse(raw);
+                    } catch (e) {
+                        console.error('Falha ao parsear JSON de api_estatisticas.php:', { raw, error: e });
+                        throw e;
+                    }
+                })
                 .then(data => {
                     loadingDiv.style.display = 'none';
                     contentDiv.style.display = 'block';
@@ -2349,6 +2354,7 @@ if (!window.statsInitialized) {
                     }
                 })
                 .catch(error => {
+                    console.error('Erro ao carregar estatísticas:', error);
                     loadingDiv.innerHTML = '<p style="color: #dc3545;">Erro ao carregar estatsticas</p>';
                 });
         }
@@ -2754,15 +2760,14 @@ if (!window.statsInitialized) {
             if (!historyList) return;
             if (Array.isArray(items) && items.length > 0) {
                 historyList.innerHTML = items.map(item => {
-                    // Parse data no formato DD/MM/YYYY HH:MM:SS
-                    const [dateStr, timeStr] = item.data.split(' ');
+                    // Parse data no formato DD/MM/YYYY
+                    const dateStr = item.data;
                     const [day, month, year] = dateStr.split('/').map(Number);
-                    const [hours, minutes, seconds] = timeStr.split(':').map(Number);
                     // Note: month is 0-indexed in JavaScript Date constructor
-                    const date = new Date(year, month - 1, day, hours, minutes, seconds);
+                    const date = new Date(year, month - 1, day);
                     return `
                         <div class="stats-history-item ${item.acertou ? 'correct' : 'incorrect'}">
-                            <span class="stats-history-date">Em ${date.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}, você respondeu a opção ${item.alternativa}.</span>
+                            <span class="stats-history-date">Em ${date.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}, você respondeu a opção ${item.alternativa}.</span>
                             <span class="stats-history-result">
                                 ${item.acertou ? 
                                     '<i class="fas fa-check-circle"></i> Você acertou!' : 

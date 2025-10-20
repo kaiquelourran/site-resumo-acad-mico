@@ -1,6 +1,11 @@
 <?php
 session_start();
-header('Cross-Origin-Opener-Policy: unsafe-none');
+// Headers defensivos básicos
+header('X-Content-Type-Options: nosniff');
+header('X-Frame-Options: SAMEORIGIN');
+header('X-XSS-Protection: 1; mode=block');
+// COOP padrão seguro
+header('Cross-Origin-Opener-Policy: same-origin');
 require_once 'conexao.php';
 
 // Verificação de modo de manutenção
@@ -20,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error_message = 'Token de segurança inválido.';
     } else {
         $nome = trim($_POST['nome']);
-        $email = trim($_POST['email']);
+        $email = strtolower(trim($_POST['email']));
         $password = $_POST['password'];
         $confirm_password = $_POST['confirm_password'];
         
@@ -30,12 +35,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error_message = 'As senhas não coincidem.';
         } elseif (strlen($password) < 6) {
             $error_message = 'A senha deve ter pelo menos 6 caracteres.';
+        } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $error_message = 'Informe um e-mail válido.';
         } else {
             try {
                 // Verificar se o email já existe
         $id_column = get_id_column($pdo);
-        $stmt_check = $pdo->prepare("SELECT $id_column FROM usuarios WHERE email = ?");
-                $stmt_check->execute([$email]);
+        $stmt_check = $pdo->prepare("SELECT $id_column FROM usuarios WHERE LOWER(email) = ?");
+                $stmt_check->execute([strtolower($email)]);
                 
                 if ($stmt_check->fetch()) {
                     $error_message = 'Este e-mail já está cadastrado.';
@@ -44,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $hashed_password = password_hash($password, PASSWORD_DEFAULT);
                     $stmt_insert = $pdo->prepare("INSERT INTO usuarios (nome, email, senha, tipo, created_at) VALUES (?, ?, ?, 'usuario', NOW())");
                     
-                    if ($stmt_insert->execute([$nome, $email, $hashed_password])) {
+                    if ($stmt_insert->execute([$nome, strtolower($email), $hashed_password])) {
                         $success_message = 'Cadastro realizado com sucesso! Você já pode fazer login.';
                         // Limpar campos após sucesso
                         $nome = $email = '';
@@ -53,7 +60,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
             } catch (PDOException $e) {
-                $error_message = 'Erro no banco de dados. Tente novamente.';
+                if ($e->errorInfo[1] == 1062) {
+                    $error_message = 'Este e-mail já está cadastrado.';
+                } else {
+                    $error_message = 'Erro no banco de dados. Tente novamente.';
+                }
                 error_log('PDO Error: ' . $e->getMessage());
             }
         }

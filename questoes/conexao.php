@@ -8,14 +8,15 @@ ini_set('log_errors', 1);
 // Configuração do banco de dados
 // =======================================================
 
-// CONFIGURAÇÕES DE PRODUÇÃO (HOSTINGER) - **USE ESTE CÓDIGO NA HOSTINGER**
-$host = "localhost"; // O host do MySQL da Hostinger é frequentemente 'localhost'
-$db = "u775269467_questoes";
-$user = "u775269467_kaique";
-$pass = "deixar de ser curioso";
+// FORÇAR APENAS AMBIENTE LOCAL (XAMPP)
+// Configurações para desenvolvimento local (XAMPP)
+$host = "localhost";
+$db = "resumo_quiz"; // CORREÇÃO 1: Nome do banco de dados que existe no phpMyAdmin
+$user = "root";
+$pass = ""; // XAMPP padrão não tem senha para root
 
-// Definir que NÃO está em ambiente local (MUDANÇA CRUCIAL PARA PRODUÇÃO)
-$is_local = false; 
+// Definir que sempre está em ambiente local
+$is_local = true;
 
 // =======================================================
 // FIM DAS CONFIGURAÇÕES
@@ -48,7 +49,8 @@ try {
 function get_id_column($pdo) {
     global $is_local;
     
-    // CORREÇÃO MANTIDA: Usa 'id_usuario' que é o nome correto da coluna
+    // CORREÇÃO 2: Forçar o uso de 'id_usuario' pois é o nome correto da coluna
+    // no seu banco de dados local e será o nome na Hostinger.
     return 'id_usuario';
 }
 
@@ -75,4 +77,4 @@ if (!function_exists('validate_csrf')) {
      return isset($_POST['csrf_token'], $_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $_POST['csrf_token']);
  }
 }
-?>   
+?> 

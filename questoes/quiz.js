@@ -8,10 +8,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (questoesForm) {
         questoesForm.addEventListener('click', (event) => {
-            if (event.target.tagName === 'INPUT') {
-                const alternativaSelecionada = event.target.closest('label');
-                const respostaId = alternativaSelecionada.dataset.idAlternativa;
-                const idQuestao = questoesForm.dataset.idQuestao;
+            if (event.target.tagName === 'INPUT' && event.target.type === 'radio') {
+                const alternativaSelecionada = event.target;
+                const respostaId = alternativaSelecionada.value;
+                const idQuestao = alternativaSelecionada.closest('.questoes-form').dataset.idQuestao;
                 const alternativaCorretaElement = questoesForm.querySelector('[data-correta="true"]');
                 const alternativaCorretaId = alternativaCorretaElement ? alternativaCorretaElement.dataset.alternativeId : null;
                 

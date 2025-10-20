@@ -19,8 +19,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 // Verifica se o usuário está logado; se não estiver, não grava no banco, apenas responde.
-$usuario_logado = isset($_SESSION['id_usuario']);
-$id_usuario = $usuario_logado ? $_SESSION['id_usuario'] : null;
+$usuario_logado = isset($_SESSION['user_id']);
+    $id_usuario = $usuario_logado ? $_SESSION['user_id'] : null;
 
 // Inicializa a sessão de progresso se ainda não existir
 if (!isset($_SESSION['quiz_progress'])) {
@@ -45,13 +45,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
 
     $json_data = file_get_contents('php://input');
+    error_log("DEBUG processar_resposta: Raw JSON input: " . $json_data);
     $data = json_decode($json_data, true);
+    error_log("DEBUG processar_resposta: Decoded data: " . print_r($data, true));
 
     // 2. EXTRAIR OS DADOS DO JSON LIDO
     $id_questao = isset($data['id_questao']) ? (int)$data['id_questao'] : 0;
     $id_alternativa_selecionada = isset($data['id_alternativa']) ? (int)$data['id_alternativa'] : 0;
 
-    // Dados extraídos do JSON
+    error_log("DEBUG processar_resposta: id_questao=" . $id_questao . ", id_alternativa=" . $id_alternativa_selecionada . ", user_id=" . $id_usuario);
 
     if ($id_questao > 0 && $id_alternativa_selecionada > 0) {
         // Encontra a alternativa correta no banco de dados
@@ -74,20 +76,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         try {
             // Salvar resposta na tabela de tracking (sempre, mesmo sem login)
-            $stmt_tracking = $pdo->prepare("INSERT INTO respostas_usuario (user_id, id_questao, id_alternativa, acertou) 
-                                           VALUES (?, ?, ?, ?) 
-                                           ON DUPLICATE KEY UPDATE 
-                                           id_alternativa = VALUES(id_alternativa), 
-                                           acertou = VALUES(acertou), 
-                                           data_resposta = CURRENT_TIMESTAMP");
+            $stmt_tracking = $pdo->prepare("INSERT INTO respostas_usuario (user_id, id_questao, id_alternativa, acertou) \n                                           VALUES (?, ?, ?, ?) \n                                           ON DUPLICATE KEY UPDATE \n                                           id_alternativa = VALUES(id_alternativa), \n                                           acertou = VALUES(acertou), \n                                           data_resposta = CURRENT_TIMESTAMP");
             $stmt_tracking->execute([$id_usuario, $id_questao, $id_alternativa_selecionada, $resposta_correta ? 1 : 0]);
             
-            if ($usuario_logado) {
-                // Insere a resposta apenas para usuários logados (tabela original)
-                $stmt_salvar = $pdo->prepare("INSERT INTO respostas_usuario (id_usuario, id_questao, acertou, data_resposta) VALUES (?, ?, ?, ?)");
-                $stmt_salvar->execute([$id_usuario, $id_questao, $resposta_correta ? 1 : 0, $data_resposta]);
-            }
-
             // Adiciona a questão ao array de respondidas na sessão
             $_SESSION['quiz_progress']['respondidas'][] = $id_questao;
 

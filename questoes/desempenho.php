@@ -12,7 +12,10 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
 
 // Buscar estatísticas do usuário
 try {
-    $user_id = $_SESSION['id_usuario'] ?? $_SESSION['user_id'] ?? 1; // Usar 1 como padrão
+    $user_id = $_SESSION['id_usuario'] ?? $_SESSION['user_id'] ?? null; // requer usuário válido
+    if ($user_id === null) {
+        throw new Exception('Usuário não identificado para cálculo de desempenho');
+    }
     
     // Buscar dados da tabela respostas_usuario
     
@@ -29,7 +32,7 @@ try {
     // Calcular percentual de acerto
     $percentual_acerto = $total_respostas > 0 ? round(($respostas_corretas / $total_respostas) * 100, 1) : 0;
     
-    // Estatísticas por assunto (sem filtro de user_id)
+    // Estatísticas por assunto (apenas do usuário atual)
     $stmt_assuntos = $pdo->prepare("
         SELECT 
             a.nome as nome_assunto,
@@ -40,7 +43,7 @@ try {
         JOIN questoes q ON r.id_questao = q.id_questao
         JOIN assuntos a ON q.id_assunto = a.id_assunto
         WHERE r.user_id = ?
-        GROUP BY a.id_assunto, a.nome_assunto
+        GROUP BY a.id_assunto, a.nome
         ORDER BY percentual DESC
     ");
     $stmt_assuntos->execute([$user_id]);
@@ -83,9 +86,7 @@ try {
     $questoes_sempre = $total_respostas;
     
 } catch (Exception $e) {
-    $total_respostas = 0;
-    $respostas_corretas = 0;
-    $percentual_acerto = 0;
+
     $stats_assuntos = [];
     $atividades_recentes = [];
     $questoes_24h = 0;
@@ -1065,7 +1066,7 @@ $page_subtitle = 'Acompanhe sua evolução e estatísticas detalhadas';
                             <div class="activity-content">
                                 <div class="activity-subject"><?php echo htmlspecialchars($atividade['nome_assunto']); ?></div>
                                 <div class="activity-question"><?php echo htmlspecialchars(substr($atividade['pergunta'], 0, 80)) . '...'; ?></div>
-                                <div class="activity-time"><?php echo date('d/m/Y H:i', strtotime($atividade['data_resposta'])); ?></div>
+                                <div class="activity-time"><?php echo date('d/m/Y', strtotime($atividade['data_resposta'])); ?></div>
                             </div>
                             <div class="activity-result">
                                 <span class="result-badge <?php echo $atividade['resposta_correta'] ? 'success' : 'error'; ?>">

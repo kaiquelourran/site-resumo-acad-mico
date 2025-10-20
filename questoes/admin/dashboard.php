@@ -18,41 +18,58 @@ require_once __DIR__ . '/../conexao.php';
 $stmt_usuarios = $pdo->query("SELECT COUNT(*) AS total_usuarios FROM usuarios");
 $total_usuarios = $stmt_usuarios->fetch(PDO::FETCH_ASSOC)['total_usuarios'];
 
-// Total de questões respondidas por todos os usuários
-$stmt_respostas_geral = $pdo->query("SELECT COUNT(*) AS total_respostas_geral FROM respostas_usuarios");
-$total_respostas_geral = $stmt_respostas_geral->fetch(PDO::FETCH_ASSOC)['total_respostas_geral'];
-
-// NOVO: Contagem de usuários que fizeram login hoje (usando created_at como fallback)
+// Total de questões respondidas por todos os usuários (tabela correta)
 try {
-    $stmt_usuarios_hoje = $pdo->query("SELECT COUNT(DISTINCT id_usuario) AS usuarios_hoje FROM usuarios WHERE DATE(created_at) = CURDATE()");
-    $usuarios_hoje = $stmt_usuarios_hoje->fetch(PDO::FETCH_ASSOC)['usuarios_hoje'];
+    $stmt_respostas_geral = $pdo->query("SELECT COUNT(*) AS total_respostas_geral FROM respostas_usuario");
+    $total_respostas_geral = $stmt_respostas_geral->fetch(PDO::FETCH_ASSOC)['total_respostas_geral'];
+} catch (Exception $e) {
+    $total_respostas_geral = 0;
+}
+
+// Contagens de login real (usa coluna ultimo_login se existir; senão, fallback em created_at)
+try {
+    $hasUltimoLogin = false;
+    try {
+        $desc = $pdo->query("DESCRIBE usuarios");
+        $cols = $desc ? $desc->fetchAll(PDO::FETCH_COLUMN, 0) : [];
+        $hasUltimoLogin = in_array('ultimo_login', $cols, true);
+    } catch (Exception $e) { /* ignore */ }
+
+    $col = $hasUltimoLogin ? 'ultimo_login' : 'created_at';
+
+    $stmt_usuarios_hoje = $pdo->query("SELECT COUNT(DISTINCT id_usuario) AS usuarios_hoje FROM usuarios WHERE DATE($col) = CURDATE()");
+    $usuarios_hoje = (int)$stmt_usuarios_hoje->fetch(PDO::FETCH_ASSOC)['usuarios_hoje'];
+
+    $stmt_usuarios_semana = $pdo->query("SELECT COUNT(DISTINCT id_usuario) AS usuarios_semana FROM usuarios WHERE $col >= (CURDATE() - INTERVAL 7 DAY)");
+    $usuarios_semana = (int)$stmt_usuarios_semana->fetch(PDO::FETCH_ASSOC)['usuarios_semana'];
+
+    $stmt_usuarios_mes = $pdo->query("SELECT COUNT(DISTINCT id_usuario) AS usuarios_mes FROM usuarios WHERE $col >= (CURDATE() - INTERVAL 30 DAY)");
+    $usuarios_mes = (int)$stmt_usuarios_mes->fetch(PDO::FETCH_ASSOC)['usuarios_mes'];
 } catch (Exception $e) {
     $usuarios_hoje = 0;
-}
-
-// NOVO: Contagem de usuários que fizeram login na última semana
-try {
-    $stmt_usuarios_semana = $pdo->query("SELECT COUNT(DISTINCT id_usuario) AS usuarios_semana FROM usuarios WHERE created_at >= CURDATE() - INTERVAL 7 DAY");
-    $usuarios_semana = $stmt_usuarios_semana->fetch(PDO::FETCH_ASSOC)['usuarios_semana'];
-} catch (Exception $e) {
     $usuarios_semana = 0;
-}
-
-// NOVO: Contagem de usuários que fizeram login no último mês
-try {
-    $stmt_usuarios_mes = $pdo->query("SELECT COUNT(DISTINCT id_usuario) AS usuarios_mes FROM usuarios WHERE created_at >= CURDATE() - INTERVAL 30 DAY");
-    $usuarios_mes = $stmt_usuarios_mes->fetch(PDO::FETCH_ASSOC)['usuarios_mes'];
-} catch (Exception $e) {
     $usuarios_mes = 0;
 }
 
-// Lista de usuários cadastrados (últimos 10)
+// Lista de usuários cadastrados (últimos 10), incluindo último login quando houver
 try {
-    $stmt_usuarios_lista = $pdo->query("SELECT id_usuario, nome, email, tipo, created_at FROM usuarios ORDER BY created_at DESC LIMIT 10");
-    $usuarios_lista = $stmt_usuarios_lista->fetchAll(PDO::FETCH_ASSOC);
-     error_log("DEBUG: Conteúdo de $usuarios_lista: " . print_r($usuarios_lista, true));
+    // Detectar colunas reais para compatibilidade com variações (id vs id_usuario, created_at vs data_criacao)
+    $desc = $pdo->query("DESCRIBE usuarios");
+    $cols = $desc ? $desc->fetchAll(PDO::FETCH_COLUMN, 0) : [];
+    $has = function($c) use ($cols) { return in_array($c, $cols, true); };
+
+    $colId = $has('id_usuario') ? 'id_usuario' : ($has('id') ? 'id' : 'id_usuario');
+    $colNome = $has('nome') ? 'nome' : ($has('name') ? 'name' : 'nome');
+    $colEmail = $has('email') ? 'email' : 'email';
+    $colTipo = $has('tipo') ? 'tipo' : ($has('role') ? 'role' : 'tipo');
+    $colCreated = $has('created_at') ? 'created_at' : ($has('data_criacao') ? 'data_criacao' : 'created_at');
+    $colUltimo = $has('ultimo_login') ? 'ultimo_login' : null;
+
+    $selectUltimo = $colUltimo ? ", $colUltimo AS ultimo_login" : ", NULL AS ultimo_login";
+    $sqlUsers = "SELECT $colId AS id_usuario, $colNome AS nome, $colEmail AS email, $colTipo AS tipo, $colCreated AS created_at" . $selectUltimo . " FROM usuarios ORDER BY $colCreated DESC LIMIT 10";
+    $stmt_usuarios_lista = $pdo->query($sqlUsers);
+    $usuarios_lista = $stmt_usuarios_lista->fetchAll(PDO::FETCH_ASSOC) ?: [];
 } catch (Exception $e) {
-    error_log("ERRO PDO ao buscar usuários: " . $e->getMessage());
     $usuarios_lista = [];
 }
 
@@ -63,13 +80,17 @@ $sql_acerto_por_assunto = "
            SUM(CASE WHEN r.acertou = 1 THEN 1 ELSE 0 END) AS acertos,
            COUNT(*) AS total,
            ROUND(SUM(CASE WHEN r.acertou = 1 THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 0) AS taxa
-    FROM respostas_usuarios r
+    FROM respostas_usuario r
     JOIN questoes q ON q.id_questao = r.id_questao
     JOIN assuntos a ON a.id_assunto = q.id_assunto
     GROUP BY a.id_assunto
     ORDER BY taxa ASC
     LIMIT 5";
-$assuntos_mais_dificeis = $pdo->query($sql_acerto_por_assunto)->fetchAll(PDO::FETCH_ASSOC);
+try {
+    $assuntos_mais_dificeis = $pdo->query($sql_acerto_por_assunto)->fetchAll(PDO::FETCH_ASSOC);
+} catch (Exception $e) {
+    $assuntos_mais_dificeis = [];
+}
 
 // Questões mais erradas (top 5)
 $sql_mais_erradas = "
@@ -77,13 +98,17 @@ $sql_mais_erradas = "
            SUM(CASE WHEN r.acertou = 0 THEN 1 ELSE 0 END) AS erros,
            COUNT(*) AS total,
            ROUND(SUM(CASE WHEN r.acertou = 0 THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 0) AS taxa_erro
-    FROM respostas_usuarios r
+    FROM respostas_usuario r
     JOIN questoes q ON q.id_questao = r.id_questao
     GROUP BY q.id_questao
     HAVING total >= 3
     ORDER BY taxa_erro DESC, erros DESC
     LIMIT 5";
-$questoes_mais_erradas = $pdo->query($sql_mais_erradas)->fetchAll(PDO::FETCH_ASSOC);
+try {
+    $questoes_mais_erradas = $pdo->query($sql_mais_erradas)->fetchAll(PDO::FETCH_ASSOC);
+} catch (Exception $e) {
+    $questoes_mais_erradas = [];
+}
 
 // Buckets de dificuldade por taxa de acerto
 $sql_buckets = "
@@ -94,11 +119,15 @@ $sql_buckets = "
     FROM (
       SELECT q.id_questao,
              ROUND(AVG(r.acertou)*100,0) AS taxa
-      FROM respostas_usuarios r
+      FROM respostas_usuario r
       JOIN questoes q ON q.id_questao = r.id_questao
       GROUP BY q.id_questao
     ) sub";
-$buckets = $pdo->query($sql_buckets)->fetch(PDO::FETCH_ASSOC);
+try {
+    $buckets = $pdo->query($sql_buckets)->fetch(PDO::FETCH_ASSOC);
+} catch (Exception $e) {
+    $buckets = ['dificeis' => 0, 'medias' => 0, 'faceis' => 0];
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">

@@ -95,21 +95,23 @@ switch($filtro_ativo) {
             $sql = "SELECT q.*, a.nome as assunto_nome, 'nao-respondida' as status_resposta
                     FROM questoes q 
                     LEFT JOIN assuntos a ON q.id_assunto = a.id_assunto
-                    WHERE NOT EXISTS (
+                    WHERE q.id_assunto = ?
+                      AND NOT EXISTS (
                         SELECT 1 FROM respostas_usuario ru
                         WHERE ru.id_questao = q.id_questao AND ru.user_id = ?
                     )";
-            $params = [$user_id];
+            $params = [$id_assunto, $user_id];
         } else {
             // Sem coluna user_id: considerar questões sem qualquer resposta
             $sql = "SELECT q.*, a.nome as assunto_nome, 'nao-respondida' as status_resposta
                     FROM questoes q 
                     LEFT JOIN assuntos a ON q.id_assunto = a.id_assunto
-                    WHERE NOT EXISTS (
+                    WHERE q.id_assunto = ?
+                      AND NOT EXISTS (
                         SELECT 1 FROM respostas_usuario ru
                         WHERE ru.id_questao = q.id_questao
                     )";
-            $params = [];
+            $params = [$id_assunto];
         }
         break;
     case 'certas':
