@@ -49,9 +49,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 } else {
                     // Inserir novo usuário
                     $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-                    $stmt_insert = $pdo->prepare("INSERT INTO usuarios (nome, email, senha, tipo, created_at) VALUES (?, ?, ?, 'usuario', NOW())");
                     
-                    if ($stmt_insert->execute([$nome, strtolower($email), $hashed_password])) {
+                    // Detectar colunas existentes na tabela usuarios
+                    try {
+                        $desc = $pdo->query("DESCRIBE usuarios");
+                        $cols = $desc ? $desc->fetchAll(PDO::FETCH_COLUMN, 0) : [];
+                    } catch (Exception $e) {
+                        $cols = [];
+                    }
+                    
+                    // Construir INSERT baseado nas colunas existentes
+                    $hasNome = in_array('nome', $cols, true);
+                    $hasEmail = in_array('email', $cols, true);
+                    $hasSenha = in_array('senha', $cols, true);
+                    $hasTipo = in_array('tipo', $cols, true);
+                    $hasCreatedAt = in_array('created_at', $cols, true);
+                    $hasDataCriacao = in_array('data_criacao', $cols, true);
+                    
+                    if (!$hasNome || !$hasEmail || !$hasSenha) {
+                        throw new PDOException('Estrutura da tabela usuarios incompatível');
+                    }
+                    
+                    $colTipo = $hasTipo ? 'tipo' : 'role';
+                    $colCreated = $hasCreatedAt ? 'created_at' : ($hasDataCriacao ? 'data_criacao' : null);
+                    
+                    $fields = ['nome', 'email', 'senha'];
+                    $values = ['?', '?', '?'];
+                    $params = [$nome, strtolower($email), $hashed_password];
+                    
+                    if ($colTipo) {
+                        $fields[] = $colTipo;
+                        $values[] = "'usuario'";
+                    }
+                    
+                    if ($colCreated) {
+                        $fields[] = $colCreated;
+                        $values[] = 'NOW()';
+                    }
+                    
+                    $sql = "INSERT INTO usuarios (" . implode(', ', $fields) . ") VALUES (" . implode(', ', $values) . ")";
+                    $stmt_insert = $pdo->prepare($sql);
+                    
+                    if ($stmt_insert->execute($params)) {
                         $success_message = 'Cadastro realizado com sucesso! Você já pode fazer login.';
                         // Limpar campos após sucesso
                         $nome = $email = '';
@@ -63,9 +102,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($e->errorInfo[1] == 1062) {
                     $error_message = 'Este e-mail já está cadastrado.';
                 } else {
-                    $error_message = 'Erro no banco de dados. Tente novamente.';
+                    // Log detalhado para debug
+                    error_log('PDO Error no cadastro: ' . $e->getMessage());
+                    error_log('SQL State: ' . $e->errorInfo[0]);
+                    error_log('Error Code: ' . $e->errorInfo[1]);
+                    error_log('Error Message: ' . $e->errorInfo[2]);
+                    
+                    // Verificar se é erro de coluna inexistente
+                    if (strpos($e->getMessage(), 'Unknown column') !== false) {
+                        $error_message = 'Erro de configuração do banco. Contate o administrador.';
+                    } else {
+                        $error_message = 'Erro no banco de dados. Tente novamente.';
+                    }
                 }
-                error_log('PDO Error: ' . $e->getMessage());
             }
         }
     }
