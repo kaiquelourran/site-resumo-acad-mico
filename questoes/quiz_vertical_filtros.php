@@ -40,7 +40,7 @@ $assunto_nome = 'Todas as Questões';
 if ($id_assunto > 0) {
     $stmt_assunto = $pdo->prepare("SELECT nome FROM assuntos WHERE id_assunto = ?");
     $stmt_assunto->execute([$id_assunto]);
-    $assunto_nome = $stmt_assunto->fetchColumn() ?: 'Assunto nao encontrado';
+    $assunto_nome = $stmt_assunto->fetchColumn() ?: 'Conteúdo não encontrado';
 }
 
 // Processar resposta se enviada via POST
@@ -57,10 +57,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_questao']) && isse
         // NO EMBARALHAR - usar ordem original do banco
         
         // Mapear a letra selecionada para o ID da alternativa (ordem original do banco)
-        $letras = ['A', 'B', 'C', 'D', 'E'];
+        $letras = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J']; // Suporte para até 10 alternativas
         $id_alternativa = null;
         foreach ($alternativas_questao as $index => $alternativa) {
-            $letra = $letras[$index] ?? ($index + 1);
+            $letra = $letras[$index] ?? chr(65 + $index); // Fallback para letras além do array
             if (strtoupper($letra) === strtoupper($alternativa_selecionada)) {
                 $id_alternativa = $alternativa['id_alternativa'];
                 break;
@@ -145,10 +145,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_questao']) && isse
         if (isset($_POST['ajax_request'])) {
                 // Encontrar a letra da alternativa correta (ordem original do banco)
             $letra_correta = '';
-            $letras = ['A', 'B', 'C', 'D', 'E'];
+            $letras = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J']; // Suporte para até 10 alternativas
             foreach ($alternativas_questao as $index => $alt) {
                 if ($alt['id_alternativa'] == $alternativa_correta['id_alternativa']) {
-                    $letra_correta = $letras[$index] ?? ($index + 1);
+                    $letra_correta = $letras[$index] ?? chr(65 + $index); // Fallback para letras além do array
                     break;
                 }
             }
@@ -1624,7 +1624,7 @@ function getNomeFiltro($filtro) {
 <?php
 $breadcrumb_items = [
     ['icon' => '', 'text' => 'Incio', 'link' => 'index.php', 'current' => false],
-    ['icon' => '', 'text' => 'Assuntos', 'link' => 'escolher_assunto.php', 'current' => false],
+    ['icon' => '', 'text' => 'Conteúdos', 'link' => 'escolher_assunto.php', 'current' => false],
     ['icon' => '', 'text' => 'Lista de Questões', 'link' => 'listar_questoes.php?id=' . $id_assunto . '&filtro=' . $filtro_ativo, 'current' => false],
     ['icon' => '', 'text' => 'Questões', 'link' => '', 'current' => true]
 ];
@@ -1752,10 +1752,10 @@ include 'header.php';
                                     // NO EMBARALHAR - usar ordem original do banco
                                     
                                     // Mapear as letras corretas (ordem original do banco)
-                                    $letras = ['A', 'B', 'C', 'D', 'E'];
+                                    $letras = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J']; // Suporte para até 10 alternativas
                                     $letra_correta = '';
                                     foreach ($alternativas_questao as $index => $alternativa) {
-                                        $letra = $letras[$index] ?? ($index + 1);
+                                        $letra = $letras[$index] ?? chr(65 + $index); // Fallback para letras além do array
                                         
                                         // Identificar qual letra corresponde  resposta correta aps embaralhamento
                                         if ($alternativa['eh_correta'] == 1) {
@@ -1921,7 +1921,7 @@ include 'header.php';
                          Incio
                     </a>
                     <a href="escolher_assunto.php" class="nav-btn nav-btn-outline">
-                         Escolher Assunto
+                         Escolher Conteúdo
                     </a>
                 </div>
             </div>
@@ -2389,7 +2389,7 @@ if (!window.statsInitialized) {
             new Chart(barCtx, {
                 type: 'bar',
                 data: {
-                    labels: ['A', 'B', 'C', 'D', 'E'],
+                    labels: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'],
                     datasets: [{
                         label: 'Respostas',
                         data: [
@@ -2397,9 +2397,14 @@ if (!window.statsInitialized) {
                             data.alternativas.B || 0,
                             data.alternativas.C || 0,
                             data.alternativas.D || 0,
-                            data.alternativas.E || 0
+                            data.alternativas.E || 0,
+                            data.alternativas.F || 0,
+                            data.alternativas.G || 0,
+                            data.alternativas.H || 0,
+                            data.alternativas.I || 0,
+                            data.alternativas.J || 0
                         ],
-                        backgroundColor: ['#FFB84D', '#5DADE2', '#F4D03F', '#A3CB7F', '#EC7063']
+                        backgroundColor: ['#FFB84D', '#5DADE2', '#F4D03F', '#A3CB7F', '#EC7063', '#BB8FCE', '#85C1E9', '#F8C471', '#82E0AA', '#F1948A']
                     }]
                 },
                 options: {

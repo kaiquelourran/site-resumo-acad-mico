@@ -82,7 +82,7 @@ include '../header.php';
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>Assunto</th>
+                        <th>Conteúdo</th>
                         <th>Enunciado</th>
                         <th>Ações</th>
                     </tr>

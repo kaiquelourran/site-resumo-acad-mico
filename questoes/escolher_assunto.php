@@ -10,14 +10,75 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
     exit;
 }
 
-// Buscar todos os assuntos que têm questões
+// Buscar assuntos categorizados por tipo_assunto
+try {
+    // Verificar se o campo 'tipo_assunto' existe
+    $stmt = $pdo->query("DESCRIBE assuntos");
+    $cols = $stmt->fetchAll(PDO::FETCH_COLUMN, 0);
+    $tem_campo_tipo_assunto = in_array('tipo_assunto', $cols);
+} catch (Exception $e) {
+    $tem_campo_tipo_assunto = false;
+}
+
+if ($tem_campo_tipo_assunto) {
+    // Buscar assuntos categorizados usando tipo_assunto
+    $sql = "SELECT a.id_assunto, a.nome, a.tipo_assunto, COUNT(q.id_questao) as total_questoes 
+            FROM assuntos a 
+            INNER JOIN questoes q ON a.id_assunto = q.id_assunto 
+            GROUP BY a.id_assunto, a.nome, a.tipo_assunto 
+            ORDER BY a.tipo_assunto, a.nome";
+    $result = $pdo->query($sql)->fetchAll();
+    
+    // Mapear tipo_assunto para tipo (para compatibilidade com o frontend)
+    foreach ($result as &$assunto) {
+        switch ($assunto['tipo_assunto']) {
+            case 'concurso':
+                $assunto['tipo'] = 'concursos';
+                break;
+            case 'profissional':
+                $assunto['tipo'] = 'profissionais';
+                break;
+            case 'tema':
+            default:
+                $assunto['tipo'] = 'temas';
+                break;
+        }
+    }
+} else {
+    // Fallback: categorizar baseado no nome
 $sql = "SELECT a.id_assunto, a.nome, COUNT(q.id_questao) as total_questoes 
         FROM assuntos a 
         INNER JOIN questoes q ON a.id_assunto = q.id_assunto 
         GROUP BY a.id_assunto, a.nome 
         ORDER BY a.nome";
+    $result = $pdo->query($sql)->fetchAll();
+    
+    // Categorizar baseado no nome
+    foreach ($result as &$assunto) {
+        $nome = strtolower($assunto['nome']);
+        if (strpos($nome, 'concurso') !== false || strpos($nome, 'prova') !== false || strpos($nome, 'edital') !== false) {
+            $assunto['tipo'] = 'concursos';
+        } elseif (strpos($nome, 'profissional') !== false || strpos($nome, 'carreira') !== false || strpos($nome, 'trabalho') !== false) {
+            $assunto['tipo'] = 'profissionais';
+        } else {
+            $assunto['tipo'] = 'temas';
+        }
+    }
+}
 
-$result = $pdo->query($sql)->fetchAll();
+// Organizar por categorias
+$categorias = [
+    'temas' => [],
+    'concursos' => [],
+    'profissionais' => []
+];
+
+foreach ($result as $assunto) {
+    $tipo = $assunto['tipo'] ?? 'temas';
+    if (isset($categorias[$tipo])) {
+        $categorias[$tipo][] = $assunto;
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -25,7 +86,7 @@ $result = $pdo->query($sql)->fetchAll();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Escolher Assunto - Questões</title>
+    <title>Escolher Conteúdo - Questões</title>
     <link rel="icon" href="../fotos/Logotipo_resumo_academico.png" type="image/png">
     <link rel="apple-touch-icon" href="../fotos/minha-logo-apple.png">
     <link rel="stylesheet" href="modern-style.css">
@@ -62,11 +123,153 @@ $result = $pdo->query($sql)->fetchAll();
             box-shadow: 0 0 0 4px rgba(0,114,255,0.18);
         }
 
-        /* Grid responsivo de assuntos */
-        .subjects-grid {
+        /* Layout de três colunas */
+        .categorias-container {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin-top: 20px;
+        }
+        
+        .categoria-coluna {
+            background: #FFFFFF;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            border: 1px solid #e9eef3;
+        }
+        
+        .categoria-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f0f7ff;
+        }
+        
+        .categoria-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: #fff;
+        }
+        
+        .categoria-temas .categoria-icon {
+            background: linear-gradient(135deg, #00C6FF, #0072FF);
+        }
+        
+        .categoria-concursos .categoria-icon {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+        }
+        
+        .categoria-profissionais .categoria-icon {
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+        }
+        
+        .categoria-titulo {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #222;
+            margin: 0;
+        }
+        
+        .categoria-count {
+            background: #f8f9fa;
+            color: #666;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-left: auto;
+        }
+        
+        .categoria-conteudos {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .conteudo-item {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid #e9ecef;
+        }
+        
+        .conteudo-item:hover {
+            background: #e3f2fd;
+            border-color: #0072FF;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,114,255,0.15);
+        }
+        
+        .conteudo-nome {
+            font-weight: 600;
+            color: #222;
+            margin-bottom: 6px;
+            font-size: 0.95rem;
+        }
+        
+        .conteudo-questoes {
+            color: #666;
+            font-size: 0.85rem;
+        }
+        
+        .ver-resto-btn {
+            background: linear-gradient(135deg, #00C6FF, #0072FF);
+            color: #fff;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 16px;
+            width: 100%;
+        }
+        
+        .ver-resto-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,114,255,0.3);
+        }
+        
+        .ver-resto-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        /* Responsividade */
+        @media (max-width: 1024px) {
+            .categorias-container {
+                grid-template-columns: 1fr;
             gap: 20px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .categoria-coluna {
+                padding: 16px;
+            }
+            
+            .categoria-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            
+            .categoria-count {
+                margin-left: 0;
+            }
         }
         
         /* Card de assunto - paleta azul padronizada */
@@ -350,9 +553,9 @@ $result = $pdo->query($sql)->fetchAll();
 <?php
 $breadcrumb_items = [
     ['icon' => '🏠', 'text' => 'Início', 'link' => 'index.php', 'current' => false],
-    ['icon' => '📚', 'text' => 'Assuntos', 'link' => 'escolher_assunto.php', 'current' => true]
+    ['icon' => '📚', 'text' => 'Conteúdos', 'link' => 'escolher_assunto.php', 'current' => true]
 ];
-$page_title = '🎯 Escolha um Assunto';
+$page_title = '🎯 Escolha um Conteúdo';
 $page_subtitle = 'Selecione o assunto que deseja estudar';
 include 'header.php';
 ?>
@@ -419,30 +622,112 @@ include 'header.php';
             <a href="index.php" class="voltar-btn" aria-label="Voltar para Início"><span>←</span> Voltar</a>
             
             <div class="subjects-toolbar">
-                <input id="search-assunto" class="search-input" type="text" placeholder="Buscar assunto..." aria-label="Buscar assunto">
+                <input id="search-assunto" class="search-input" type="text" placeholder="Buscar conteúdo..." aria-label="Buscar conteúdo">
             </div>
 
-            <?php if ($result && count($result) > 0): ?>
-                <div class="subjects-grid" id="assuntos-grid">
-                    <?php foreach($result as $assunto): ?>
-                        <article class="assunto-card" tabindex="0" role="button"
-                            aria-label="Assunto: <?php echo htmlspecialchars($assunto['nome']); ?>; clique para ver as questões"
+            <?php if (!empty($categorias['temas']) || !empty($categorias['concursos']) || !empty($categorias['profissionais'])): ?>
+                <div class="categorias-container">
+                    <!-- Coluna 1: Temas -->
+                    <div class="categoria-coluna categoria-temas">
+                        <div class="categoria-header">
+                            <div class="categoria-icon">📚</div>
+                            <h3 class="categoria-titulo">Temas</h3>
+                            <span class="categoria-count"><?php echo count($categorias['temas']); ?></span>
+                        </div>
+                        <div class="categoria-conteudos" data-categoria="temas">
+                            <?php 
+                            $temas_visiveis = array_slice($categorias['temas'], 0, 6);
+                            foreach($temas_visiveis as $assunto): 
+                            ?>
+                                <div class="conteudo-item" 
                             data-name="<?php echo mb_strtolower($assunto['nome'], 'UTF-8'); ?>"
                             onclick="window.location.href='listar_questoes.php?id=<?php echo $assunto['id_assunto']; ?>'"
-                            onkeydown="if(event.key==='Enter'){ window.location.href='listar_questoes.php?id=<?php echo $assunto['id_assunto']; ?>'; }">
-                            <div class="assunto-titulo"><?php echo htmlspecialchars($assunto['nome']); ?></div>
-                            <div class="assunto-info">Clique para ver as questões deste assunto</div>
-                            <div class="questoes-count">
-                                <?php echo $assunto['total_questoes']; ?> questões disponíveis
+                                     onkeydown="if(event.key==='Enter'){ window.location.href='listar_questoes.php?id=<?php echo $assunto['id_assunto']; ?>'; }"
+                                     tabindex="0" role="button">
+                                    <div class="conteudo-nome"><?php echo htmlspecialchars($assunto['nome']); ?></div>
+                                    <div class="conteudo-questoes"><?php echo $assunto['total_questoes']; ?> questões</div>
+                                </div>
+                            <?php endforeach; ?>
+                            
+                            <?php if (count($categorias['temas']) > 6): ?>
+                                <button class="ver-resto-btn" onclick="carregarMais('temas')">
+                                    Ver o resto... (<?php echo count($categorias['temas']) - 6; ?> mais)
+                                </button>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+
+                    <!-- Coluna 2: Concursos -->
+                    <div class="categoria-coluna categoria-concursos">
+                        <div class="categoria-header">
+                            <div class="categoria-icon">🏆</div>
+                            <h3 class="categoria-titulo">Concursos</h3>
+                            <span class="categoria-count"><?php echo count($categorias['concursos']); ?></span>
+                        </div>
+                        <div class="categoria-conteudos" data-categoria="concursos">
+                            <?php 
+                            $concursos_visiveis = array_slice($categorias['concursos'], 0, 6);
+                            foreach($concursos_visiveis as $assunto): 
+                            ?>
+                                <div class="conteudo-item" 
+                                     data-name="<?php echo mb_strtolower($assunto['nome'], 'UTF-8'); ?>"
+                                     onclick="window.location.href='listar_questoes.php?id=<?php echo $assunto['id_assunto']; ?>'"
+                                     onkeydown="if(event.key==='Enter'){ window.location.href='listar_questoes.php?id=<?php echo $assunto['id_assunto']; ?>'; }"
+                                     tabindex="0" role="button">
+                                    <div class="conteudo-nome"><?php echo htmlspecialchars($assunto['nome']); ?></div>
+                                    <div class="conteudo-questoes"><?php echo $assunto['total_questoes']; ?> questões</div>
+                                </div>
+                            <?php endforeach; ?>
+                            
+                            <?php if (count($categorias['concursos']) > 6): ?>
+                                <button class="ver-resto-btn" onclick="carregarMais('concursos')">
+                                    Ver o resto... (<?php echo count($categorias['concursos']) - 6; ?> mais)
+                                </button>
+                            <?php endif; ?>
+                        </div>
+            </div>
+
+                    <!-- Coluna 3: Profissionais -->
+                    <div class="categoria-coluna categoria-profissionais">
+                        <div class="categoria-header">
+                            <div class="categoria-icon">💼</div>
+                            <h3 class="categoria-titulo">Profissionais</h3>
+                            <span class="categoria-count"><?php echo count($categorias['profissionais']); ?></span>
+                        </div>
+                        <div class="categoria-conteudos" data-categoria="profissionais">
+                            <?php 
+                            $profissionais_visiveis = array_slice($categorias['profissionais'], 0, 6);
+                            foreach($profissionais_visiveis as $assunto): 
+                            ?>
+                                <div class="conteudo-item" 
+                            data-name="<?php echo mb_strtolower($assunto['nome'], 'UTF-8'); ?>"
+                            onclick="window.location.href='listar_questoes.php?id=<?php echo $assunto['id_assunto']; ?>'"
+                                     onkeydown="if(event.key==='Enter'){ window.location.href='listar_questoes.php?id=<?php echo $assunto['id_assunto']; ?>'; }"
+                                     tabindex="0" role="button">
+                                    <div class="conteudo-nome"><?php echo htmlspecialchars($assunto['nome']); ?></div>
+                                    <div class="conteudo-questoes"><?php echo $assunto['total_questoes']; ?> questões</div>
                             </div>
-                        </article>
                     <?php endforeach; ?>
+                            
+                            <?php if (count($categorias['profissionais']) > 6): ?>
+                                <button class="ver-resto-btn" onclick="carregarMais('profissionais')">
+                                    Ver o resto... (<?php echo count($categorias['profissionais']) - 6; ?> mais)
+                                </button>
+                            <?php endif; ?>
+                        </div>
+                    </div>
                 </div>
             <?php else: ?>
-                <div class="assunto-card empty-state">
-                    <div class="assunto-titulo">Nenhum assunto encontrado</div>
-                    <div class="assunto-info">
-                        Não há assuntos com questões cadastradas no sistema.
+                <div class="categoria-coluna">
+                    <div class="categoria-header">
+                        <div class="categoria-icon">📚</div>
+                        <h3 class="categoria-titulo">Nenhum conteúdo encontrado</h3>
+                    </div>
+                    <div class="categoria-conteudos">
+                        <div class="conteudo-item">
+                            <div class="conteudo-nome">Nenhum conteúdo disponível</div>
+                            <div class="conteudo-questoes">Não há conteúdos com questões cadastradas no sistema.</div>
+                        </div>
                     </div>
                 </div>
             <?php endif; ?>
@@ -450,18 +735,48 @@ include 'header.php';
     </div>
 
     <script>
-    // Filtro de assuntos (client-side) mantendo lógica de servidor intacta
+    // Dados completos para carregamento dinâmico
+    const categoriasCompletas = {
+        temas: <?php echo json_encode($categorias['temas']); ?>,
+        concursos: <?php echo json_encode($categorias['concursos']); ?>,
+        profissionais: <?php echo json_encode($categorias['profissionais']); ?>
+    };
+    
+    // Filtro de conteúdos (client-side)
     document.addEventListener('DOMContentLoaded', function() {
         var input = document.getElementById('search-assunto');
         if (!input) return;
+        
         input.addEventListener('input', function() {
             var q = this.value.toLowerCase().trim();
-            document.querySelectorAll('.subjects-grid .assunto-card').forEach(function(card){
-                var name = (card.getAttribute('data-name') || '').toLowerCase();
-                card.style.display = (!q || name.indexOf(q) !== -1) ? '' : 'none';
+            
+            // Filtrar em todas as colunas
+            document.querySelectorAll('.categoria-conteudos').forEach(function(container) {
+                var itens = container.querySelectorAll('.conteudo-item');
+                var visiveis = 0;
+                
+                itens.forEach(function(item) {
+                    var name = (item.getAttribute('data-name') || '').toLowerCase();
+                    var mostrar = (!q || name.indexOf(q) !== -1);
+                    item.style.display = mostrar ? '' : 'none';
+                    if (mostrar) visiveis++;
+                });
+                
+                // Mostrar/ocultar botão "Ver o resto" baseado na busca
+                var btn = container.querySelector('.ver-resto-btn');
+                if (btn) {
+                    btn.style.display = q ? 'none' : '';
+                }
             });
         });
     });
+    
+    // Função para carregar mais conteúdos (estrutura preparada para AJAX futuro)
+    function carregarMais(categoria) {
+        console.log('Carregar mais:', categoria);
+        // TODO: Implementar carregamento via AJAX em prompt futuro
+        alert('Funcionalidade "Ver o resto" será implementada em breve!');
+    }
     </script>
 <?php include 'footer.php'; ?>
 </body>

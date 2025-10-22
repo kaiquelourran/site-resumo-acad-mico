@@ -41,7 +41,7 @@ if (!isset($page_subtitle)) {
             </a>
             <a href="escolher_assunto.php" class="nav-link">
                 <i class="fas fa-book"></i>
-                <span>Assuntos</span>
+                <span>Conteúdos</span>
             </a>
             <a href="desempenho.php" class="nav-link">
                 <i class="fas fa-chart-line"></i>

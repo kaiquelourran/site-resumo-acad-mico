@@ -23,17 +23,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         'alt2' => trim($_POST['alt2'] ?? ''),
         'alt3' => trim($_POST['alt3'] ?? ''),
         'alt4' => trim($_POST['alt4'] ?? ''),
+        'alt5' => trim($_POST['alt5'] ?? ''),  // Alternativa E opcional
         'correta' => $_POST['correta'] ?? ''
     ];
     
     $enunciado = $form_data['enunciado'];
     $id_assunto = $form_data['id_assunto'];
     $explicacao = $form_data['explicacao'];
+    
     $alternativas = [
         $form_data['alt1'],
         $form_data['alt2'],
         $form_data['alt3'],
-        $form_data['alt4']
+        $form_data['alt4'],
+        $form_data['alt5']  // Alternativa E opcional
     ];
     $correta_index = (int)$form_data['correta'];
 
@@ -48,9 +51,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
     
     // Se uma alternativa correta foi selecionada, verificar se ela existe
-    if ($correta_index >= 1 && $correta_index <= 4) {
-        if (empty($alternativas[$correta_index - 1])) {
-            $letra = chr(64 + $correta_index); // A, B, C, D
+    if ($correta_index >= 1 && $correta_index <= 5) {
+        if (empty(trim($alternativas[$correta_index - 1]))) {
+            $letra = chr(64 + $correta_index); // A, B, C, D, E
             $errors[] = "A alternativa {$letra} selecionada como correta está vazia";
         }
     }
@@ -59,6 +62,41 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $mensagem_status = 'error';
         $mensagem_texto = implode('<br>', $errors);
     } else {
+        // CORREÇÃO: Capturar id_assunto baseado no tipo de conteúdo selecionado
+        $tipo_conteudo = $_POST['tipo_conteudo'] ?? '';
+        
+        if ($tipo_conteudo === 'tema') {
+            $id_assunto = $_POST['assunto_tema'] ?? '';
+        } elseif ($tipo_conteudo === 'profissional') {
+            $id_assunto = $_POST['assunto_profissional'] ?? '';
+        } elseif ($tipo_conteudo === 'concurso') {
+            // Para concursos, buscar o assunto baseado nas seleções
+            $orgao = $_POST['concurso_orgao_sel'] ?? '';
+            $banca = $_POST['concurso_banca_sel'] ?? '';
+            $ano = $_POST['concurso_ano_sel'] ?? '';
+            $prova = $_POST['concurso_prova_sel'] ?? '';
+            
+            if ($orgao && $banca && $ano && $prova) {
+                try {
+                    $stmt_concurso = $pdo->prepare("SELECT id_assunto FROM assuntos WHERE concurso_orgao = ? AND concurso_banca = ? AND concurso_ano = ? AND concurso_prova = ?");
+                    $stmt_concurso->execute([$orgao, $banca, $ano, $prova]);
+                    $assunto_concurso = $stmt_concurso->fetch();
+                    
+                    if ($assunto_concurso) {
+                        $id_assunto = $assunto_concurso['id_assunto'];
+                    }
+                } catch (Exception $e) {
+                    $errors[] = 'Erro ao buscar o concurso selecionado: ' . $e->getMessage();
+                }
+            }
+        }
+        
+        // Validação final do id_assunto
+        if (empty($id_assunto)) {
+            $errors[] = 'Erro: Nenhum conteúdo foi selecionado. Por favor, selecione um conteúdo válido.';
+            $mensagem_status = 'error';
+            $mensagem_texto = implode('<br>', $errors);
+        } else {
         try {
             $pdo->beginTransaction();
 
@@ -72,8 +110,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $stmt_alternativas = $pdo->prepare($sql_alternativas);
 
             foreach ($alternativas as $index => $texto) {
+                // Só insere se a alternativa não estiver vazia
+                if (!empty(trim($texto))) {
                 $eh_correta = ($index + 1 == $correta_index) ? 1 : 0;
                 $stmt_alternativas->execute([$id_questao, $texto, $eh_correta]);
+                }
             }
 
             $pdo->commit();
@@ -87,14 +128,38 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $pdo->rollBack();
             $mensagem_status = 'error';
             $mensagem_texto = 'Erro ao adicionar a questão: ' . $e->getMessage();
+            }
         }
     }
 }
 
-// Busca os assuntos e estatísticas
+// Busca os assuntos categorizados e estatísticas
 try {
-    $stmt_assuntos = $pdo->query("SELECT id_assunto, nome FROM assuntos ORDER BY nome");
+    // Verificar se existe campo tipo_assunto
+    $stmt_check = $pdo->query("DESCRIBE assuntos");
+    $cols = $stmt_check->fetchAll(PDO::FETCH_COLUMN, 0);
+    $tem_campo_tipo = in_array('tipo_assunto', $cols);
+    
+    if ($tem_campo_tipo) {
+        $stmt_assuntos = $pdo->query("SELECT id_assunto, nome, tipo_assunto, concurso_ano, concurso_banca, concurso_orgao, concurso_prova FROM assuntos ORDER BY tipo_assunto, nome");
+    } else {
+        $stmt_assuntos = $pdo->query("SELECT id_assunto, nome, 'tema' as tipo_assunto, NULL as concurso_ano, NULL as concurso_banca, NULL as concurso_orgao, NULL as concurso_prova FROM assuntos ORDER BY nome");
+    }
     $assuntos = $stmt_assuntos->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Organizar assuntos por tipo
+    $assuntos_por_tipo = [
+        'tema' => [],
+        'concurso' => [],
+        'profissional' => []
+    ];
+    
+    foreach ($assuntos as $assunto) {
+        $tipo = $assunto['tipo_assunto'] ?? 'tema';
+        if (isset($assuntos_por_tipo[$tipo])) {
+            $assuntos_por_tipo[$tipo][] = $assunto;
+        }
+    }
     
     // Estatísticas
     $stmt_stats = $pdo->query("SELECT COUNT(*) as total_questoes FROM questoes");
@@ -354,6 +419,29 @@ try {
             font-size: 0.8rem;
             font-weight: bold;
         }
+        
+        .alt-optional {
+            color: #6b7280;
+            font-size: 0.75rem;
+            font-weight: 400;
+            background: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 8px;
+        }
+        
+        /* Garantir que os grupos de seleção sejam exibidos corretamente */
+        #grupo-concursos,
+        #grupo-temas,
+        #grupo-profissionais {
+            display: none !important;
+        }
+        
+        #grupo-concursos.show,
+        #grupo-temas.show,
+        #grupo-profissionais.show {
+            display: block !important;
+        }
 
         .correct-answer-section {
             background: #f8fafc;
@@ -531,7 +619,7 @@ try {
             </div>
             <div class="stat-item">
                 <span class="stat-number"><?php echo $total_assuntos; ?></span>
-                <div class="stat-label">Assuntos Disponíveis</div>
+                <div class="stat-label">Conteúdos Disponíveis</div>
             </div>
             <div class="stat-item">
                 <span class="stat-number" id="session-count">1</span>
@@ -550,20 +638,105 @@ try {
             <form method="POST" id="questionForm" novalidate>
                 <div class="form-grid">
                     <div class="form-group">
-                        <label for="id_assunto">
-                            <i class="fas fa-tag"></i> Assunto
+                        <label for="tipo_conteudo">
+                            <i class="fas fa-tag"></i> Tipo de Conteúdo
                         </label>
-                        <select name="id_assunto" id="id_assunto" class="form-control">
-                            <option value="">Selecione um assunto</option>
-                            <?php foreach ($assuntos as $assunto): ?>
-                                <option value="<?php echo $assunto['id_assunto']; ?>" 
-                                        <?php echo (isset($form_data['id_assunto']) && $form_data['id_assunto'] == $assunto['id_assunto']) ? 'selected' : ''; ?>>
+                        <select name="tipo_conteudo" id="tipo_conteudo" class="form-control" onchange="atualizarSeletoresConteudo()">
+                            <option value="">Selecione o tipo de conteúdo</option>
+                            <option value="tema">📚 Temas</option>
+                            <option value="concurso">🏆 Concursos</option>
+                            <option value="profissional">💼 Profissionais</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Seletor para Temas -->
+                    <div class="form-group" id="grupo-temas">
+                        <label for="assunto_tema">
+                            <i class="fas fa-book"></i> Tema
+                        </label>
+                        <select id="assunto_tema" class="form-control">
+                            <option value="">Selecione um tema</option>
+                            <?php foreach ($assuntos_por_tipo['tema'] as $assunto): ?>
+                                <option value="<?php echo $assunto['id_assunto']; ?>">
                                     <?php echo htmlspecialchars($assunto['nome']); ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>
-                        <div class="validation-message" id="assunto-error"></div>
                     </div>
+                    
+                    <!-- Seletores para Concursos -->
+                    <div id="grupo-concursos">
+                        <div class="form-group">
+                            <label for="concurso_orgao_sel">
+                                <i class="fas fa-building"></i> Órgão
+                            </label>
+                            <select name="concurso_orgao_sel" id="concurso_orgao_sel" class="form-control" onchange="atualizarBancas()">
+                                <option value="">Selecione o órgão</option>
+                                <?php
+                                $orgaos = [];
+                                foreach ($assuntos_por_tipo['concurso'] as $assunto) {
+                                    if (!empty($assunto['concurso_orgao'])) {
+                                        $orgaos[] = $assunto['concurso_orgao'];
+                                    }
+                                }
+                                $orgaos = array_unique($orgaos);
+                                foreach ($orgaos as $orgao): ?>
+                                    <option value="<?php echo htmlspecialchars($orgao); ?>">
+                                        <?php echo htmlspecialchars($orgao); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="concurso_banca_sel">
+                                <i class="fas fa-university"></i> Banca
+                            </label>
+                            <select name="concurso_banca_sel" id="concurso_banca_sel" class="form-control" onchange="atualizarAnos()">
+                                <option value="">Selecione a banca</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="concurso_ano_sel">
+                                <i class="fas fa-calendar"></i> Ano
+                            </label>
+                            <select name="concurso_ano_sel" id="concurso_ano_sel" class="form-control" onchange="atualizarProvas()">
+                                <option value="">Selecione o ano</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="concurso_prova_sel">
+                                <i class="fas fa-file-alt"></i> Prova
+                            </label>
+                            <select name="concurso_prova_sel" id="concurso_prova_sel" class="form-control" onchange="selecionarAssuntoConcurso()">
+                                <option value="">Selecione a prova</option>
+                            </select>
+                        </div>
+                        
+                        <input type="hidden" id="id_assunto_concurso" value="">
+                    </div>
+                    
+                    <!-- Campo principal id_assunto (hidden) - ÚNICO campo enviado ao servidor -->
+                    <input type="hidden" name="id_assunto" id="id_assunto" value="">
+                    
+                    <!-- Seletor para Profissionais -->
+                    <div class="form-group" id="grupo-profissionais">
+                        <label for="assunto_profissional">
+                            <i class="fas fa-briefcase"></i> Profissional
+                        </label>
+                        <select id="assunto_profissional" class="form-control">
+                            <option value="">Selecione um profissional</option>
+                            <?php foreach ($assuntos_por_tipo['profissional'] as $assunto): ?>
+                                <option value="<?php echo $assunto['id_assunto']; ?>">
+                                    <?php echo htmlspecialchars($assunto['nome']); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    
+                    <div class="validation-message" id="assunto-error"></div>
 
                     <div class="form-group">
                         <label for="enunciado">
@@ -584,20 +757,26 @@ try {
                         </label>
                         <div class="alternatives-grid">
                             <?php 
-                            $letters = ['A', 'B', 'C', 'D'];
-                            $alt_names = ['alt1', 'alt2', 'alt3', 'alt4'];
-                            for ($i = 0; $i < 4; $i++): 
+                            $letters = ['A', 'B', 'C', 'D', 'E'];
+                            $alt_names = ['alt1', 'alt2', 'alt3', 'alt4', 'alt5'];
+                            for ($i = 0; $i < 5; $i++): 
                             ?>
                                 <div class="alternative-item">
                                     <div class="alternative-label">
                                         <span class="alt-letter"><?php echo $letters[$i]; ?></span>
                                         Alternativa <?php echo $letters[$i]; ?>
+                                        <?php if ($i == 4): ?>
+                                            <span class="alt-optional">(Opcional)</span>
+                                        <?php endif; ?>
                                     </div>
                                     <input type="text" name="<?php echo $alt_names[$i]; ?>" 
                                            id="<?php echo $alt_names[$i]; ?>" class="form-control"
                                            placeholder="Digite a alternativa <?php echo $letters[$i]; ?>"
                                            maxlength="500"
-                                           value="<?php echo htmlspecialchars($form_data[$alt_names[$i]] ?? ''); ?>">
+                                           value="<?php echo htmlspecialchars($form_data[$alt_names[$i]] ?? ''); ?>"
+                                           <?php if ($i == 4): ?>
+                                           data-optional="true"
+                                           <?php endif; ?>>
                                     <div class="validation-message" id="<?php echo $alt_names[$i]; ?>-error"></div>
                                 </div>
                             <?php endfor; ?>
@@ -621,13 +800,16 @@ try {
                             <i class="fas fa-check-circle"></i> Alternativa Correta
                         </label>
                         <div class="radio-group">
-                            <?php for ($i = 1; $i <= 4; $i++): ?>
+                            <?php for ($i = 1; $i <= 5; $i++): ?>
                                 <div class="radio-item">
                                     <input type="radio" name="correta" id="correta<?php echo $i; ?>" 
                                            value="<?php echo $i; ?>"
                                            <?php echo (isset($form_data['correta']) && $form_data['correta'] == $i) ? 'checked' : ''; ?>>
                                     <label for="correta<?php echo $i; ?>" class="radio-label">
                                         Alternativa <?php echo chr(64 + $i); ?>
+                                        <?php if ($i == 5): ?>
+                                            <span class="alt-optional">(Opcional)</span>
+                                        <?php endif; ?>
                                     </label>
                                 </div>
                             <?php endfor; ?>
@@ -682,7 +864,7 @@ try {
         // Validação em tempo real
         function setupValidation() {
             const form = document.getElementById('questionForm');
-            const fields = ['id_assunto', 'enunciado', 'alt1', 'alt2', 'alt3', 'alt4'];
+            const fields = ['id_assunto', 'enunciado', 'alt1', 'alt2', 'alt3', 'alt4', 'alt5'];
             
             fields.forEach(fieldName => {
                 const field = document.getElementById(fieldName);
@@ -721,6 +903,11 @@ try {
                 isValid = false;
                 message = 'Selecione uma opção válida';
             }
+            
+            // Alternativa E (alt5) é opcional - não validar se estiver vazia
+            if (field.id === 'alt5' && !value) {
+                isValid = true; // Alternativa E pode estar vazia
+            }
 
             if (isValid) {
                 field.classList.remove('error');
@@ -757,7 +944,7 @@ try {
             // Gerar conteúdo da pré-visualização
             const assunto = document.getElementById('id_assunto');
             const enunciado = document.getElementById('enunciado').value;
-            const alternativas = ['alt1', 'alt2', 'alt3', 'alt4'].map(id => 
+            const alternativas = ['alt1', 'alt2', 'alt3', 'alt4', 'alt5'].map(id => 
                 document.getElementById(id).value
             );
             const correta = document.querySelector('input[name="correta"]:checked');
@@ -767,7 +954,7 @@ try {
             
             if (assunto.value) {
                 html += `<div style="color: #6b7280; font-size: 0.9rem; margin-bottom: 10px;">
-                    <strong>Assunto:</strong> ${assunto.options[assunto.selectedIndex].text}
+                    <strong>Conteúdo:</strong> ${assunto.options[assunto.selectedIndex].text}
                 </div>`;
             }
             
@@ -777,7 +964,7 @@ try {
                 </div>`;
             }
 
-            const letters = ['A', 'B', 'C', 'D'];
+            const letters = ['A', 'B', 'C', 'D', 'E'];
             alternativas.forEach((alt, index) => {
                 if (alt) {
                     const isCorrect = correta && correta.value == (index + 1);
@@ -854,23 +1041,27 @@ try {
         // Auto-save (localStorage)
         function setupAutoSave() {
             const form = document.getElementById('questionForm');
-            const fields = ['id_assunto', 'enunciado', 'alt1', 'alt2', 'alt3', 'alt4', 'explicacao'];
+            const fields = ['enunciado', 'alt1', 'alt2', 'alt3', 'alt4', 'alt5', 'explicacao'];
             
             // Carregar dados salvos
             fields.forEach(fieldName => {
                 const field = document.getElementById(fieldName);
+                if (field) {
                 const saved = localStorage.getItem('questao_' + fieldName);
                 if (saved && !field.value) {
                     field.value = saved;
+                    }
                 }
             });
 
             // Salvar automaticamente
             fields.forEach(fieldName => {
                 const field = document.getElementById(fieldName);
+                if (field) {
                 field.addEventListener('input', () => {
                     localStorage.setItem('questao_' + fieldName, field.value);
                 });
+                }
             });
 
             // Limpar localStorage após envio bem-sucedido
@@ -885,6 +1076,50 @@ try {
 
         // Validação do formulário antes do envio - agora opcional
         document.getElementById('questionForm').addEventListener('submit', function(e) {
+            // Debug: verificar se id_assunto está preenchido
+            const idAssunto = document.getElementById('id_assunto');
+            const tipoConteudo = document.getElementById('tipo_conteudo').value;
+            
+            console.log('Tipo de conteúdo selecionado:', tipoConteudo);
+            console.log('ID Assunto sendo enviado:', idAssunto ? idAssunto.value : 'Elemento não encontrado');
+            
+            // Debug: verificar todos os campos de assunto
+            console.log('assunto_tema value:', document.getElementById('assunto_tema')?.value);
+            console.log('assunto_profissional value:', document.getElementById('assunto_profissional')?.value);
+            console.log('id_assunto_concurso value:', document.getElementById('id_assunto_concurso')?.value);
+            
+            // Verificar se algum conteúdo foi selecionado baseado no tipo
+            let conteudoSelecionado = false;
+            
+            if (tipoConteudo === 'tema') {
+                const assuntoTema = document.getElementById('assunto_tema');
+                if (assuntoTema && assuntoTema.value) {
+                    idAssunto.value = assuntoTema.value;
+                    conteudoSelecionado = true;
+                    console.log('ID Assunto preenchido (tema):', assuntoTema.value);
+                }
+            } else if (tipoConteudo === 'profissional') {
+                const assuntoProfissional = document.getElementById('assunto_profissional');
+                if (assuntoProfissional && assuntoProfissional.value) {
+                    idAssunto.value = assuntoProfissional.value;
+                    conteudoSelecionado = true;
+                    console.log('ID Assunto preenchido (profissional):', assuntoProfissional.value);
+                }
+            } else if (tipoConteudo === 'concurso') {
+                const idAssuntoConcurso = document.getElementById('id_assunto_concurso');
+                if (idAssuntoConcurso && idAssuntoConcurso.value) {
+                    idAssunto.value = idAssuntoConcurso.value;
+                    conteudoSelecionado = true;
+                    console.log('ID Assunto preenchido (concurso):', idAssuntoConcurso.value);
+                }
+            }
+            
+            if (!conteudoSelecionado) {
+                e.preventDefault();
+                alert('Erro: Nenhum conteúdo foi selecionado. Por favor, selecione um conteúdo válido.');
+                return false;
+            }
+            
             // Remover validação obrigatória - permitir envio com campos vazios
             // Apenas limpar mensagens de erro existentes
             document.querySelectorAll('.validation-message').forEach(msg => {
@@ -898,6 +1133,9 @@ try {
             setupValidation();
             setupAutoSave();
             
+            // Inicializar seletores de conteúdo
+            atualizarSeletoresConteudo();
+            
             // Atualizar contador de sessão
             const sessionCount = parseInt(localStorage.getItem('session_questions') || '0');
             <?php if ($mensagem_status === 'success'): ?>
@@ -907,7 +1145,242 @@ try {
             <?php else: ?>
                 document.getElementById('session-count').textContent = sessionCount;
             <?php endif; ?>
+            
+            // Event listeners para atualizar id_assunto
+            const assuntoTema = document.getElementById('assunto_tema');
+            const assuntoProfissional = document.getElementById('assunto_profissional');
+            const idAssunto = document.getElementById('id_assunto');
+            
+            if (assuntoTema && idAssunto) {
+                assuntoTema.addEventListener('change', function() {
+                    idAssunto.value = this.value;
+                });
+            }
+            
+            if (assuntoProfissional && idAssunto) {
+                assuntoProfissional.addEventListener('change', function() {
+                    idAssunto.value = this.value;
+                });
+            }
+            
+            // Event listeners para seletores de concurso
+            const concursoOrgao = document.getElementById('concurso_orgao_sel');
+            const concursoBanca = document.getElementById('concurso_banca_sel');
+            const concursoAno = document.getElementById('concurso_ano_sel');
+            const concursoProva = document.getElementById('concurso_prova_sel');
+            
+            if (concursoOrgao) {
+                concursoOrgao.addEventListener('change', function() {
+                    atualizarBancas();
+                    atualizarAnos();
+                    atualizarProvas();
+                    selecionarAssuntoConcurso();
+                });
+            }
+            
+            if (concursoBanca) {
+                concursoBanca.addEventListener('change', function() {
+                    atualizarAnos();
+                    atualizarProvas();
+                    selecionarAssuntoConcurso();
+                });
+            }
+            
+            if (concursoAno) {
+                concursoAno.addEventListener('change', function() {
+                    atualizarProvas();
+                    selecionarAssuntoConcurso();
+                });
+            }
+            
+            if (concursoProva) {
+                concursoProva.addEventListener('change', function() {
+                    selecionarAssuntoConcurso();
+                });
+            }
         });
+        
+        // Dados dos assuntos para JavaScript
+        const assuntosPorTipo = <?php echo json_encode($assuntos_por_tipo); ?>;
+        
+        // Debug: Mostrar dados no console
+        console.log('Dados carregados:', assuntosPorTipo);
+        console.log('Concursos encontrados:', assuntosPorTipo.concurso);
+        
+        // Debug visual na página
+        if (assuntosPorTipo.concurso.length === 0) {
+            console.warn('⚠️ Nenhum concurso encontrado! Crie alguns concursos primeiro em add_assunto.php');
+        }
+        
+        // Função para atualizar seletores de conteúdo
+        function atualizarSeletoresConteudo() {
+            const tipoConteudo = document.getElementById('tipo_conteudo').value;
+            console.log('Tipo de conteúdo selecionado:', tipoConteudo);
+            
+            // Ocultar todos os grupos
+            document.getElementById('grupo-temas').classList.remove('show');
+            document.getElementById('grupo-concursos').classList.remove('show');
+            document.getElementById('grupo-profissionais').classList.remove('show');
+            
+            // Limpar seleções
+            const assuntoTema = document.getElementById('assunto_tema');
+            const assuntoProfissional = document.getElementById('assunto_profissional');
+            const idAssuntoConcurso = document.getElementById('id_assunto_concurso');
+            const idAssunto = document.getElementById('id_assunto');
+            
+            if (assuntoTema) assuntoTema.value = '';
+            if (assuntoProfissional) assuntoProfissional.value = '';
+            if (idAssuntoConcurso) idAssuntoConcurso.value = '';
+            if (idAssunto) idAssunto.value = ''; // Limpar campo principal também
+            
+            // Mostrar grupo apropriado
+            if (tipoConteudo === 'tema') {
+                console.log('Mostrando grupo de temas');
+                document.getElementById('grupo-temas').classList.add('show');
+            } else if (tipoConteudo === 'concurso') {
+                console.log('Mostrando grupo de concursos');
+                const grupoConcursos = document.getElementById('grupo-concursos');
+                console.log('Elemento grupo-concursos encontrado:', grupoConcursos);
+                if (grupoConcursos) {
+                    grupoConcursos.classList.add('show');
+                    console.log('Grupo de concursos exibido');
+                } else {
+                    console.error('Elemento grupo-concursos não encontrado!');
+                }
+            } else if (tipoConteudo === 'profissional') {
+                console.log('Mostrando grupo de profissionais');
+                document.getElementById('grupo-profissionais').classList.add('show');
+            }
+        }
+        
+        // Função para atualizar bancas baseado no órgão selecionado
+        function atualizarBancas() {
+            const orgaoSelect = document.getElementById('concurso_orgao_sel');
+            const bancaSelect = document.getElementById('concurso_banca_sel');
+            
+            if (!orgaoSelect || !bancaSelect) return;
+            
+            const orgao = orgaoSelect.value;
+            
+            // Limpar opções
+            bancaSelect.innerHTML = '<option value="">Selecione a banca</option>';
+            
+            if (orgao) {
+                const bancas = [...new Set(assuntosPorTipo.concurso
+                    .filter(a => a.concurso_orgao === orgao)
+                    .map(a => a.concurso_banca)
+                    .filter(b => b))];
+                
+                bancas.forEach(banca => {
+                    const option = document.createElement('option');
+                    option.value = banca;
+                    option.textContent = banca;
+                    bancaSelect.appendChild(option);
+                });
+            }
+            
+            // Limpar seleções dependentes
+            atualizarAnos();
+        }
+        
+        // Função para atualizar anos baseado na banca selecionada
+        function atualizarAnos() {
+            const orgaoSelect = document.getElementById('concurso_orgao_sel');
+            const bancaSelect = document.getElementById('concurso_banca_sel');
+            const anoSelect = document.getElementById('concurso_ano_sel');
+            
+            if (!orgaoSelect || !bancaSelect || !anoSelect) return;
+            
+            const orgao = orgaoSelect.value;
+            const banca = bancaSelect.value;
+            
+            // Limpar opções
+            anoSelect.innerHTML = '<option value="">Selecione o ano</option>';
+            
+            if (orgao && banca) {
+                const anos = [...new Set(assuntosPorTipo.concurso
+                    .filter(a => a.concurso_orgao === orgao && a.concurso_banca === banca)
+                    .map(a => a.concurso_ano)
+                    .filter(a => a)
+                    .sort((a, b) => b - a))]; // Ordenar do mais recente para o mais antigo
+                
+                anos.forEach(ano => {
+                    const option = document.createElement('option');
+                    option.value = ano;
+                    option.textContent = ano;
+                    anoSelect.appendChild(option);
+                });
+            }
+            
+            // Limpar seleções dependentes
+            atualizarProvas();
+        }
+        
+        // Função para atualizar provas baseado no ano selecionado
+        function atualizarProvas() {
+            const orgaoSelect = document.getElementById('concurso_orgao_sel');
+            const bancaSelect = document.getElementById('concurso_banca_sel');
+            const anoSelect = document.getElementById('concurso_ano_sel');
+            const provaSelect = document.getElementById('concurso_prova_sel');
+            const idAssuntoConcurso = document.getElementById('id_assunto_concurso');
+            
+            if (!orgaoSelect || !bancaSelect || !anoSelect || !provaSelect) return;
+            
+            const orgao = orgaoSelect.value;
+            const banca = bancaSelect.value;
+            const ano = anoSelect.value;
+            
+            // Limpar opções
+            provaSelect.innerHTML = '<option value="">Selecione a prova</option>';
+            
+            if (orgao && banca && ano) {
+                const provas = [...new Set(assuntosPorTipo.concurso
+                    .filter(a => a.concurso_orgao === orgao && a.concurso_banca === banca && a.concurso_ano === ano)
+                    .map(a => a.concurso_prova)
+                    .filter(p => p))];
+                
+                provas.forEach(prova => {
+                    const option = document.createElement('option');
+                    option.value = prova;
+                    option.textContent = prova;
+                    provaSelect.appendChild(option);
+                });
+            }
+            
+            // Limpar seleção de assunto
+            if (idAssuntoConcurso) idAssuntoConcurso.value = '';
+        }
+        
+        // Função para selecionar o assunto de concurso baseado nas seleções
+        function selecionarAssuntoConcurso() {
+            const orgaoSelect = document.getElementById('concurso_orgao_sel');
+            const bancaSelect = document.getElementById('concurso_banca_sel');
+            const anoSelect = document.getElementById('concurso_ano_sel');
+            const provaSelect = document.getElementById('concurso_prova_sel');
+            const idAssuntoConcurso = document.getElementById('id_assunto_concurso');
+            const idAssunto = document.getElementById('id_assunto');
+            
+            if (!orgaoSelect || !bancaSelect || !anoSelect || !provaSelect) return;
+            
+            const orgao = orgaoSelect.value;
+            const banca = bancaSelect.value;
+            const ano = anoSelect.value;
+            const prova = provaSelect.value;
+            
+            if (orgao && banca && ano && prova) {
+                const assunto = assuntosPorTipo.concurso.find(a => 
+                    a.concurso_orgao === orgao && 
+                    a.concurso_banca === banca && 
+                    a.concurso_ano === ano && 
+                    a.concurso_prova === prova
+                );
+                
+                if (assunto) {
+                    if (idAssuntoConcurso) idAssuntoConcurso.value = assunto.id_assunto;
+                    if (idAssunto) idAssunto.value = assunto.id_assunto;
+                }
+            }
+        }
     </script>
 </body>
 </html>

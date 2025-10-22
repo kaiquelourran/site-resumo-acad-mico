@@ -442,10 +442,10 @@ try {
                 <h2>Gerenciamento de Conteúdo</h2>
                 <div class="buttons-grid">
                     <a href="../gerenciar_questoes_sem_auth.php" class="btn btn-primary">📋 Gerenciar Questões</a>
-                    <a href="gerenciar_assuntos.php" class="btn btn-primary">📚 Gerenciar Assuntos</a>
+                    <a href="gerenciar_assuntos.php" class="btn btn-primary">📚 Gerenciar Conteúdos</a>
                     <a href="gerenciar_comentarios.php" class="btn btn-primary">💬 Gerenciar Comentários</a>
                     <a href="add_questao.php" class="btn btn-success">➕ Adicionar Questão</a>
-                    <a href="add_assunto.php" class="btn btn-secondary">📝 Adicionar Assunto</a>
+                    <a href="add_assunto.php" class="btn btn-secondary">📝 Adicionar Conteúdo</a>
 
                     <a href="../index.php" class="btn btn-outline">🏠 Voltar ao Site</a>
                 </div>
@@ -530,7 +530,7 @@ try {
                 <h2>📈 Análises e Relatórios</h2>
                 <div class="cards-container">
                     <div class="card">
-                        <h4>🎯 Assuntos mais difíceis (taxa de acerto)</h4>
+                        <h4>🎯 Conteúdos mais difíceis (taxa de acerto)</h4>
                         <ul class="analytics-list">
                             <?php if (!empty($assuntos_mais_dificeis)): foreach ($assuntos_mais_dificeis as $row): ?>
                                 <li><?= htmlspecialchars($row['assunto']) ?> — <strong><?= htmlspecialchars($row['taxa']) ?>%</strong></li>

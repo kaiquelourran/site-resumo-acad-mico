@@ -549,7 +549,7 @@ include 'header.php';
         <div class="stats-container">
             <div class="stat-card slide-in-right">
                 <div class="stat-number"><?php echo $total_assuntos; ?></div>
-                <div class="stat-label">Assuntos</div>
+                <div class="stat-label">Conteúdos</div>
             </div>
             <div class="stat-card slide-in-right">
                 <div class="stat-number"><?php echo $total_questoes; ?></div>
@@ -669,7 +669,7 @@ include 'header.php';
                 $debug_info['sql'] = $sql_rank;
                 
                 try {
-                    $ranking_semanal = $pdo->query($sql_rank)->fetchAll(PDO::FETCH_ASSOC);
+                $ranking_semanal = $pdo->query($sql_rank)->fetchAll(PDO::FETCH_ASSOC);
                 } catch (Exception $e) {
                     error_log("Erro ao executar query de ranking: " . $e->getMessage());
                     $ranking_semanal = [];
@@ -912,9 +912,9 @@ include 'header.php';
 
                 <div class="card fade-in clickable-card" style="background: linear-gradient(to top, #00C6FF, #0072FF); color: white;">
                     <span class="card-icon">📝</span>
-                    <h3 class="card-title" style="color:#fff;">Adicionar Assunto</h3>
-                    <p class="card-description" style="color:#f8f9fa;">Crie novos assuntos para organizar as questões.</p>
-                    <a href="admin/add_assunto.php" class="btn" style="background: rgba(255,255,255,0.2); border: 2px solid white;">Novo Assunto</a>
+                    <h3 class="card-title" style="color:#fff;">Adicionar Conteúdo</h3>
+                    <p class="card-description" style="color:#f8f9fa;">Crie novos conteúdos para organizar as questões.</p>
+                    <a href="admin/add_assunto.php" class="btn" style="background: rgba(255,255,255,0.2); border: 2px solid white;">Novo Conteúdo</a>
                 </div>
 
                 <div class="card fade-in clickable-card" style="background: linear-gradient(to top, #00C6FF, #0072FF); color: white;">

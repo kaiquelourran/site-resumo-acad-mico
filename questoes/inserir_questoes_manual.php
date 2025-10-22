@@ -13,6 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $alternativa_b = trim($_POST['alternativa_b'] ?? '');
     $alternativa_c = trim($_POST['alternativa_c'] ?? '');
     $alternativa_d = trim($_POST['alternativa_d'] ?? '');
+    $alternativa_e = trim($_POST['alternativa_e'] ?? '');  // Alternativa E opcional
     $resposta_correta = $_POST['resposta_correta'] ?? '';
     $explicacao = trim($_POST['explicacao'] ?? '');
     
@@ -49,6 +50,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'C' => $alternativa_c,
                 'D' => $alternativa_d
             ];
+            
+            // Adicionar alternativa E se preenchida
+            if (!empty($alternativa_e)) {
+                $alternativas['E'] = $alternativa_e;
+            }
             
             foreach ($alternativas as $letra => $texto) {
                 $eh_correta = ($letra === $resposta_correta) ? 1 : 0;
@@ -327,7 +333,7 @@ try {
             </div>
             <div class="stat-card">
                 <div class="stat-number"><?php echo $total_assuntos; ?></div>
-                <div class="stat-label">📚 Assuntos</div>
+                <div class="stat-label">📚 Conteúdos</div>
             </div>
         </div>
 
@@ -340,10 +346,10 @@ try {
 
             <form method="POST" action="">
                 <div class="form-group">
-                    <label for="assunto_nome">Nome do Assunto:</label>
+                    <label for="assunto_nome">Nome do Conteúdo:</label>
                     <?php if (!empty($assuntos_existentes)): ?>
                         <div class="existing-subjects">
-                            <h4>Assuntos existentes:</h4>
+                            <h4>Conteúdos existentes:</h4>
                             <div class="subjects-list">
                                 <?php foreach ($assuntos_existentes as $assunto): ?>
                                     <span class="subject-tag"><?php echo htmlspecialchars($assunto); ?></span>
@@ -386,8 +392,14 @@ try {
                         <div class="alternative-item">
                             <div class="alternative-letter">D</div>
                             <input type="text" name="alternativa_d" 
-                                   value="<?php echo htmlspecialchars($alternativa_d ?? ''); ?)" 
+                                   value="<?php echo htmlspecialchars($alternativa_d ?? ''); ?>" 
                                    placeholder="Alternativa D" required>
+                        </div>
+                        <div class="alternative-item">
+                            <div class="alternative-letter">E</div>
+                            <input type="text" name="alternativa_e" 
+                                   value="<?php echo htmlspecialchars($alternativa_e ?? ''); ?>" 
+                                   placeholder="Alternativa E (opcional)">
                         </div>
                     </div>
                 </div>
@@ -415,6 +427,11 @@ try {
                                 <input type="radio" id="resp_d" name="resposta_correta" value="D" 
                                        <?php echo ($resposta_correta ?? '') === 'D' ? 'checked' : ''; ?> required>
                                 <label for="resp_d">D</label>
+                            </div>
+                            <div class="radio-item">
+                                <input type="radio" id="resp_e" name="resposta_correta" value="E" 
+                                       <?php echo ($resposta_correta ?? '') === 'E' ? 'checked' : ''; ?>>
+                                <label for="resp_e">E</label>
                             </div>
                         </div>
                     </div>

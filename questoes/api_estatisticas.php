@@ -20,7 +20,7 @@ if ($idQuestao <= 0) {
         'message' => 'Parâmetro id_questao inválido',
         'acertos' => 0,
         'erros' => 0,
-        'alternativas' => ['A' => 0, 'B' => 0, 'C' => 0, 'D' => 0, 'E' => 0],
+        'alternativas' => ['A' => 0, 'B' => 0, 'C' => 0, 'D' => 0, 'E' => 0, 'F' => 0, 'G' => 0, 'H' => 0, 'I' => 0, 'J' => 0],
         'historico' => []
     ];
     $json = json_encode($payload);
@@ -62,26 +62,26 @@ try {
     $totais = $stmtTotais->fetch(PDO::FETCH_ASSOC) ?: ['acertos' => 0, 'erros' => 0];
 
     // Distribuição por alternativas (geral para a questão) baseada em respostas_usuario (id_alternativa)
-    $alternativas = ['A' => 0, 'B' => 0, 'C' => 0, 'D' => 0, 'E' => 0];
+    $alternativas = ['A' => 0, 'B' => 0, 'C' => 0, 'D' => 0, 'E' => 0, 'F' => 0, 'G' => 0, 'H' => 0, 'I' => 0, 'J' => 0];
     try {
         // Buscar alternativas da questão para mapear letras
         $stmt_alternativas = $pdo->prepare(
             "SELECT id_alternativa, texto, eh_correta
-             FROM alternativas 
-             WHERE id_questao = ? 
+        FROM alternativas 
+        WHERE id_questao = ? 
              ORDER BY id_alternativa"
         );
         $stmt_alternativas->execute([$idQuestao]);
         $alternativas_questao = $stmt_alternativas->fetchAll(PDO::FETCH_ASSOC) ?: [];
-
-        // Mapear IDs das alternativas para letras
-        $letras = ['A','B','C','D','E'];
-        $mapa_alternativas = [];
-        foreach ($alternativas_questao as $index => $alt) {
+    
+    // Mapear IDs das alternativas para letras
+        $letras = ['A','B','C','D','E','F','G','H','I','J'];
+    $mapa_alternativas = [];
+    foreach ($alternativas_questao as $index => $alt) {
             $letra = $letras[$index] ?? (string)($index + 1);
-            $mapa_alternativas[$alt['id_alternativa']] = $letra;
-        }
-
+        $mapa_alternativas[$alt['id_alternativa']] = $letra;
+    }
+    
         // Contagem geral por id_alternativa
         $stmtAlt = $pdo->prepare(
             "SELECT id_alternativa, COUNT(*) AS total
@@ -115,7 +115,7 @@ try {
                 );
                 $stmt_alternativas->execute([$idQuestao]);
                 $alternativas_questao = $stmt_alternativas->fetchAll(PDO::FETCH_ASSOC) ?: [];
-                $letras = ['A','B','C','D','E'];
+                $letras = ['A','B','C','D','E','F','G','H','I','J'];
                 $mapa_alternativas = [];
                 foreach ($alternativas_questao as $index => $alt) {
                     $letra = $letras[$index] ?? (string)($index + 1);
@@ -155,7 +155,7 @@ try {
                         $rowLetra = $stmtAltLetra->fetch(PDO::FETCH_ASSOC);
                         if ($rowLetra && !empty($rowLetra['alternativa'])) {
                             $cand = strtoupper($rowLetra['alternativa']);
-                            if (in_array($cand, ['A','B','C','D','E'], true)) {
+                            if (in_array($cand, ['A','B','C','D','E','F','G','H','I','J'], true)) {
                                 $letra = $cand;
                             }
                         }
@@ -194,7 +194,7 @@ try {
         'error' => $e->getMessage(),
         'acertos' => 0,
         'erros' => 0,
-        'alternativas' => ['A' => 0, 'B' => 0, 'C' => 0, 'D' => 0, 'E' => 0],
+        'alternativas' => ['A' => 0, 'B' => 0, 'C' => 0, 'D' => 0, 'E' => 0, 'F' => 0, 'G' => 0, 'H' => 0, 'I' => 0, 'J' => 0],
         'historico' => []
     ];
     $json = json_encode($payload);

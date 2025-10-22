@@ -16,7 +16,7 @@ $assunto_nome = 'Todas as Questões';
 if ($id_assunto > 0) {
     $stmt_assunto = $pdo->prepare("SELECT nome FROM assuntos WHERE id_assunto = ?");
     $stmt_assunto->execute([$id_assunto]);
-    $assunto_nome = $stmt_assunto->fetchColumn() ?: 'Assunto não encontrado';
+    $assunto_nome = $stmt_assunto->fetchColumn() ?: 'Conteúdo não encontrado';
 }
 
 // Detectar suporte a user_id na tabela de respostas e obter user_id atual
@@ -894,7 +894,7 @@ $contadores['erradas'] = $stmt_count_erradas->fetchColumn();
 <?php
 $breadcrumb_items = [
     ['icon' => '🏠', 'text' => 'Início', 'link' => 'index.php', 'current' => false],
-    ['icon' => '📚', 'text' => 'Assuntos', 'link' => 'escolher_assunto.php', 'current' => false],
+    ['icon' => '📚', 'text' => 'Conteúdos', 'link' => 'escolher_assunto.php', 'current' => false],
     ['icon' => '📋', 'text' => 'Lista de Questões', 'link' => '', 'current' => true]
 ];
 $page_title = 'Lista de Questões';
@@ -1059,7 +1059,7 @@ include 'header.php';
                         🏠 Voltar ao Início
                     </a>
                     <a href="escolher_assunto.php" class="nav-btn nav-btn-outline">
-                        📚 Escolher Assunto
+                        📚 Escolher Conteúdo
                     </a>
                 </div>
             </div>

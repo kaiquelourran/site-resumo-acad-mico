@@ -82,7 +82,7 @@ include '../header.php';
         <div style="display:flex; gap:10px; justify-content:flex-end; margin-bottom:15px;">
             <a href="dashboard.php" class="btn btn-outline">← Voltar ao Dashboard</a>
             <a href="add_questao.php" class="btn btn-success">+ Adicionar Questão</a>
-            <a href="gerenciar_assuntos.php" class="btn btn-primary">Gerenciar Assuntos</a>
+            <a href="gerenciar_assuntos.php" class="btn btn-primary">Gerenciar Conteúdos</a>
         </div>
 
         <?php if (!empty($mensagem_status)): ?>
@@ -117,7 +117,7 @@ include '../header.php';
                     <thead>
                         <tr>
                             <th>ID</th>
-                            <th>Assunto</th>
+                            <th>Conteúdo</th>
                             <th>Enunciado</th>
                             <th>Dificuldade</th>
                             <th>Alternativas</th>

@@ -313,7 +313,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['id_questao'])) {
                     <input type="hidden" name="id_questao" value="<?= htmlspecialchars($questao['id_questao']) ?>">
 
                     <div class="form-group">
-                        <label for="id_assunto">📋 Assunto:</label>
+                        <label for="id_assunto">📋 Conteúdo:</label>
                         <select id="id_assunto" name="id_assunto" required>
                             <?php foreach ($assuntos as $assunto): ?>
                                 <option value="<?= htmlspecialchars($assunto['id_assunto']) ?>" <?= ($assunto['id_assunto'] == $questao['id_assunto']) ? 'selected' : '' ?>>

@@ -512,7 +512,7 @@ try {
             gap: 24px;
         }
         
-        /* Cards de Assuntos */
+        /* Cards de Conteúdos */
         .subjects-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -901,7 +901,7 @@ $page_subtitle = 'Acompanhe sua evolução e estatísticas detalhadas';
                     </div>
                     <div class="stat-info">
                         <div class="stat-number"><?php echo count($stats_assuntos); ?></div>
-                        <div class="stat-label">Assuntos Estudados</div>
+                        <div class="stat-label">Conteúdos Estudados</div>
                     </div>
                     <div class="stat-trend">
                         <i class="fas fa-layer-group"></i>
@@ -979,7 +979,7 @@ $page_subtitle = 'Acompanhe sua evolução e estatísticas detalhadas';
             <div class="section-header">
                 <h2 class="section-title">
                     <i class="fas fa-chart-pie"></i>
-                    Performance por Assunto
+                    Performance por Conteúdo
                 </h2>
             </div>
             <div class="charts-grid">
@@ -1002,7 +1002,7 @@ $page_subtitle = 'Acompanhe sua evolução e estatísticas detalhadas';
             <div class="section-header">
                 <h2 class="section-title">
                     <i class="fas fa-books"></i>
-                    Desempenho por Assunto
+                    Desempenho por Conteúdo
                 </h2>
             </div>
             <div class="subjects-grid">
@@ -1095,7 +1095,7 @@ $page_subtitle = 'Acompanhe sua evolução e estatísticas detalhadas';
         // Dados para os gráficos
         const subjectData = <?php echo json_encode($stats_assuntos); ?>;
 
-        // Gráfico de Performance por Assunto
+        // Gráfico de Performance por Conteúdo
         const subjectCtx = document.getElementById('subjectChart').getContext('2d');
         new Chart(subjectCtx, {
             type: 'doughnut',

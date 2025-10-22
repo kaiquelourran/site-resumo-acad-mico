@@ -261,7 +261,7 @@ try {
                 </div>
                 <div class="stat-content">
                     <div class="stat-number"><?php echo count($stats_assuntos); ?></div>
-                    <div class="stat-label">Assuntos Estudados</div>
+                    <div class="stat-label">Conteúdos Estudados</div>
                 </div>
                 <div class="stat-trend positive">
                     <span class="trend-icon">
@@ -294,7 +294,7 @@ try {
                     </div>
                 </div>
 
-                <!-- Gráfico de Performance por Assunto -->
+                <!-- Gráfico de Performance por Conteúdo -->
                 <div class="chart-card">
                     <div class="chart-header">
                         <h3 class="chart-title">
@@ -303,7 +303,7 @@ try {
                                     <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                                 </svg>
                             </span>
-                            Performance por Assunto
+                            Performance por Conteúdo
                         </h3>
                     </div>
                     <div class="chart-container">
@@ -313,7 +313,7 @@ try {
             </div>
         </div>
 
-        <!-- Detalhes por Assunto -->
+        <!-- Detalhes por Conteúdo -->
         <div class="subjects-performance-section">
             <div class="section-header">
                 <h2 class="section-title">
@@ -322,7 +322,7 @@ try {
                             <path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"/>
                         </svg>
                     </span>
-                    Desempenho por Assunto
+                    Desempenho por Conteúdo
                 </h2>
             </div>
             <div class="subjects-grid">
@@ -473,7 +473,7 @@ try {
             }
         });
 
-        // Gráfico de Performance por Assunto
+        // Gráfico de Performance por Conteúdo
         const subjectCtx = document.getElementById('subjectChart').getContext('2d');
         new Chart(subjectCtx, {
             type: 'doughnut',

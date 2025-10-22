@@ -219,7 +219,7 @@
                             </a></li>
                             <li><a href="escolher_assunto.php" class="footer-link">
                                 <span class="footer-link-icon">📚</span>
-                                Assuntos
+                                Conteúdos
                             </a></li>
                             <li><a href="../index.html" class="footer-link">
                                 <span class="footer-link-icon">🌐</span>

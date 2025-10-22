@@ -29,7 +29,7 @@ $assuntos = $stmt_assuntos->fetchAll(PDO::FETCH_ASSOC);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerenciar Assuntos - Admin</title>
+    <title>Gerenciar Conteúdos - Admin</title>
     <link rel="icon" href="../../fotos/Logotipo_resumo_academico.png" type="image/png">
     <link rel="apple-touch-icon" href="../../fotos/minha-logo-apple.png">
     <link rel="stylesheet" href="../style.css">
@@ -190,17 +190,17 @@ $assuntos = $stmt_assuntos->fetchAll(PDO::FETCH_ASSOC);
                     <i class="fas fa-arrow-left"></i> Voltar
                 </button>
             </div>
-            <h1>🎯 Gerenciar Assuntos</h1>
-            <p>Administre os assuntos do sistema</p>
+            <h1>🎯 Gerenciar Conteúdos</h1>
+            <p>Administre os conteúdos do sistema</p>
             <div style="margin-top: 15px;">
                 <a href="dashboard.php" class="btn btn-secondary">← Voltar ao Dashboard</a>
-                <a href="add_assunto.php" class="btn btn-success">+ Adicionar Assunto</a>
+                <a href="add_assunto.php" class="btn btn-success">+ Adicionar Conteúdo</a>
             </div>
         </div>
 
         <?php if (isset($_GET['sucesso']) && $_GET['sucesso'] === 'excluido'): ?>
             <div class="alert alert-success">
-                <strong>✅ Sucesso!</strong> Assunto excluído com sucesso.
+                <strong>✅ Sucesso!</strong> Conteúdo excluído com sucesso.
             </div>
         <?php endif; ?>
 
@@ -211,7 +211,7 @@ $assuntos = $stmt_assuntos->fetchAll(PDO::FETCH_ASSOC);
         
         <div class="stats">
             <div class="stat-card">
-                <h3>Total de Assuntos</h3>
+                <h3>Total de Conteúdos</h3>
                 <div class="stat-number"><?= $total_assuntos ?></div>
             </div>
             <div class="stat-card">
