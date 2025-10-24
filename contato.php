@@ -121,7 +121,7 @@
                         <div class="contact-icon">📧</div>
                         <div class="contact-details">
                             <h4>E-mail</h4>
-                            <p>contato@resumoacademico.com</p>
+                            <p>kaiquenunis976@gmail.com</p>
                         </div>
                     </div>
 
@@ -140,9 +140,34 @@
                             <p>Até 24 horas em dias úteis</p>
                         </div>
                     </div>
+                </div>
+            </div>
 
+            <!-- EMBAIXADORA T.O -->
+            <div style="background: linear-gradient(135deg, #0072FF 0%, #00C6FF 100%); padding: 40px; border-radius: 15px; color: white; text-align: center; margin: 30px 0; box-shadow: 0 10px 40px rgba(0,114,255,0.3);">
+                <h3 style="font-size: 2em; margin-bottom: 15px; font-weight: 600; color: #ffffff;">💬 Contato</h3>
+                <p style="font-size: 1.2em; margin-bottom: 30px; opacity: 0.95;">
+                    Para entrar em contato, fale com a nossa <strong>embaixadora</strong>.
+                </p>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 25px; margin-top: 25px;">
+                    <div style="background: rgba(255,255,255,0.15); padding: 25px; border-radius: 15px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2);">
+                        <div style="font-size: 2.5em; margin-bottom: 15px;">📧</div>
+                        <h4 style="font-size: 1.3em; margin-bottom: 10px; font-weight: 600;">E-mail</h4>
+                        <p style="font-size: 1.1em; margin: 0; opacity: 0.95;">cleicevitoria02@gmail.com</p>
+                    </div>
+                    
+                    <a href="https://instagram.com/cleice.santtana" target="_blank" style="text-decoration: none; color: inherit; display: block;">
+                        <div class="instagram-card" style="background: rgba(255,255,255,0.15); padding: 25px; border-radius: 15px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); transition: all 0.3s ease; cursor: pointer;">
+                            <div style="font-size: 2.5em; margin-bottom: 15px;">📸</div>
+                            <h4 style="font-size: 1.3em; margin-bottom: 10px; font-weight: 600;">Instagram</h4>
+                            <p style="font-size: 1.1em; margin: 0; opacity: 0.95;">@cleice.santtana</p>
+                        </div>
+                    </a>
+                </div>
+            </div>
 
-                    <!-- FAQ RÁPIDO -->
+            <!-- FAQ RÁPIDO -->
                     <div class="faq-section">
                         <h4>❓ Perguntas Frequentes</h4>
                         <div class="faq-item">

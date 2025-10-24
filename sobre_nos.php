@@ -56,11 +56,32 @@
 <main style="padding: 140px 20px 60px; max-width: 1000px; margin: 0 auto;">
     
     <!-- HERO SECTION -->
-    <article style="background: linear-gradient(135deg, #0072FF 0%, #00C6FF 100%); padding: 60px 40px; border-radius: 20px; color: white; text-align: center; margin-bottom: 40px; box-shadow: 0 10px 40px rgba(0,114,255,0.3);">
-        <h2 style="font-size: 2.5em; margin-bottom: 20px;">🎓 Sobre o Resumo Acadêmico</h2>
-        <p style="font-size: 1.2em; line-height: 1.8; max-width: 800px; margin: 0 auto;">
-            Democratizando o conhecimento em Terapia Ocupacional através de um sistema inteligente de questões
-        </p>
+    <article style="background: linear-gradient(135deg, #0072FF 0%, #00C6FF 100%); padding: 0; border-radius: 25px; margin-bottom: 40px; box-shadow: 0 25px 80px rgba(0,114,255,0.4); overflow: hidden; position: relative;">
+        <!-- Decoração de fundo -->
+        <div style="position: absolute; top: -100px; right: -100px; width: 300px; height: 300px; background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%); border-radius: 50%;"></div>
+        <div style="position: absolute; bottom: -150px; left: -150px; width: 400px; height: 400px; background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%); border-radius: 50%;"></div>
+        
+        <!-- Conteúdo principal -->
+        <div style="padding: 35px 30px; text-align: center; color: white; position: relative; z-index: 2;">
+            <div style="max-width: 900px; margin: 0 auto;">
+                
+                <h2 style="font-size: 2.2em; margin-bottom: 12px; font-weight: 600; line-height: 1.2; color: #ffffff;">
+                    Resumo Acadêmico
+                </h2>
+                
+                <p style="font-size: 1.1em; line-height: 1.5; margin-bottom: 25px; font-weight: 300; opacity: 0.95; max-width: 550px; margin-left: auto; margin-right: auto;">
+                    A plataforma mais <strong>avançada</strong> e <strong>completa</strong> para estudantes e profissionais de <strong>Terapia Ocupacional</strong>
+                </p>
+                
+                
+                <!-- Call to action -->
+                <div style="margin-top: 20px;">
+                    <a href="questoes/index.php" style="display: inline-block; background: rgba(255,255,255,0.2); color: white; padding: 10px 25px; border-radius: 50px; text-decoration: none; font-weight: 600; font-size: 0.95em; transition: all 0.3s ease; backdrop-filter: blur(10px); border: 2px solid rgba(255,255,255,0.3);">
+                        🚀 Começar Agora
+                    </a>
+                </div>
+            </div>
+        </div>
     </article>
 
     <!-- NOSSA MISSÃO -->
@@ -122,10 +143,6 @@
         </p>
 
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin: 30px 0;">
-            <div style="background: #f9fafb; padding: 25px; border-radius: 10px; border-top: 4px solid #0072FF;">
-                <h5 style="color: #0072FF; font-size: 1.2em; margin-bottom: 10px;">📖 Precisão Acadêmica</h5>
-                <p style="line-height: 1.6;">Baseado em literatura científica atualizada e diretrizes profissionais</p>
-            </div>
             <div style="background: #f9fafb; padding: 25px; border-radius: 10px; border-top: 4px solid #00C6FF;">
                 <h5 style="color: #00C6FF; font-size: 1.2em; margin-bottom: 10px;">🎯 Relevância Prática</h5>
                 <p style="line-height: 1.6;">Questões que refletem situações reais da prática profissional</p>
@@ -164,18 +181,6 @@
         </div>
     </article>
 
-    <!-- NOSSA EQUIPE -->
-    <article style="background: white; padding: 40px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin-bottom: 30px;">
-        
-        <h3 style="color: #0072FF; font-size: 2em; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
-            <span>👥</span> Equipe e Desenvolvimento
-        </h3>
-        
-        <p style="font-size: 1.1em; line-height: 1.8; margin-bottom: 30px;">
-            O Resumo Acadêmico é fruto da colaboração entre profissionais de Terapia Ocupacional e desenvolvedores especializados em sistemas educacionais.
-        </p>
-
-    </article>
 
     <!-- NOSSOS VALORES -->
     <article style="background: white; padding: 40px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin-bottom: 30px;">
@@ -221,36 +226,17 @@
 
     <!-- NOSSO COMPROMISSO -->
     <article style="background: linear-gradient(135deg, #0072FF 0%, #00C6FF 100%); padding: 40px; border-radius: 15px; color: white; text-align: center; margin-bottom: 30px; box-shadow: 0 10px 40px rgba(0,114,255,0.3);">
-        <h3 style="font-size: 2em; margin-bottom: 20px;">🤝 Nosso Compromisso com Você</h3>
-        <p style="font-size: 1.1em; line-height: 1.8; max-width: 800px; margin: 0 auto;">
-            Estamos comprometidos em fornecer uma plataforma confiável, segura e eficaz para seu desenvolvimento profissional em Terapia Ocupacional. Seu sucesso é nosso sucesso!
+        <h3 style="font-size: 2em; margin-bottom: 20px; font-weight: 600; color: #ffffff;">🤝 Nosso Compromisso com Você</h3>
+        <p style="font-size: 1.1em; line-height: 1.8; max-width: 800px; margin: 0 auto 25px;">
+            Estamos comprometidos em fornecer uma plataforma <strong>confiável</strong>, <strong>segura</strong> e <strong>eficaz</strong> para seu desenvolvimento profissional em Terapia Ocupacional.
         </p>
-    </article>
-
-    <!-- ESTATÍSTICAS -->
-    <article style="background: white; padding: 40px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin-bottom: 30px;">
-        
-        <h3 style="color: #0072FF; font-size: 2em; margin-bottom: 30px; text-align: center;">📊 Nossos Números</h3>
-        
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 30px; text-align: center;">
-            <div>
-                <div style="font-size: 3em; font-weight: bold; color: #0072FF;">500+</div>
-                <div style="font-size: 1.1em; color: #666; margin-top: 10px;">Questões Disponíveis</div>
-            </div>
-            <div>
-                <div style="font-size: 3em; font-weight: bold; color: #00C6FF;">15+</div>
-                <div style="font-size: 1.1em; color: #666; margin-top: 10px;">Temas Cobertos</div>
-            </div>
-            <div>
-                <div style="font-size: 3em; font-weight: bold; color: #0072FF;">1000+</div>
-                <div style="font-size: 1.1em; color: #666; margin-top: 10px;">Usuários Cadastrados</div>
-            </div>
-            <div>
-                <div style="font-size: 3em; font-weight: bold; color: #00C6FF;">24/7</div>
-                <div style="font-size: 1.1em; color: #666; margin-top: 10px;">Disponibilidade</div>
-            </div>
+        <div style="background: rgba(255,255,255,0.15); padding: 20px; border-radius: 10px; margin-top: 20px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2);">
+            <p style="font-size: 1.2em; font-weight: 600; margin: 0; opacity: 0.95;">
+                "Seu sucesso é nosso sucesso!"
+            </p>
         </div>
     </article>
+
 
     <!-- CTA FINAL -->
     <div style="text-align: center; margin: 50px 0;">
