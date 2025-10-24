@@ -20,49 +20,26 @@ try {
     $tem_campo_tipo_assunto = false;
 }
 
-if ($tem_campo_tipo_assunto) {
-    // Buscar assuntos categorizados usando tipo_assunto
-    $sql = "SELECT a.id_assunto, a.nome, a.tipo_assunto, COUNT(q.id_questao) as total_questoes 
-            FROM assuntos a 
-            LEFT JOIN questoes q ON a.id_assunto = q.id_assunto 
-            GROUP BY a.id_assunto, a.nome, a.tipo_assunto 
-            ORDER BY a.tipo_assunto, a.nome";
-    $result = $pdo->query($sql)->fetchAll();
-    
-    // Mapear tipo_assunto para tipo (para compatibilidade com o frontend)
-    foreach ($result as &$assunto) {
-        switch ($assunto['tipo_assunto']) {
-            case 'concurso':
-                $assunto['tipo'] = 'concursos';
-                break;
-            case 'profissional':
-                $assunto['tipo'] = 'profissionais';
-                break;
-            case 'tema':
-            default:
-                $assunto['tipo'] = 'temas';
-                break;
-        }
-    }
-} else {
-    // Fallback: categorizar baseado no nome
-$sql = "SELECT a.id_assunto, a.nome, COUNT(q.id_questao) as total_questoes 
+// SEMPRE buscar com LEFT JOIN para garantir que todos os assuntos apareçam
+$sql = "SELECT a.id_assunto, a.nome, a.tipo_assunto, COUNT(q.id_questao) as total_questoes 
         FROM assuntos a 
         LEFT JOIN questoes q ON a.id_assunto = q.id_assunto 
-        GROUP BY a.id_assunto, a.nome 
-        ORDER BY a.nome";
-    $result = $pdo->query($sql)->fetchAll();
+        GROUP BY a.id_assunto, a.nome, a.tipo_assunto 
+        ORDER BY a.tipo_assunto, a.nome";
+$result = $pdo->query($sql)->fetchAll();
+
+// Mapear tipo_assunto para tipo (para compatibilidade com o frontend)
+// FORÇAR a categorização correta com trim e strtolower
+foreach ($result as &$assunto) {
+    $tipo_limpo = trim(strtolower($assunto['tipo_assunto'] ?? ''));
     
-    // Categorizar baseado no nome
-    foreach ($result as &$assunto) {
-        $nome = strtolower($assunto['nome']);
-        if (strpos($nome, 'concurso') !== false || strpos($nome, 'prova') !== false || strpos($nome, 'edital') !== false) {
-            $assunto['tipo'] = 'concursos';
-        } elseif (strpos($nome, 'profissional') !== false || strpos($nome, 'carreira') !== false || strpos($nome, 'trabalho') !== false) {
-            $assunto['tipo'] = 'profissionais';
-        } else {
-            $assunto['tipo'] = 'temas';
-        }
+    if ($tipo_limpo === 'concurso') {
+        $assunto['tipo'] = 'concursos';
+    } elseif ($tipo_limpo === 'profissional') {
+        $assunto['tipo'] = 'profissionais';
+    } else {
+        // Default é temas (inclui 'tema' e valores NULL)
+        $assunto['tipo'] = 'temas';
     }
 }
 
@@ -73,11 +50,38 @@ $categorias = [
     'profissionais' => []
 ];
 
+// DEBUG TEMPORÁRIO - REMOVER DEPOIS
+$debug_info = [];
+
 foreach ($result as $assunto) {
     $tipo = $assunto['tipo'] ?? 'temas';
+    
+    // DEBUG: Registrar cada assunto
+    $debug_info[] = [
+        'id' => $assunto['id_assunto'],
+        'nome' => $assunto['nome'],
+        'tipo_assunto_db' => $assunto['tipo_assunto'],
+        'tipo_mapeado' => $tipo,
+        'questoes' => $assunto['total_questoes']
+    ];
+    
     if (isset($categorias[$tipo])) {
         $categorias[$tipo][] = $assunto;
     }
+}
+
+// DEBUG: Mostrar no HTML (comentário invisível)
+if (!empty($debug_info)) {
+    echo "<!-- DEBUG INFO:\n";
+    echo "Total de assuntos: " . count($result) . "\n";
+    echo "Temas: " . count($categorias['temas']) . "\n";
+    echo "Concursos: " . count($categorias['concursos']) . "\n";
+    echo "Profissionais: " . count($categorias['profissionais']) . "\n\n";
+    echo "Detalhes:\n";
+    foreach ($debug_info as $d) {
+        echo "ID: {$d['id']} | Nome: {$d['nome']} | DB: {$d['tipo_assunto_db']} | Mapeado: {$d['tipo_mapeado']} | Questões: {$d['questoes']}\n";
+    }
+    echo "-->\n";
 }
 ?>
 
