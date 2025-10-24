@@ -1,4 +1,10 @@
 <?php
+// Limpar TODOS os caches possíveis
+if (function_exists('opcache_reset')) {
+    opcache_reset();
+}
+clearstatcache(true);
+
 session_start();
 require_once 'conexao.php';
 
