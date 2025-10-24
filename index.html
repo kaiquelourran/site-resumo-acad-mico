@@ -129,34 +129,22 @@
             <p style="text-align: center; margin-bottom: 40px;">Explore nosso banco de questões organizado em <strong>Temas</strong>, <strong>Concursos</strong> e <strong>Profissionais</strong> da TO</p>
             
             <div class="topics-grid" id="temas-container">
-                <!-- Loading placeholder -->
-                <div class="topic-card loading-card">
-                    <div class="loading-skeleton">
-                        <div class="skeleton-title"></div>
-                        <div class="skeleton-text"></div>
-                        <div class="skeleton-count"></div>
-                    </div>
+                <!-- Fallback estático - temas padrão -->
+                <div class="topic-card">
+                    <h3>👶 Marcos do Desenvolvimento Infantil</h3>
+                    <span class="question-count">20 questões disponíveis</span>
                 </div>
-                <div class="topic-card loading-card">
-                    <div class="loading-skeleton">
-                        <div class="skeleton-title"></div>
-                        <div class="skeleton-text"></div>
-                        <div class="skeleton-count"></div>
-                    </div>
+                <div class="topic-card">
+                    <h3>🧠 Transtorno do Déficit de Atenção e Hiperatividade (TDAH)</h3>
+                    <span class="question-count">20 questões disponíveis</span>
                 </div>
-                <div class="topic-card loading-card">
-                    <div class="loading-skeleton">
-                        <div class="skeleton-title"></div>
-                        <div class="skeleton-text"></div>
-                        <div class="skeleton-count"></div>
-                    </div>
+                <div class="topic-card">
+                    <h3>🌟 Transtorno do Espectro Autista (TEA)</h3>
+                    <span class="question-count">20 questões disponíveis</span>
                 </div>
-                <div class="topic-card loading-card">
-                    <div class="loading-skeleton">
-                        <div class="skeleton-title"></div>
-                        <div class="skeleton-text"></div>
-                        <div class="skeleton-count"></div>
-                    </div>
+                <div class="topic-card">
+                    <h3>📚 Dislexia e Dificuldades de Aprendizagem</h3>
+                    <span class="question-count">15 questões disponíveis</span>
                 </div>
             </div>
         </article>
@@ -395,21 +383,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
 async function carregarTemas() {
     try {
-        // Implementar timeout de 10 segundos
+        // Implementar timeout de 5 segundos (reduzido para não demorar muito)
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
         
         const response = await fetch('buscar_temas.php', {
             signal: controller.signal
         });
         clearTimeout(timeoutId);
         
+        if (!response.ok) {
+            throw new Error('Resposta não OK: ' + response.status);
+        }
+        
         const temas = await response.json();
         
         const container = document.getElementById('temas-container');
         
         if (temas && temas.length > 0) {
-            // Limpar loading placeholders
+            // Limpar conteúdo atual
             container.innerHTML = '';
             
             // Criar cards para cada tema
@@ -417,24 +409,11 @@ async function carregarTemas() {
                 const card = criarCardTema(tema);
                 container.appendChild(card);
             });
-        } else {
-            // Fallback: mostrar temas padrão se não houver dados
-            container.innerHTML = `
-                <div class="topic-card">
-                    <h3>📚 Temas de Terapia Ocupacional</h3>
-                    <span class="question-count">Carregando temas...</span>
-                </div>
-            `;
         }
+        // Se não houver temas ou estiver vazio, manter os temas estáticos que já estão no HTML
     } catch (error) {
-        // Fallback em caso de erro (erro silencioso para produção)
-        const container = document.getElementById('temas-container');
-        container.innerHTML = `
-            <div class="topic-card">
-                <h3>📚 Temas de Terapia Ocupacional</h3>
-                <span class="question-count">Temas disponíveis</span>
-            </div>
-        `;
+        // Em caso de erro, manter os temas estáticos que já estão no HTML
+        // Não fazer nada - os temas estáticos já estão visíveis
     }
 }
 

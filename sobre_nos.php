@@ -142,15 +142,24 @@
         </p>
 
         <div id="areas-cobertura" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0;">
-            <!-- Loading placeholder -->
-            <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; text-align: center; animation: pulse 1.5s ease-in-out infinite;">
-                <strong>Carregando temas...</strong>
+            <!-- Fallback estático - temas padrão -->
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                <strong>👶 Desenvolvimento Infantil</strong>
             </div>
-            <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; text-align: center; animation: pulse 1.5s ease-in-out infinite;">
-                <strong>Carregando temas...</strong>
+            <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                <strong>🧠 TDAH</strong>
             </div>
-            <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; text-align: center; animation: pulse 1.5s ease-in-out infinite;">
-                <strong>Carregando temas...</strong>
+            <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                <strong>🌟 TEA</strong>
+            </div>
+            <div style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                <strong>📚 Dislexia</strong>
+            </div>
+            <div style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                <strong>👥 Síndrome de Down</strong>
+            </div>
+            <div style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: #333; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                <strong>🔧 Síndrome de Apert</strong>
             </div>
         </div>
     </article>
@@ -442,27 +451,35 @@ document.addEventListener('DOMContentLoaded', function() {
 
 async function carregarAreasCobertura() {
     try {
-        // Implementar timeout de 10 segundos
+        // Implementar timeout de 5 segundos (reduzido)
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
         
         const response = await fetch('buscar_temas.php', {
             signal: controller.signal
         });
         clearTimeout(timeoutId);
         
+        if (!response.ok) {
+            throw new Error('Resposta não OK: ' + response.status);
+        }
+        
         const temas = await response.json();
         
         const container = document.getElementById('areas-cobertura');
         
         if (temas && temas.length > 0) {
-            // Limpar loading placeholders
+            // Limpar conteúdo atual
             container.innerHTML = '';
             
             // Cores para os cards
             const cores = [
-                '#e0f2fe', '#dbeafe', '#bfdbfe', '#93c5fd', '#60a5fa', '#3b82f6',
-                '#1d4ed8', '#1e40af', '#1e3a8a', '#312e81', '#581c87', '#7c2d12'
+                'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+                'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+                'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)'
             ];
             
             // Criar cards para cada tema
@@ -470,28 +487,11 @@ async function carregarAreasCobertura() {
                 const card = criarCardArea(tema, cores[index % cores.length]);
                 container.appendChild(card);
             });
-        } else {
-            // Fallback: mostrar temas padrão se não houver dados
-            container.innerHTML = `
-                <div style="background: #e0f2fe; padding: 15px; border-radius: 8px; text-align: center;">
-                    <strong>👶 Pediatria</strong>
-                </div>
-                <div style="background: #dbeafe; padding: 15px; border-radius: 8px; text-align: center;">
-                    <strong>🧠 Neurologia</strong>
-                </div>
-                <div style="background: #bfdbfe; padding: 15px; border-radius: 8px; text-align: center;">
-                    <strong>👴 Geriatria</strong>
-                </div>
-            `;
         }
+        // Se não houver temas ou estiver vazio, manter os temas estáticos que já estão no HTML
     } catch (error) {
-        // Fallback em caso de erro (erro silencioso para produção)
-        const container = document.getElementById('areas-cobertura');
-        container.innerHTML = `
-            <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; text-align: center;">
-                <strong>📚 Temas de Terapia Ocupacional</strong>
-            </div>
-        `;
+        // Em caso de erro, manter os temas estáticos que já estão no HTML
+        // Não fazer nada - os temas estáticos já estão visíveis
     }
 }
 
