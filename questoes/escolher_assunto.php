@@ -56,38 +56,11 @@ $categorias = [
     'profissionais' => []
 ];
 
-// DEBUG TEMPORÁRIO - REMOVER DEPOIS
-$debug_info = [];
-
 foreach ($result as $assunto) {
     $tipo = $assunto['tipo'] ?? 'temas';
-    
-    // DEBUG: Registrar cada assunto
-    $debug_info[] = [
-        'id' => $assunto['id_assunto'],
-        'nome' => $assunto['nome'],
-        'tipo_assunto_db' => $assunto['tipo_assunto'],
-        'tipo_mapeado' => $tipo,
-        'questoes' => $assunto['total_questoes']
-    ];
-    
     if (isset($categorias[$tipo])) {
         $categorias[$tipo][] = $assunto;
     }
-}
-
-// DEBUG: Mostrar no HTML (comentário invisível)
-if (!empty($debug_info)) {
-    echo "<!-- DEBUG INFO:\n";
-    echo "Total de assuntos: " . count($result) . "\n";
-    echo "Temas: " . count($categorias['temas']) . "\n";
-    echo "Concursos: " . count($categorias['concursos']) . "\n";
-    echo "Profissionais: " . count($categorias['profissionais']) . "\n\n";
-    echo "Detalhes:\n";
-    foreach ($debug_info as $d) {
-        echo "ID: {$d['id']} | Nome: {$d['nome']} | DB: {$d['tipo_assunto_db']} | Mapeado: {$d['tipo_mapeado']} | Questões: {$d['questoes']}\n";
-    }
-    echo "-->\n";
 }
 ?>
 
