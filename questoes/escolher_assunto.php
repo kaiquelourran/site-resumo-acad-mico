@@ -771,11 +771,10 @@ include 'header.php';
         });
     });
     
-    // Função para carregar mais conteúdos (estrutura preparada para AJAX futuro)
+    // Função para carregar mais conteúdos
     function carregarMais(categoria) {
-        console.log('Carregar mais:', categoria);
-        // TODO: Implementar carregamento via AJAX em prompt futuro
-        alert('Funcionalidade "Ver o resto" será implementada em breve!');
+        // Redirecionar para a página de listagem com o filtro da categoria
+        window.location.href = 'listar_questoes.php?categoria=' + categoria;
     }
     </script>
 <?php include 'footer.php'; ?>

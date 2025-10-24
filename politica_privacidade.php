@@ -33,8 +33,8 @@
     </nav>
     
     <!-- Botão Hambúrguer para Mobile -->
-    <button class="menu-toggle" id="menuToggle">
-        <span>☰</span>
+    <button class="menu-toggle" id="menuToggle" aria-label="Abrir menu de navegação" aria-expanded="false">
+        <span aria-hidden="true">☰</span>
     </button>
 </header>
 
@@ -294,9 +294,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (menuToggle && menu) {
         menuToggle.addEventListener('click', function() {
-            menu.classList.toggle('active');
+            const isActive = menu.classList.toggle('active');
             menuToggle.classList.toggle('active');
             body.classList.toggle('menu-open');
+            this.setAttribute('aria-expanded', isActive ? 'true' : 'false');
+            this.setAttribute('aria-label', isActive ? 'Fechar menu de navegação' : 'Abrir menu de navegação');
         });
 
         // Fechar menu ao clicar em um link

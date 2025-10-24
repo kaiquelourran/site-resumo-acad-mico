@@ -1122,7 +1122,7 @@ body {
     100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
 }
 .header .user-name { 
-    color: #FFFFFF; 
+    color: #FFFFFF !important; 
     font-weight: 500; 
     font-size: 16px;
     font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
@@ -1149,7 +1149,7 @@ body {
 .header .user-info:hover .user-name {
     text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
     transform: translateX(1px);
-    color: #f8f9fa;
+    color: #FFFFFF !important;
 }
 .header .header-btn {
     display: inline-flex; 
@@ -1225,7 +1225,8 @@ body {
   padding: 16px 24px 18px 40px;
   position: relative;
 }
-.header   content: "";
+.header .page-header-info::before {
+  content: "";
   position: absolute;
   left: 16px;
   top: 14px;
@@ -1256,6 +1257,7 @@ body {
         font-size: 15px;
         letter-spacing: 0.1px;
         font-weight: 500;
+        color: #FFFFFF !important;
     }
     .header .header-btn {
         padding: 9px 14px;

@@ -1,0 +1,25 @@
+# Robots.txt para Resumo Acadêmico - Terapia Ocupacional
+# Permitir acesso aos motores de busca
+
+User-agent: *
+Allow: /
+
+# Bloquear pastas administrativas e de logs
+Disallow: /questoes/admin/
+Disallow: /questoes/logs/
+Disallow: /original/
+
+# Bloquear arquivos temporários e de configuração
+Disallow: *.sql$
+Disallow: *.log$
+Disallow: *.txt$
+
+# Permitir acesso a recursos importantes
+Allow: /style.css
+Allow: /fotos/
+Allow: /apostilas/
+Allow: /questoes/*.php
+
+# Sitemap
+Sitemap: https://www.resumoacademico.com/sitemap.xml
+

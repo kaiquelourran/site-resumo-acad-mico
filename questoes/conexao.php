@@ -54,10 +54,31 @@ function get_id_column($pdo) {
     return 'id_usuario';
 }
 
+// Função auxiliar para inicializar sessão de forma segura
+if (!function_exists('init_secure_session')) {
+ function init_secure_session(): void {
+     if (session_status() === PHP_SESSION_NONE) {
+         ini_set('session.cookie_httponly', 1);
+         ini_set('session.use_only_cookies', 1);
+         ini_set('session.cookie_secure', 0); // Alterar para 1 com HTTPS
+         ini_set('session.cookie_samesite', 'Lax');
+         session_start();
+         
+         // Regenerar ID periodicamente
+         if (!isset($_SESSION['last_regeneration'])) {
+             $_SESSION['last_regeneration'] = time();
+         } elseif (time() - $_SESSION['last_regeneration'] > 1800) {
+             session_regenerate_id(true);
+             $_SESSION['last_regeneration'] = time();
+         }
+     }
+ }
+}
+
 // Helpers de segurança e sessão
 if (!function_exists('csrf_token')) {
  function csrf_token(): string {
-     if (session_status() === PHP_SESSION_NONE) { session_start(); }
+     init_secure_session();
      if (!isset($_SESSION['csrf_token'])) {
          $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
      }
@@ -73,8 +94,57 @@ if (!function_exists('csrf_field')) {
 
 if (!function_exists('validate_csrf')) {
  function validate_csrf(): bool {
-     if (session_status() === PHP_SESSION_NONE) { session_start(); }
+     init_secure_session();
      return isset($_POST['csrf_token'], $_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $_POST['csrf_token']);
+ }
+}
+
+// Função auxiliar para ler JSON do php://input com segurança
+if (!function_exists('get_json_input')) {
+ function get_json_input($max_size = 1048576) { // 1MB default
+     $input = file_get_contents('php://input', false, null, 0, $max_size);
+     
+     if ($input === false || empty($input)) {
+         return null;
+     }
+     
+     $data = json_decode($input, true);
+     
+     if (json_last_error() !== JSON_ERROR_NONE) {
+         error_log('Erro ao decodificar JSON: ' . json_last_error_msg());
+         return null;
+     }
+     
+     return $data;
+ }
+}
+
+// Função auxiliar para sanitizar inputs
+if (!function_exists('sanitize_input')) {
+ function sanitize_input($data, $type = 'string') {
+     if (is_array($data)) {
+         return array_map(function($item) use ($type) {
+             return sanitize_input($item, $type);
+         }, $data);
+     }
+     
+     $data = trim($data);
+     $data = stripslashes($data);
+     
+     switch ($type) {
+         case 'int':
+             return filter_var($data, FILTER_VALIDATE_INT) !== false ? (int)$data : 0;
+         case 'float':
+             return filter_var($data, FILTER_VALIDATE_FLOAT) !== false ? (float)$data : 0.0;
+         case 'email':
+             return filter_var($data, FILTER_SANITIZE_EMAIL);
+         case 'url':
+             return filter_var($data, FILTER_SANITIZE_URL);
+         case 'html':
+             return htmlspecialchars($data, ENT_QUOTES, 'UTF-8');
+         default: // string
+             return htmlspecialchars(strip_tags($data), ENT_QUOTES, 'UTF-8');
+     }
  }
 }
 ?> 

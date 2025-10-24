@@ -63,7 +63,7 @@ if (!isset($page_subtitle)) {
                             <?php echo strtoupper(substr($display_name, 0, 1)); ?>
                         <?php endif; ?>
                     </div>
-                    <span class="user-name"><?php echo htmlspecialchars($display_name); ?></span>
+                    <span class="user-name" style="color: #FFFFFF !important;"><?php echo htmlspecialchars($display_name); ?></span>
                 </div>
                 <?php 
                 // Verificar se estamos na página de gerenciar comentários

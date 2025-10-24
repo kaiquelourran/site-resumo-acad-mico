@@ -6,6 +6,22 @@
     <meta name="description" content="Sistema interativo de questões para estudantes e profissionais de Terapia Ocupacional. Teste seus conhecimentos com feedback imediato e estatísticas detalhadas.">
     <meta name="keywords" content="Terapia Ocupacional, questões, TO, estudo, banco de questões, avaliação">
     <title>Resumo Acadêmico - Sistema de Questões de Terapia Ocupacional</title>
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.resumoacademico.com/">
+    <meta property="og:title" content="Resumo Acadêmico - Sistema de Questões de Terapia Ocupacional">
+    <meta property="og:description" content="Sistema interativo de questões para estudantes e profissionais de Terapia Ocupacional. Teste seus conhecimentos com feedback imediato e estatísticas detalhadas.">
+    <meta property="og:image" content="https://www.resumoacademico.com/fotos/Logotipo_resumo_academico.png">
+    <meta property="og:locale" content="pt_BR">
+    <meta property="og:site_name" content="Resumo Acadêmico">
+    
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://www.resumoacademico.com/">
+    <meta name="twitter:title" content="Resumo Acadêmico - Sistema de Questões de Terapia Ocupacional">
+    <meta name="twitter:description" content="Sistema interativo de questões para estudantes e profissionais de Terapia Ocupacional. Teste seus conhecimentos com feedback imediato e estatísticas detalhadas.">
+    <meta name="twitter:image" content="https://www.resumoacademico.com/fotos/Logotipo_resumo_academico.png">
     <link rel="stylesheet" href="style.css">
     <link rel="icon" href="fotos/Logotipo_resumo_academico.png" type="image/png">
     <link rel="apple-touch-icon" href="fotos/minha-logo-apple.png">
@@ -43,8 +59,8 @@
     </nav>
     
     <!-- Botão Hambúrguer para Mobile -->
-    <button class="menu-toggle" id="menuToggle">
-        <span>☰</span>
+    <button class="menu-toggle" id="menuToggle" aria-label="Abrir menu de navegação" aria-expanded="false">
+        <span aria-hidden="true">☰</span>
     </button>
 </header>
 
@@ -342,9 +358,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // Toggle menu
     if (menuToggle) {
         menuToggle.addEventListener('click', function() {
-            menu.classList.toggle('active');
+            const isActive = menu.classList.toggle('active');
             overlay.classList.toggle('active');
-            this.querySelector('span').textContent = menu.classList.contains('active') ? '✕' : '☰';
+            this.querySelector('span').textContent = isActive ? '✕' : '☰';
+            this.setAttribute('aria-expanded', isActive ? 'true' : 'false');
+            this.setAttribute('aria-label', isActive ? 'Fechar menu de navegação' : 'Abrir menu de navegação');
         });
     }
     
@@ -377,7 +395,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
 async function carregarTemas() {
     try {
-        const response = await fetch('buscar_temas.php');
+        // Implementar timeout de 10 segundos
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        
+        const response = await fetch('buscar_temas.php', {
+            signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        
         const temas = await response.json();
         
         const container = document.getElementById('temas-container');
@@ -401,8 +427,7 @@ async function carregarTemas() {
             `;
         }
     } catch (error) {
-        console.error('Erro ao carregar temas:', error);
-        // Fallback em caso de erro
+        // Fallback em caso de erro (erro silencioso para produção)
         const container = document.getElementById('temas-container');
         container.innerHTML = `
             <div class="topic-card">

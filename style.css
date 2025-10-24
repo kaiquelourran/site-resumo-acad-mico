@@ -1632,6 +1632,22 @@ footer {
     }
 }
 
+/* ==========================================
+   ACESSIBILIDADE - REDUZIR ANIMAÇÕES
+   ========================================== */
+
+/* Respeitar preferência do usuário por animações reduzidas */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
 /* RODAPÉ - Estilo Moderno como index.php */
 footer {
     margin-top: 40px;
@@ -1990,7 +2006,7 @@ footer .footer-contact-item.animated-contact:hover .footer-contact-icon {
     color: white;
     padding: 20px;
     box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
-    z-index: 9999;
+    z-index: 200;
     animation: slideUp 0.5s ease-out;
 }
 

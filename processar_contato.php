@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once 'init_session.php';
 
 // Verificar se o formulário foi enviado via POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -76,9 +76,21 @@ $log_data = [
     'mensagem' => $mensagem
 ];
 
-// Salvar em arquivo de log (opcional)
-$log_file = 'contatos_log.txt';
-$log_entry = date('Y-m-d H:i:s') . " | " . $nome . " | " . $email . " | " . $assunto_formatado . " | " . substr($mensagem, 0, 100) . "...\n";
+// Salvar em arquivo de log protegido (opcional)
+// IMPORTANTE: Este arquivo está na pasta questoes que tem .htaccess de proteção
+$log_file = 'questoes/logs/contatos_log.txt';
+$log_dir = dirname($log_file);
+
+// Criar diretório de logs se não existir
+if (!is_dir($log_dir)) {
+    mkdir($log_dir, 0755, true);
+    // Criar .htaccess para proteger a pasta
+    file_put_contents($log_dir . '/.htaccess', "Deny from all\n");
+}
+
+// Salvar log com hash do email (não expor dados sensíveis)
+$email_hash = substr(md5($email), 0, 8);
+$log_entry = date('Y-m-d H:i:s') . " | " . $email_hash . " | " . $assunto_formatado . "\n";
 file_put_contents($log_file, $log_entry, FILE_APPEND | LOCK_EX);
 
 // Configurar mensagem de sucesso

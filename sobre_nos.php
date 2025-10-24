@@ -6,6 +6,21 @@
     <meta name="description" content="Conheça o Resumo Acadêmico - Sistema especializado em questões de Terapia Ocupacional. Nossa missão, valores e compromisso com a educação de qualidade.">
     <meta name="robots" content="index, follow">
     <title>Sobre Nós - Resumo Acadêmico | Terapia Ocupacional</title>
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.resumoacademico.com/sobre_nos.php">
+    <meta property="og:title" content="Sobre Nós - Resumo Acadêmico | Terapia Ocupacional">
+    <meta property="og:description" content="Conheça o Resumo Acadêmico - Sistema especializado em questões de Terapia Ocupacional. Nossa missão, valores e compromisso com a educação de qualidade.">
+    <meta property="og:image" content="https://www.resumoacademico.com/fotos/Logotipo_resumo_academico.png">
+    <meta property="og:locale" content="pt_BR">
+    
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://www.resumoacademico.com/sobre_nos.php">
+    <meta name="twitter:title" content="Sobre Nós - Resumo Acadêmico | Terapia Ocupacional">
+    <meta name="twitter:description" content="Conheça o Resumo Acadêmico - Sistema especializado em questões de Terapia Ocupacional. Nossa missão, valores e compromisso com a educação de qualidade.">
+    <meta name="twitter:image" content="https://www.resumoacademico.com/fotos/Logotipo_resumo_academico.png">
     <link rel="stylesheet" href="style.css">
     <link rel="icon" href="fotos/Logotipo_resumo_academico.png" type="image/png">
     
@@ -33,8 +48,8 @@
     </nav>
     
     <!-- Botão Hambúrguer para Mobile -->
-    <button class="menu-toggle" id="menuToggle">
-        <span>☰</span>
+    <button class="menu-toggle" id="menuToggle" aria-label="Abrir menu de navegação" aria-expanded="false">
+        <span aria-hidden="true">☰</span>
     </button>
 </header>
 
@@ -390,9 +405,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // Toggle menu
     if (menuToggle) {
         menuToggle.addEventListener('click', function() {
-            menu.classList.toggle('active');
+            const isActive = menu.classList.toggle('active');
             overlay.classList.toggle('active');
-            this.querySelector('span').textContent = menu.classList.contains('active') ? '✕' : '☰';
+            this.querySelector('span').textContent = isActive ? '✕' : '☰';
+            this.setAttribute('aria-expanded', isActive ? 'true' : 'false');
+            this.setAttribute('aria-label', isActive ? 'Fechar menu de navegação' : 'Abrir menu de navegação');
         });
     }
     
@@ -425,7 +442,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
 async function carregarAreasCobertura() {
     try {
-        const response = await fetch('buscar_temas.php');
+        // Implementar timeout de 10 segundos
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        
+        const response = await fetch('buscar_temas.php', {
+            signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        
         const temas = await response.json();
         
         const container = document.getElementById('areas-cobertura');
@@ -460,8 +485,7 @@ async function carregarAreasCobertura() {
             `;
         }
     } catch (error) {
-        console.error('Erro ao carregar áreas de cobertura:', error);
-        // Fallback em caso de erro
+        // Fallback em caso de erro (erro silencioso para produção)
         const container = document.getElementById('areas-cobertura');
         container.innerHTML = `
             <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; text-align: center;">

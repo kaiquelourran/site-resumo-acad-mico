@@ -1,0 +1,76 @@
+# .htaccess para pasta Questoes
+
+# ==========================================
+# PROTEÇÃO DE ARQUIVOS SENSÍVEIS
+# ==========================================
+
+# Proteger arquivos de configuração
+<FilesMatch "^(config|conexao|init_session|security_headers)\.php$">
+    Order Allow,Deny
+    Allow from all
+</FilesMatch>
+
+# Proteger scripts de desenvolvimento/manutenção
+<FilesMatch "^(force_|criar_|corrigir_|gerar_|remover_|inserir_).*\.php$">
+    Order Allow,Deny
+    Deny from all
+    # Permitir apenas do localhost em desenvolvimento
+    Allow from 127.0.0.1
+    Allow from ::1
+</FilesMatch>
+
+# Proteger arquivos SQL
+<FilesMatch "\.(sql|log)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# Proteger README e documentação (opcional)
+<FilesMatch "^README.*\.(md|txt)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# ==========================================
+# SEGURANÇA ADICIONAL
+# ==========================================
+
+# Desabilitar listagem de diretórios
+Options -Indexes
+
+# Prevenir acesso direto a includes
+<FilesMatch "^(header|footer)\.php$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# ==========================================
+# PROTEÇÃO CSRF E XSS
+# ==========================================
+
+# Headers de segurança (caso o PHP não os envie)
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# ==========================================
+# PERFORMANCE
+# ==========================================
+
+# Cache para arquivos estáticos
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/gif "access plus 1 year"
+</IfModule>
+
+# Compressão GZIP
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/css application/javascript text/javascript
+</IfModule>
+

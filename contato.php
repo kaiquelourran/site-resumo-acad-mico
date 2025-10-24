@@ -36,10 +36,10 @@
             </ul>
         </nav>
         
-        <!-- Botão Hambúrguer para Mobile -->
-        <button class="menu-toggle" id="menuToggle">
-            <span>☰</span>
-        </button>
+    <!-- Botão Hambúrguer para Mobile -->
+    <button class="menu-toggle" id="menuToggle" aria-label="Abrir menu de navegação" aria-expanded="false">
+        <span aria-hidden="true">☰</span>
+    </button>
     </header>
 
     <!-- CONTEÚDO PRINCIPAL -->
@@ -52,7 +52,7 @@
 
             <!-- MENSAGEM DE STATUS -->
             <?php
-            session_start();
+            require_once 'init_session.php';
             if (isset($_SESSION['mensagem_contato'])) {
                 $tipo = $_SESSION['mensagem_tipo'] ?? 'success';
                 $cor = $tipo === 'success' ? '#10b981' : '#ef4444';
@@ -246,7 +246,7 @@
                         <a href="contato.php" class="footer-legal-link">Contato</a>
                     </div>
                     <div class="footer-legal-text">
-                        <p>© 2024 Resumo Acadêmico. Todos os direitos reservados.</p>
+                        <p>© <?php echo date('Y'); ?> Resumo Acadêmico. Todos os direitos reservados.</p>
                     </div>
                 </div>
             </div>
@@ -309,9 +309,11 @@
         // Toggle menu
         if (menuToggle) {
             menuToggle.addEventListener('click', function() {
-                menu.classList.toggle('active');
+                const isActive = menu.classList.toggle('active');
                 overlay.classList.toggle('active');
-                this.querySelector('span').textContent = menu.classList.contains('active') ? '✕' : '☰';
+                this.querySelector('span').textContent = isActive ? '✕' : '☰';
+                this.setAttribute('aria-expanded', isActive ? 'true' : 'false');
+                this.setAttribute('aria-label', isActive ? 'Fechar menu de navegação' : 'Abrir menu de navegação');
             });
         }
         
