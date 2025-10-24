@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Página Não Encontrada - Resumo Acadêmico</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="icon" href="fotos/Logotipo_resumo_academico.png" type="image/png">
+    <link rel="icon" href="fotos/minha-logo-apple.png" type="image/png">
 </head>
 <body>
 <header>

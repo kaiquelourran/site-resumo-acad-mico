@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Contato - Resumo Acadêmico</title>
     <meta name="description" content="Entre em contato com o Resumo Acadêmico. Envie suas dúvidas, sugestões ou solicite informações sobre nosso sistema de questões.">
-    <link rel="icon" href="fotos/Logotipo_resumo_academico.png" type="image/png">
+    <link rel="icon" href="fotos/minha-logo-apple.png" type="image/png">
     <link rel="apple-touch-icon" href="fotos/minha-logo-apple.png">
     
     <!-- Google tag (gtag.js) -->

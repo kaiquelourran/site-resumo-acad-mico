@@ -7,7 +7,7 @@
     <meta name="robots" content="index, follow">
     <title>Política de Privacidade - Resumo Acadêmico</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="icon" href="fotos/Logotipo_resumo_academico.png" type="image/png">
+    <link rel="icon" href="fotos/minha-logo-apple.png" type="image/png">
     
     <!-- Espaço reservado para código de verificação Google AdSense -->
     <!-- 

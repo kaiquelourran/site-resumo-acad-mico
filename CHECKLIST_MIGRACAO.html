@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checklist de Migração - Hostinger</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Arial, sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container { 
+            max-width: 1000px; 
+            margin: 0 auto; 
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 10px 50px rgba(0,0,0,0.3);
+        }
+        h1 { 
+            color: #667eea; 
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        h2 { 
+            color: #764ba2; 
+            margin: 30px 0 20px 0;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+        .problema { 
+            background: #fee; 
+            border-left: 4px solid #c00;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .solucao { 
+            background: #efe; 
+            border-left: 4px solid #0c0;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .aviso { 
+            background: #ffe; 
+            border-left: 4px solid #fc0;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .info { 
+            background: #eef; 
+            border-left: 4px solid #00c;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .comando {
+            background: #2d2d30;
+            color: #4EC9B0;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background: #667eea;
+            color: white;
+            font-weight: bold;
+        }
+        tr:hover {
+            background: #f5f5f5;
+        }
+        .checkbox {
+            width: 25px;
+            height: 25px;
+            cursor: pointer;
+        }
+        .badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+            margin: 5px;
+        }
+        .badge-ok { background: #4EC9B0; color: white; }
+        .badge-erro { background: #f48771; color: white; }
+        .badge-aviso { background: #dcdcaa; color: #333; }
+        ul { margin-left: 25px; margin-top: 10px; }
+        li { margin: 8px 0; }
+        .destaque {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📋 Checklist de Migração - XAMPP → Hostinger</h1>
+
+        <div class="problema">
+            <h3>❌ PROBLEMA IDENTIFICADO:</h3>
+            <p><strong>O layout está quebrado na Hostinger!</strong></p>
+            <p>Possíveis causas:</p>
+            <ul>
+                <li>🔴 CSS não está carregando (case-sensitivity)</li>
+                <li>🔴 JavaScript não está executando</li>
+                <li>🔴 Banco de dados não está conectando</li>
+                <li>🔴 Arquivos não foram enviados corretamente</li>
+            </ul>
+        </div>
+
+        <h2>🔍 PASSO 1: Verificar Arquivos Localmente</h2>
+        
+        <div class="info">
+            <h3>Arquivos que DEVEM existir na raiz:</h3>
+            <table>
+                <tr>
+                    <th>✅</th>
+                    <th>Arquivo</th>
+                    <th>Case OK?</th>
+                    <th>Descrição</th>
+                </tr>
+                <tr>
+                    <td><input type="checkbox" class="checkbox"></td>
+                    <td><strong>index.html</strong></td>
+                    <td><span class="badge badge-ok">✅ OK</span></td>
+                    <td>Página principal (COM FALLBACKS ESTÁTICOS)</td>
+                </tr>
+                <tr>
+                    <td><input type="checkbox" class="checkbox"></td>
+                    <td><strong>style.css</strong></td>
+                    <td><span class="badge badge-ok">✅ OK</span></td>
+                    <td>Arquivo CSS principal (minúsculas)</td>
+                </tr>
+                <tr>
+                    <td><input type="checkbox" class="checkbox"></td>
+                    <td><strong>buscar_temas.php</strong></td>
+                    <td><span class="badge badge-ok">✅ OK</span></td>
+                    <td>API de temas</td>
+                </tr>
+                <tr>
+                    <td><input type="checkbox" class="checkbox"></td>
+                    <td><strong>sobre_nos.php</strong></td>
+                    <td><span class="badge badge-ok">✅ OK</span></td>
+                    <td>Página sobre (COM FALLBACKS ESTÁTICOS)</td>
+                </tr>
+                <tr>
+                    <td><input type="checkbox" class="checkbox"></td>
+                    <td><strong>contato.php</strong></td>
+                    <td><span class="badge badge-ok">✅ OK</span></td>
+                    <td>Página de contato</td>
+                </tr>
+                <tr>
+                    <td><input type="checkbox" class="checkbox"></td>
+                    <td><strong>origem_to.html</strong></td>
+                    <td><span class="badge badge-ok">✅ OK</span></td>
+                    <td>Página origem TO</td>
+                </tr>
+                <tr>
+                    <td><input type="checkbox" class="checkbox"></td>
+                    <td><strong>politica_privacidade.php</strong></td>
+                    <td><span class="badge badge-ok">✅ OK</span></td>
+                    <td>Política de privacidade</td>
+                </tr>
+                <tr>
+                    <td><input type="checkbox" class="checkbox"></td>
+                    <td><strong>manifest.json</strong></td>
+                    <td><span class="badge badge-ok">✅ OK</span></td>
+                    <td>Manifest PWA</td>
+                </tr>
+                <tr>
+                    <td><input type="checkbox" class="checkbox"></td>
+                    <td><strong>robots.txt</strong></td>
+                    <td><span class="badge badge-ok">✅ OK</span></td>
+                    <td>SEO robots</td>
+                </tr>
+                <tr>
+                    <td><input type="checkbox" class="checkbox"></td>
+                    <td><strong>sitemap.xml</strong></td>
+                    <td><span class="badge badge-ok">✅ OK</span></td>
+                    <td>SEO sitemap</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="aviso">
+            <h3>⚠️ PASTAS que DEVEM existir:</h3>
+            <table>
+                <tr>
+                    <th>✅</th>
+                    <th>Pasta</th>
+                    <th>Case OK?</th>
+                    <th>Descrição</th>
+                </tr>
+                <tr>
+                    <td><input type="checkbox" class="checkbox"></td>
+                    <td><strong>fotos/</strong></td>
+                    <td><span class="badge badge-ok">✅ OK</span></td>
+                    <td>Imagens do site (TUDO MINÚSCULAS)</td>
+                </tr>
+                <tr>
+                    <td><input type="checkbox" class="checkbox"></td>
+                    <td><strong>questoes/</strong></td>
+                    <td><span class="badge badge-ok">✅ OK</span></td>
+                    <td>Sistema de questões (TUDO MINÚSCULAS)</td>
+                </tr>
+                <tr>
+                    <td><input type="checkbox" class="checkbox"></td>
+                    <td><strong>videos/</strong></td>
+                    <td><span class="badge badge-ok">✅ OK</span></td>
+                    <td>Vídeos do site (TUDO MINÚSCULAS)</td>
+                </tr>
+            </table>
+        </div>
+
+        <h2>🔧 PASSO 2: Corrigir Problemas de Case-Sensitivity</h2>
+
+        <div class="solucao">
+            <h3>✅ REGRA DE OURO:</h3>
+            <p style="font-size: 1.3em; font-weight: bold; color: #0c0;">TUDO EM MINÚSCULAS!</p>
+            <p>Linux é case-sensitive:</p>
+            <ul>
+                <li>❌ <code>Style.css</code> → ✅ <code>style.css</code></li>
+                <li>❌ <code>Fotos/</code> → ✅ <code>fotos/</code></li>
+                <li>❌ <code>Questoes/</code> → ✅ <code>questoes/</code></li>
+            </ul>
+        </div>
+
+        <div class="comando">
+            <h3 style="color: white;">🔧 Comandos para correção (se necessário):</h3>
+            <p># Renomear arquivo para minúsculas:</p>
+            <code>mv Style.css style.css</code>
+            <br><br>
+            <p># Renomear pasta para minúsculas:</p>
+            <code>mv Fotos fotos</code>
+            <br><br>
+            <p># Verificar permissões:</p>
+            <code>chmod 644 *.css *.html *.php</code><br>
+            <code>chmod 755 */</code>
+        </div>
+
+        <h2>📤 PASSO 3: Fazer Upload para Hostinger</h2>
+
+        <div class="info">
+            <h3>Ordem de Upload:</h3>
+            <ol>
+                <li><strong>1. Fazer backup do site atual</strong> (se houver)</li>
+                <li><strong>2. Enviar arquivos corrigidos:</strong>
+                    <ul>
+                        <li>✅ index.html (COM FALLBACKS)</li>
+                        <li>✅ style.css</li>
+                        <li>✅ buscar_temas.php</li>
+                        <li>✅ sobre_nos.php (COM FALLBACKS)</li>
+                        <li>✅ contato.php</li>
+                        <li>✅ origem_to.html</li>
+                        <li>✅ politica_privacidade.php</li>
+                        <li>✅ manifest.json</li>
+                        <li>✅ robots.txt</li>
+                        <li>✅ sitemap.xml</li>
+                    </ul>
+                </li>
+                <li><strong>3. Enviar pastas:</strong>
+                    <ul>
+                        <li>✅ fotos/ (todos os arquivos)</li>
+                        <li>✅ questoes/ (todos os arquivos)</li>
+                        <li>✅ videos/ (todos os arquivos)</li>
+                    </ul>
+                </li>
+                <li><strong>4. Atualizar questoes/conexao.php:</strong>
+                    <ul>
+                        <li>❌ <code>$is_local = true;</code></li>
+                        <li>✅ <code>$is_local = false;</code></li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+
+        <h2>🧪 PASSO 4: Testar na Hostinger</h2>
+
+        <div class="aviso">
+            <h3>URLs para Testar:</h3>
+            <ol>
+                <li><strong>Diagnóstico:</strong>
+                    <div class="comando">
+                        https://www.resumoacademico.com/diagnostico.php
+                    </div>
+                    <p>Este arquivo vai mostrar se o banco está conectado e se buscar_temas.php funciona.</p>
+                </li>
+                <li><strong>Auditoria Case:</strong>
+                    <div class="comando">
+                        https://www.resumoacademico.com/auditoria_case_sensitivity.php
+                    </div>
+                    <p>Este arquivo vai mostrar se há problemas de case-sensitivity.</p>
+                </li>
+                <li><strong>Site Principal:</strong>
+                    <div class="comando">
+                        https://www.resumoacademico.com/
+                    </div>
+                    <p>Deve mostrar o layout correto com cards lado a lado.</p>
+                </li>
+            </ol>
+        </div>
+
+        <h2>🐛 PASSO 5: Debug no Navegador</h2>
+
+        <div class="info">
+            <h3>Como verificar o que está falhando:</h3>
+            <ol>
+                <li>Pressione <strong>F12</strong> no navegador</li>
+                <li>Vá na aba <strong>Network</strong></li>
+                <li>Recarregue a página (<strong>Ctrl+F5</strong>)</li>
+                <li>Procure por arquivos em vermelho (erro 404)</li>
+                <li>Verifique:
+                    <ul>
+                        <li>✅ style.css carregou? (Status 200)</li>
+                        <li>✅ buscar_temas.php retornou JSON? (Status 200)</li>
+                        <li>✅ Imagens carregaram? (Status 200)</li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+
+        <h2>💡 PASSO 6: Solução Definitiva</h2>
+
+        <div class="destaque">
+            <h3>🎯 SE AINDA NÃO FUNCIONAR:</h3>
+            <p>Use a versão com CSS INLINE:</p>
+            <ol style="text-align: left; margin: 20px auto; max-width: 600px;">
+                <li>Renomeie <code>index.html</code> para <code>index_old.html</code></li>
+                <li>Renomeie <code>index_fix.html</code> para <code>index.html</code></li>
+                <li>Faça upload</li>
+                <li>Teste novamente</li>
+            </ol>
+            <p style="margin-top: 20px;">
+                <strong>O index_fix.html tem CSS embutido e vai funcionar com certeza!</strong>
+            </p>
+        </div>
+
+        <h2>📊 Resumo da Solução</h2>
+
+        <table>
+            <tr>
+                <th>Problema</th>
+                <th>Causa</th>
+                <th>Solução</th>
+            </tr>
+            <tr>
+                <td>CSS não carrega</td>
+                <td>Case-sensitivity</td>
+                <td>Usar minúsculas em tudo</td>
+            </tr>
+            <tr>
+                <td>Temas não aparecem</td>
+                <td>JavaScript/API falha</td>
+                <td>Usar fallbacks estáticos</td>
+            </tr>
+            <tr>
+                <td>Layout quebrado</td>
+                <td>CSS não aplicado</td>
+                <td>Usar index_fix.html (CSS inline)</td>
+            </tr>
+            <tr>
+                <td>Banco não conecta</td>
+                <td>$is_local = true</td>
+                <td>Mudar para false na Hostinger</td>
+            </tr>
+        </table>
+
+        <div class="solucao" style="margin-top: 40px;">
+            <h3>✅ CHECKLIST FINAL:</h3>
+            <ul style="font-size: 1.1em;">
+                <li><input type="checkbox" class="checkbox"> Todos os arquivos em minúsculas</li>
+                <li><input type="checkbox" class="checkbox"> index.html tem fallbacks estáticos</li>
+                <li><input type="checkbox" class="checkbox"> style.css existe e está correto</li>
+                <li><input type="checkbox" class="checkbox"> buscar_temas.php foi enviado</li>
+                <li><input type="checkbox" class="checkbox"> questoes/conexao.php com $is_local = false</li>
+                <li><input type="checkbox" class="checkbox"> Pastas fotos/ questoes/ videos/ enviadas</li>
+                <li><input type="checkbox" class="checkbox"> Testado com F12 → Network</li>
+                <li><input type="checkbox" class="checkbox"> diagnostico.php rodou com sucesso</li>
+            </ul>
+        </div>
+
+        <div class="info" style="margin-top: 30px; text-align: center;">
+            <p><strong>📅 Data:</strong> <span id="data"></span></p>
+            <p><strong>⏰ Hora:</strong> <span id="hora"></span></p>
+        </div>
+    </div>
+
+    <script>
+        // Mostrar data e hora
+        const agora = new Date();
+        document.getElementById('data').textContent = agora.toLocaleDateString('pt-BR');
+        document.getElementById('hora').textContent = agora.toLocaleTimeString('pt-BR');
+
+        // Salvar checkboxes no localStorage
+        const checkboxes = document.querySelectorAll('.checkbox');
+        checkboxes.forEach((checkbox, index) => {
+            const saved = localStorage.getItem('checkbox_' + index);
+            if (saved === 'true') {
+                checkbox.checked = true;
+            }
+            
+            checkbox.addEventListener('change', function() {
+                localStorage.setItem('checkbox_' + index, this.checked);
+            });
+        });
+    </script>
+</body>
+</html>

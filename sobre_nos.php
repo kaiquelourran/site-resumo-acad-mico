@@ -12,7 +12,7 @@
     <meta property="og:url" content="https://www.resumoacademico.com/sobre_nos.php">
     <meta property="og:title" content="Sobre Nós - Resumo Acadêmico | Terapia Ocupacional">
     <meta property="og:description" content="Conheça o Resumo Acadêmico - Sistema especializado em questões de Terapia Ocupacional. Nossa missão, valores e compromisso com a educação de qualidade.">
-    <meta property="og:image" content="https://www.resumoacademico.com/fotos/Logotipo_resumo_academico.png">
+    <meta property="og:image" content="https://www.resumoacademico.com/fotos/minha-logo-apple.png">
     <meta property="og:locale" content="pt_BR">
     
     <!-- Twitter -->
@@ -20,9 +20,9 @@
     <meta name="twitter:url" content="https://www.resumoacademico.com/sobre_nos.php">
     <meta name="twitter:title" content="Sobre Nós - Resumo Acadêmico | Terapia Ocupacional">
     <meta name="twitter:description" content="Conheça o Resumo Acadêmico - Sistema especializado em questões de Terapia Ocupacional. Nossa missão, valores e compromisso com a educação de qualidade.">
-    <meta name="twitter:image" content="https://www.resumoacademico.com/fotos/Logotipo_resumo_academico.png">
+    <meta name="twitter:image" content="https://www.resumoacademico.com/fotos/minha-logo-apple.png">
     <link rel="stylesheet" href="style.css">
-    <link rel="icon" href="fotos/Logotipo_resumo_academico.png" type="image/png">
+    <link rel="icon" href="fotos/minha-logo-apple.png" type="image/png">
     
     <!-- Espaço reservado para código de verificação Google AdSense -->
     <!-- 
