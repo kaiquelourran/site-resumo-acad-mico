@@ -8,15 +8,29 @@ ini_set('log_errors', 1);
 // Configuração do banco de dados
 // =======================================================
 
-// FORÇAR APENAS AMBIENTE LOCAL (XAMPP)
-// Configurações para desenvolvimento local (XAMPP)
-$host = "localhost";
-$db = "resumo_quiz"; // CORREÇÃO 1: Nome do banco de dados que existe no phpMyAdmin
-$user = "root";
-$pass = ""; // XAMPP padrão não tem senha para root
+// DETECÇÃO AUTOMÁTICA DE AMBIENTE
+// Verifica se está no servidor local (XAMPP) ou produção (Hostinger)
+$is_local = (
+    $_SERVER['SERVER_NAME'] === 'localhost' || 
+    $_SERVER['SERVER_ADDR'] === '127.0.0.1' ||
+    $_SERVER['SERVER_ADDR'] === '::1' ||
+    strpos($_SERVER['HTTP_HOST'], 'localhost') !== false ||
+    strpos($_SERVER['HTTP_HOST'], '127.0.0.1') !== false
+);
 
-// Definir que sempre está em ambiente local
-$is_local = true;
+if ($is_local) {
+    // CONFIGURAÇÕES PARA DESENVOLVIMENTO LOCAL (XAMPP)
+    $host = "localhost";
+    $db = "resumo_quiz";
+    $user = "root";
+    $pass = "";
+} else {
+    // CONFIGURAÇÕES PARA PRODUÇÃO (HOSTINGER)
+    $host = "localhost";
+    $db = "u775269467_questoes";
+    $user = "u775269467_kaique";
+    $pass = "deixar de ser curioso";
+}
 
 // =======================================================
 // FIM DAS CONFIGURAÇÕES
