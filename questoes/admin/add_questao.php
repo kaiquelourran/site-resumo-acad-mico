@@ -654,7 +654,7 @@ try {
                         <label for="assunto_tema">
                             <i class="fas fa-book"></i> Tema
                         </label>
-                        <select id="assunto_tema" class="form-control">
+                        <select name="assunto_tema" id="assunto_tema" class="form-control">
                             <option value="">Selecione um tema</option>
                             <?php foreach ($assuntos_por_tipo['tema'] as $assunto): ?>
                                 <option value="<?php echo $assunto['id_assunto']; ?>">
@@ -726,7 +726,7 @@ try {
                         <label for="assunto_profissional">
                             <i class="fas fa-briefcase"></i> Profissional
                         </label>
-                        <select id="assunto_profissional" class="form-control">
+                        <select name="assunto_profissional" id="assunto_profissional" class="form-control">
                             <option value="">Selecione um profissional</option>
                             <?php foreach ($assuntos_por_tipo['profissional'] as $assunto): ?>
                                 <option value="<?php echo $assunto['id_assunto']; ?>">
