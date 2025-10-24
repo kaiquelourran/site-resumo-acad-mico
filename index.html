@@ -3,172 +3,156 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Resumo Acadêmico</title>
+    <meta name="description" content="Sistema interativo de questões para estudantes e profissionais de Terapia Ocupacional. Teste seus conhecimentos com feedback imediato e estatísticas detalhadas.">
+    <meta name="keywords" content="Terapia Ocupacional, questões, TO, estudo, banco de questões, avaliação">
+    <title>Resumo Acadêmico - Sistema de Questões de Terapia Ocupacional</title>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" href="fotos/Logotipo_resumo_academico.png" type="image/png">
     <link rel="apple-touch-icon" href="fotos/minha-logo-apple.png">
+    
+    <!-- Espaço reservado para código de verificação Google AdSense -->
+    <!-- 
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX"
+     crossorigin="anonymous"></script>
+    -->
+    
     <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17492102079"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
-
   gtag('config', 'AW-17492102079');
 </script>
 </head>
 <body>
 
 <header>
-    <h1>Resumo Acadêmico</h1>
-    <p>Facilitamos sua jornada acadêmica com resumos claros e organizados em um só lugar.</p>
-
-    <nav class="menu">
+    <h1>Resumo Acadêmico - Terapia Ocupacional</h1>
+    <p>Sistema interativo de questões para estudantes e profissionais de Terapia Ocupacional</p>
+    
+    <!-- Menu de Navegação -->
+    <nav class="menu" id="menu">
         <ul>
-            <li><a href="#">HOME</a>
-                <ul class="submenu">
-                    <li><a href="#">Início Rápido</a></li>
-                    <li><a href="#">Apresentação</a></li>
-                </ul>
-            </li>
-            <li><a href="#">SOBRE</a>
-                <ul class="submenu">
-                    <li><a href="#resumo">RESUMO ACADÊMICO</a></li>
-                    <li><a href="#cleice">EMBAIXADORA T.O</a></li>
-                    <li><a href="#funcionamento">FUNCIONAMENTO</a></li>
-                </ul>
-            </li>
-            <li><a href="#">CONTEÚDO</a>
-                <ul class="submenu">
-                    <li><a href="#lista">LISTA DE CONTEUDO T.O</a></li>
-                    <li><a href="index.html#origem">ORIGEM E HISTÓRIA</a></li>
-                    <li><a href="#secao-quiz">QUESTÕES</a></li>
-                </ul>
-            </li>
+            <li><a href="index.html">🏠 HOME</a></li>
+            <li><a href="sobre_nos.php">👥 SOBRE</a></li>
+            <li><a href="questoes/index.php">📚 QUESTÕES</a></li>
+            <li><a href="origem_to.html">📖 ORIGEM TO</a></li>
+            <li><a href="contato.php">📞 CONTATO</a></li>
         </ul>
     </nav>
+    
+    <!-- Botão Hambúrguer para Mobile -->
+    <button class="menu-toggle" id="menuToggle">
+        <span>☰</span>
+    </button>
 </header>
 
 <main>
+    <!-- HERO SECTION - Sistema de Questões -->
+    <section id="hero" class="hero-questoes">
     <article>
         <h2 id="resumo">Resumo Acadêmico</h2>
-        <div class="lateral">
-            <p>É com grande entusiasmo que apresentamos o Resumo Acadêmico, plataforma criada para transformar a maneira como estudantes e pesquisadores acessam conteúdo acadêmico de qualidade. Nossa missão é clara: democratizar o conhecimento através de resumos claros, precisos e organizados, tornando a jornada educacional mais eficiente e acessível para todos.</p>
-            <img src="fotos/cleice.png.png" alt="Cleice Santana">
+            <div class="hero-content">
+                <p style="text-align: justify; max-width: 900px; margin: 0 auto 30px;">É com grande entusiasmo que apresentamos o Resumo Acadêmico, plataforma criada para transformar a maneira como estudantes e pesquisadores acessam conteúdo acadêmico de qualidade. Nossa missão é clara: democratizar o conhecimento através de um sistema inteligente de questões, tornando a jornada educacional mais eficiente e acessível para todos os profissionais e estudantes de Terapia Ocupacional.</p>
+                
         </div>
+        </article>
+    </section>
 
-        <h2 id="cleice">Prazer, me chamo Cleice Santana</h2>
-        <div class="lateral1">
-            <div class="imagens">
-                <img src="fotos/cleice.jpeg" alt="Cleice ">
-                <img src="fotos/cleice1.jpeg" alt="Cleice ">
+    <!-- FUNCIONALIDADES DO SISTEMA -->
+    <section id="features" class="features-section">
+        <article>
+            <h2 id="funcionamento">Como Funciona o Sistema de Questões</h2>
+            <p style="text-align: center; max-width: 800px; margin: 0 auto 40px;">No "Resumo Acadêmico", entendemos a correria da vida de quem trabalha ou estuda na área da saúde. Por isso, criamos um sistema de questões completo e organizado que vai direto ao que importa. Conte com a gente para facilitar sua rotina de estudos e trabalho.</p>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <h3>Sistema de Questões</h3>
+                    <p>Questões com até 5 alternativas e feedback imediato após cada resposta</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>Estatísticas Detalhadas</h3>
+                    <p>Acompanhe seu progresso, acertos e desempenho em tempo real</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🏷️</div>
+                    <h3>Organização Estratégica</h3>
+                    <p>Questões categorizadas em <strong>Temas</strong>, <strong>Concursos</strong> e <strong>Profissionais</strong> para estudo direcionado</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔄</div>
+                    <h3>Filtros Avançados</h3>
+                    <p>Filtre por: todas, respondidas, não respondidas e erradas</p>
             </div>
-            <p>Minha escolha pela Terapia Ocupacional é profundamente pessoal e se consolidou a partir de uma experiência marcante aos 18 anos, quando tive a oportunidade de trabalhar com crianças com transtornos do neurodesenvolvimento. Essa vivência foi um divisor de águas, pois me permitiu acompanhar de perto não só os desafios enfrentados por essas crianças e suas famílias, mas também o impacto transformador das pequenas conquistas diárias.
-
-            Compreendi a importância de promover autonomia, participação e qualidade de vida, e percebi que queria estar ativamente nesse processo. A Terapia Ocupacional se apresentou como a profissão que une minha paixão pelo cuidado humano com as ferramentas necessárias para intervir de forma significativa. Para mim, não se trata apenas de uma escolha profissional, mas de uma vocação: reabilitar, habilitar e potencializar capacidades, ajudando cada pessoa a viver uma vida mais plena, com inclusão, propósito e dignidade.</p>
         </div>
-        <a href="curriculo.html" class="saber">
-            Saiba mais sobre minha trajetória pessoal, minhas formações e experiências.
-        </a>
-        
+        </article>
+    </section>
 
-        <h2 id="funcionamento">Funcionamento do Resumo Acadêmico</h2>
-        <p>No "Resumo Acadêmico", entendemos a correria da vida de quem trabalha ou estuda na área da saúde. Por isso, criamos um espaço onde você encontra resumos essenciais, organizados por faixa etária (crianças, adolescentes, adultos e idosos), que vão direto ao que importa. Conte com a gente para facilitar sua rotina de estudos e trabalho.</p>
-        
-        <p>Para começar, assista ao vídeo tutorial abaixo. Você verá como o site é intuitivo e fácil de navegar.</p>
+    <!-- VÍDEO TUTORIAL -->
+    <section class="tutorial-section">
+        <article>
+            <h2>📹 Veja Como é Fácil Navegar</h2>
+            <p style="text-align: center; margin-bottom: 30px;">Para começar, assista ao vídeo tutorial abaixo. Você verá como o sistema é intuitivo e fácil de usar.</p>
 
         <div class="video">
-            
-            <video  width="100%" height="100%" autoplay loop muted controls >
+                <video width="100%" height="100%" autoplay loop muted controls>
                  <source src="videos/WhatsApp Video 2025-08-19 at 21.29.21.mp4" type="video/mp4">
                  Seu navegador não suporta a tag de vídeo.
                  </video>
         </div>
-        
-        <nav class="ldc">
-            <h2 id="lista">LISTA DE CONTEUDOS T.O</h2>
-            <ul>
-                <li><a href="#" class="CRIANÇA">CRIANÇA:</a>
-                    <ul>
-                        <li class="verde"><a href="infantil_01.html" >Desenvolvimento Infantil e Marcos do Desenvolvimento </a></li>
+        </article>
+    </section>
 
-                        <li class="verde" ><a href="infantil_02.html">Transtornos do Espectro Autista (TEA)</a></li>
+    <!-- TEMAS PRINCIPAIS -->
+    <section id="topics" class="topics-section">
+        <article>
+            <h2>📚 Principais Temas de Terapia Ocupacional</h2>
+            <p style="text-align: center; margin-bottom: 40px;">Explore nosso banco de questões organizado em <strong>Temas</strong>, <strong>Concursos</strong> e <strong>Profissionais</strong> da TO</p>
+            
+            <div class="topics-grid" id="temas-container">
+                <!-- Loading placeholder -->
+                <div class="topic-card loading-card">
+                    <div class="loading-skeleton">
+                        <div class="skeleton-title"></div>
+                        <div class="skeleton-text"></div>
+                        <div class="skeleton-count"></div>
+                    </div>
+                </div>
+                <div class="topic-card loading-card">
+                    <div class="loading-skeleton">
+                        <div class="skeleton-title"></div>
+                        <div class="skeleton-text"></div>
+                        <div class="skeleton-count"></div>
+                    </div>
+                </div>
+                <div class="topic-card loading-card">
+                    <div class="loading-skeleton">
+                        <div class="skeleton-title"></div>
+                        <div class="skeleton-text"></div>
+                        <div class="skeleton-count"></div>
+                    </div>
+                </div>
+                <div class="topic-card loading-card">
+                    <div class="loading-skeleton">
+                        <div class="skeleton-title"></div>
+                        <div class="skeleton-text"></div>
+                        <div class="skeleton-count"></div>
+                    </div>
+                </div>
+            </div>
+        </article>
+    </section>
 
-                        <li class="verde"><a href="infantil_03.html">Dificuldades de Aprendizagem e Dislexia</a> </li>
-
-                        <li><a href="infantil_04.html">Integração Sensorial</a></li>
-
-                        <li><a href="infantil_05.html">Paralisia Cerebral e Outras Condições Neuromotoras</a></li>
-
-                        <li class="verde"><a href="infantil_06.html">Transtorno de Déficit de Atenção e Hiperatividade (TDAH)</a></li>
-
-                        <li><a href="infantil_07.html">Brincar Terapêutico</a> </li>
-
-                        <li class="verde"><a href="infantil_08.html">Transtorno do Opositor Desafiador</a></li>
-
-                        <li class="verde"><a href="infantil_09.html">Síndrome de Down</a> </li>
-
-                        <li  class="verde"><a href="infantil_10.html">Síndrome de Apert</a></li>
-                    </ul>
-                </li>
-                <li><a href="#" class="adolescente">Adolescente:</a>
-                    <ul>
-                        <li><a href="#">Transição para a Vida Adulta e Autonomia</a></li>
-                        <li><a href="#">Saúde Mental na Adolescência</a></li>
-                        <li><a href="#">Habilidades Sociais e Participação em Grupos</a></li>
-                        <li><a href="#">Reabilitação Pós-Lesão (Trauma, Acidentes)</a></li>
-                        <li><a href="#">Transtornos do Neurodesenvolvimento (TEA, TDAH) na Adolescência</a></li>
-                        <li><a href="#">Gerenciamento do Estresse e Lazer</a></li>
-                        <li><a href="#">Tecnologia Assistiva e Acessibilidade</a></li>
-                        <li><a href="#">Bullying e Inclusão</a></li>
-                        <li><a href="#">Sexualidade e Deficiência na Adolescência</a></li>
-                        <li><a href="#">Preparação para o Mercado de Trabalho</a></li>
-                    </ul>
-                </li>
-                <li><a href="#" class="adulto">Adulto:</a>
-                    <ul>
-                        <li><a href="">Reabilitação Neurológica (AVC)</a></li>
-                        <li><a href="">Saúde Mental no Adulto Condições Crônicas de Saúde (Diabetes, Doenças Cardíacas, Fibromialgia)</a></li>
-                        <li><a href="">Ergonomia e Saúde Ocupacional</a></li>
-                        <li><a href="">Tecnologia Assistiva e Adaptações para o Lar</a></li>
-                        <li><a href="">Gerenciamento da Dor Crônica</a></li>
-                        <li><a href="">Reabilitação Oncológica Saúde Sexual</a></li>
-                        <li><a href="">TO em Cuidados Paliativos</a></li>
-                    </ul>
-                </li>
-                <li> <a href="#" class="idoso">Idoso:</a>
-                    <ul>
-                        <li><a href="#">Envelhecimento Ativo e Qualidade de Vida</a></li>
-                        <li><a href="#">Prevenção de Quedas e Adaptações Ambientais</a></li>
-                        <li><a href="#">Demências (Alzheimer, Demência Vascular)</a></li>
-                        <li><a href="#">Doença de Parkinson</a></li>
-                        <li><a href="#">Reabilitação Pós-AVC em Idosos</a></li>
-                        <li><a href="#">Saúde Mental no Idoso</a></li>
-                        <li><a href="#">Tecnologia Assistiva para Idosos</a></li>
-                        <li><a href="#">Manejo da Incontinência e Higiene Pessoal</a></li>
-                        <li><a href="#">Participação Social e Combate ao Isolamento</a></li>
-                        <li><a href="#">Cuidados Paliativos e Fim de Vida</a></li>
-                    </ul>
-                </li>
-                <li><a href="#" class="contextos">Contextos:</a>
-                    <ul>
-                        <li><a href="">Hospitais (Gerais, Especializados)</a></li>
-                        <li><a href="">Escolas e Creches (Regulares e Especiais)</a></li>
-                        <li><a href="">Centros de Atenção Psicossocial (CAPS)</a></li>
-                        <li><a href="">Comunidades e Territórios (Saúde Coletiva)</a></li>
-                        <li><a href="">Unidades Básicas de Saúde (UBS)</a></li>
-                        <li><a href="">Sistema Prisional e Socioeducativo</a></li>
-                    </ul>
-                </li>
-            </ul>
-        </nav>
-    </article>
-    <article >
+    <!-- A ORIGEM, HISTÓRIA E DEFINIÇÃO DA TO -->
+    <article class="origem-to-section">
                 <h2 id="origem">A Origem, História e Definição da Terapia Ocupacional: Uma Análise Aprofundada</h2>
 
         <p>A Terapia Ocupacional é uma profissão da área da saúde que se dedica a capacitar indivíduos, grupos ou comunidades a participarem das ocupações que dão sentido às suas vidas. Sua história é rica e multifacetada, enraizada em diversas correntes de pensamento filosófico e social que convergiram no início do século XX para dar forma a uma profissão única.</p>
 
-        <h2>1. As Raízes Históricas e o Tratamento Moral</h2>
+        <h3>1. As Raízes Históricas e o Tratamento Moral</h3>
 
         <p>Embora a Terapia Ocupacional moderna tenha se formalizado no século XX, seus princípios ecoam ideias muito mais antigas. Na Grécia Antiga, pensadores como Asclepíades de Bitínia já defendiam o uso de massagens, banhos e atividades recreativas para tratar doenças mentais, em oposição a métodos mais coercitivos. No entanto, o predecessor mais direto da profissão foi o Tratamento Moral, um movimento humanista que surgiu na Europa do século XVIII e se expandiu para a América do Norte no século XIX.</p>
 
@@ -177,15 +161,16 @@
         </a>
     </article>
 
-    <section class="secao-quiz" id="secao-quiz">
+    <!-- CTA FINAL -->
+    <section class="secao-quiz" id="secao-questoes">
         <div class="quiz-container">
             <div class="quiz-content">
                 <div class="quiz-icon">🎯</div>
-        <h2>Teste seus conhecimentos agora!</h2>
-        <p>Pronto para colocar o que você aprendeu em prática? Responda a um conjunto de questões rápido e descubra seu nível.</p>
+                <h2>Pronto para Testar seus Conhecimentos?</h2>
+                <p>Comece agora e descubra seu nível de conhecimento em Terapia Ocupacional através do nosso sistema completo de questões!</p>
                 <a href="questoes/index.php" class="botao-quiz">
                     <span class="btn-icon">🚀</span>
-                    <span class="btn-text">Iniciar as Questões</span>
+                    <span class="btn-text">Iniciar Questões</span>
                 </a>
             </div>
             <div class="quiz-decoration">
@@ -216,8 +201,8 @@
                         </div>
                     </div>
                     <p class="footer-description">
-                        Plataforma educacional especializada em Terapia Ocupacional, 
-                        oferecendo conteúdo de qualidade para estudantes e profissionais.
+                        Sistema educacional especializado em Terapia Ocupacional, 
+                        oferecendo banco de questões de qualidade para estudantes e profissionais.
                     </p>
                 </div>
 
@@ -236,37 +221,33 @@
                             <span class="footer-link-icon">📚</span>
                             Sistema de Questões
                         </a></li>
-                        <li><a href="#secao-quiz" class="footer-link">
+                        <li><a href="#secao-questoes" class="footer-link">
                             <span class="footer-link-icon">🎯</span>
-                            Quiz Interativo
+                            Começar Agora
                         </a></li>
                     </ul>
                 </div>
 
-                <!-- Informações de Contato -->
+                <!-- Conformidade e Legal -->
                 <div class="footer-section">
                     <h4 class="footer-section-title">
-                        <span class="footer-section-icon">💬</span>
-                        Contato
+                        <span class="footer-section-icon">⚖️</span>
+                        Legal
                     </h4>
-                    <div class="footer-contact">
-                        <p class="footer-contact-intro">
-                            Para entrar em contato, fale com a nossa embaixadora.
-                        </p>
-                        <div class="footer-contact-item animated-contact">
-                            <span class="footer-contact-icon">📧</span>
-                            <a href="mailto:Cleicevitoria02@gmail.com" class="footer-contact-link">
-                                Cleicevitoria02@gmail.com
-                            </a>
-                        </div>
-                        <div class="footer-contact-item animated-contact">
-                            <span class="footer-contact-icon">📸</span>
-                            <a href="https://www.instagram.com/cleice.santtana?igsh=ZmQ2bHExeTh0YWJ5&utm_source=qr" 
-                               target="_blank" class="footer-contact-link">
-                                @cleice.santtana
-                            </a>
-                        </div>
-                    </div>
+                    <ul class="footer-links">
+                        <li><a href="politica_privacidade.php" class="footer-link">
+                            <span class="footer-link-icon">🔒</span>
+                            Política de Privacidade
+                        </a></li>
+                        <li><a href="sobre_nos.php" class="footer-link">
+                            <span class="footer-link-icon">ℹ️</span>
+                            Sobre Nós
+                        </a></li>
+                        <li><a href="contato.php" class="footer-link">
+                            <span class="footer-link-icon">📧</span>
+                        Contato
+                        </a></li>
+                    </ul>
                 </div>
 
                 <!-- Tecnologias -->
@@ -304,6 +285,178 @@
         </div>
     </div>
 </footer>
+
+<!-- Banner de Consentimento de Cookies (LGPD) -->
+<div id="cookie-banner" class="cookie-banner" style="display: none;">
+    <div class="cookie-content">
+        <p>🍪 Este site utiliza cookies para melhorar sua experiência e exibir publicidade relevante. Ao continuar navegando, você concorda com nossa <a href="politica_privacidade.php">Política de Privacidade</a>.</p>
+        <button id="accept-cookies" class="cookie-accept-btn">Aceitar Cookies</button>
+    </div>
+</div>
+
+<!-- Script de Consentimento de Cookies -->
+<script>
+// Verificar se o cookie de aceitação já existe
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+}
+
+// Criar cookie de aceitação
+function setCookie(name, value, days) {
+    const date = new Date();
+    date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+    const expires = `expires=${date.toUTCString()}`;
+    document.cookie = `${name}=${value};${expires};path=/`;
+}
+
+// Verificar e exibir banner
+window.addEventListener('DOMContentLoaded', function() {
+    if (!getCookie('cookies_aceitos')) {
+        document.getElementById('cookie-banner').style.display = 'block';
+    }
+});
+
+// Aceitar cookies
+document.addEventListener('DOMContentLoaded', function() {
+    const acceptBtn = document.getElementById('accept-cookies');
+    if (acceptBtn) {
+        acceptBtn.addEventListener('click', function() {
+            setCookie('cookies_aceitos', 'true', 365);
+            document.getElementById('cookie-banner').style.display = 'none';
+        });
+    }
+});
+
+// Menu Hambúrguer - Mobile
+document.addEventListener('DOMContentLoaded', function() {
+    const menuToggle = document.getElementById('menuToggle');
+    const menu = document.getElementById('menu');
+    
+    // Criar overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'menu-overlay';
+    document.body.appendChild(overlay);
+    
+    // Toggle menu
+    if (menuToggle) {
+        menuToggle.addEventListener('click', function() {
+            menu.classList.toggle('active');
+            overlay.classList.toggle('active');
+            this.querySelector('span').textContent = menu.classList.contains('active') ? '✕' : '☰';
+        });
+    }
+    
+    // Fechar ao clicar no overlay
+    overlay.addEventListener('click', function() {
+        menu.classList.remove('active');
+        overlay.classList.remove('active');
+        if (menuToggle) {
+            menuToggle.querySelector('span').textContent = '☰';
+        }
+    });
+    
+    // Fechar ao clicar em um link
+    const menuLinks = menu.querySelectorAll('a');
+    menuLinks.forEach(link => {
+        link.addEventListener('click', function() {
+            menu.classList.remove('active');
+            overlay.classList.remove('active');
+            if (menuToggle) {
+                menuToggle.querySelector('span').textContent = '☰';
+            }
+        });
+    });
+});
+
+// Carregar Temas Dinamicamente do Banco de Dados
+document.addEventListener('DOMContentLoaded', function() {
+    carregarTemas();
+});
+
+async function carregarTemas() {
+    try {
+        const response = await fetch('buscar_temas.php');
+        const temas = await response.json();
+        
+        const container = document.getElementById('temas-container');
+        
+        if (temas && temas.length > 0) {
+            // Limpar loading placeholders
+            container.innerHTML = '';
+            
+            // Criar cards para cada tema
+            temas.forEach(tema => {
+                const card = criarCardTema(tema);
+                container.appendChild(card);
+            });
+        } else {
+            // Fallback: mostrar temas padrão se não houver dados
+            container.innerHTML = `
+                <div class="topic-card">
+                    <h3>📚 Temas de Terapia Ocupacional</h3>
+                    <span class="question-count">Carregando temas...</span>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Erro ao carregar temas:', error);
+        // Fallback em caso de erro
+        const container = document.getElementById('temas-container');
+        container.innerHTML = `
+            <div class="topic-card">
+                <h3>📚 Temas de Terapia Ocupacional</h3>
+                <span class="question-count">Temas disponíveis</span>
+            </div>
+        `;
+    }
+}
+
+function criarCardTema(tema) {
+    const card = document.createElement('div');
+    card.className = 'topic-card';
+    
+    // Emoji baseado no nome do tema
+    const emoji = obterEmojiTema(tema.nome);
+    
+    card.innerHTML = `
+        <h3>${emoji} ${tema.nome}</h3>
+        <span class="question-count">${tema.total_questoes} questões disponíveis</span>
+    `;
+    
+    // Adicionar link para o sistema de questões
+    card.style.cursor = 'pointer';
+    card.addEventListener('click', function() {
+        window.location.href = 'questoes/index.php';
+    });
+    
+    return card;
+}
+
+function obterEmojiTema(nome) {
+    const nomeLower = nome.toLowerCase();
+    
+    if (nomeLower.includes('desenvolvimento') || nomeLower.includes('infantil') || nomeLower.includes('criança')) {
+        return '👶';
+    } else if (nomeLower.includes('neurologia') || nomeLower.includes('neurológico') || nomeLower.includes('avc')) {
+        return '🧠';
+    } else if (nomeLower.includes('geriatria') || nomeLower.includes('idoso') || nomeLower.includes('envelhecimento')) {
+        return '👴';
+    } else if (nomeLower.includes('mental') || nomeLower.includes('psiquiatria') || nomeLower.includes('psicológico')) {
+        return '🧘';
+    } else if (nomeLower.includes('físico') || nomeLower.includes('fisioterapia') || nomeLower.includes('reabilitação')) {
+        return '🏥';
+    } else if (nomeLower.includes('escola') || nomeLower.includes('educação') || nomeLower.includes('aprendizagem')) {
+        return '🎓';
+    } else if (nomeLower.includes('trabalho') || nomeLower.includes('profissional') || nomeLower.includes('ocupacional')) {
+        return '💼';
+    } else {
+        return '📚';
+    }
+}
+
+</script>
 
 </body>
 </html>
