@@ -24,7 +24,7 @@ if ($tem_campo_tipo_assunto) {
     // Buscar assuntos categorizados usando tipo_assunto
     $sql = "SELECT a.id_assunto, a.nome, a.tipo_assunto, COUNT(q.id_questao) as total_questoes 
             FROM assuntos a 
-            INNER JOIN questoes q ON a.id_assunto = q.id_assunto 
+            LEFT JOIN questoes q ON a.id_assunto = q.id_assunto 
             GROUP BY a.id_assunto, a.nome, a.tipo_assunto 
             ORDER BY a.tipo_assunto, a.nome";
     $result = $pdo->query($sql)->fetchAll();
@@ -48,7 +48,7 @@ if ($tem_campo_tipo_assunto) {
     // Fallback: categorizar baseado no nome
 $sql = "SELECT a.id_assunto, a.nome, COUNT(q.id_questao) as total_questoes 
         FROM assuntos a 
-        INNER JOIN questoes q ON a.id_assunto = q.id_assunto 
+        LEFT JOIN questoes q ON a.id_assunto = q.id_assunto 
         GROUP BY a.id_assunto, a.nome 
         ORDER BY a.nome";
     $result = $pdo->query($sql)->fetchAll();
